@@ -7,7 +7,7 @@ function App() {
       <header className="App-header">
         <Header />
       </header>
-      
+      <br/>
       <div>
         <b>Welcome to Savvy Budget.</b><br />
       </div>
