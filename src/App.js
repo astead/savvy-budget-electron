@@ -1,4 +1,4 @@
-import './App.css';
+import './styles.css';
 import Header from './components/header.js';
 
 function App() {
@@ -7,7 +7,7 @@ function App() {
       <header className="App-header">
         <Header />
       </header>
-
+      
       <div>
         <b>Welcome to Savvy Budget.</b><br />
       </div>
