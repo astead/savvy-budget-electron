@@ -91,7 +91,7 @@ div.popout {
   border: solid 1px black;
   cursor: pointer;
   background-repeat: no-repeat;
-  vertical-align: middle;
+  /* vertical-align: middle; */
   padding-left: 15px;
   display: block;
   z-index: 5;
@@ -100,7 +100,7 @@ div.popout {
   position: absolute;
   border: solid 1px black;
   background-repeat: no-repeat;
-  vertical-align: middle;
+  /* vertical-align: middle; */
   padding-left: 15px;
   display: block;
   z-index: 5;
