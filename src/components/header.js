@@ -1,4 +1,4 @@
-export default function Header() {
+function Header() {
     return (
       <div>
         <span>Home</span>
@@ -9,6 +9,7 @@ export default function Header() {
         <span>Help</span>
         <span>Login?</span>
       </div>
-    );
-  }
-  
+  );
+}
+
+export default Header;
