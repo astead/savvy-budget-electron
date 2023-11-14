@@ -1,13 +1,115 @@
 body {
-  margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 15px;
+  color:black;
+  text-decoration: none;
+  margin: 0;
+  padding: 0;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+a, td, select, option, div, span {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 11px;
+  color:black;
+  text-decoration: none;
+  margin: 0;
+  padding: 0;
+}
+
+img, image {
+  border: none;
+}
+
+.TextBox, .CheckBox {
+  height: 11px;
+  margin: 0px;
+  padding: 0px;
+  font-size: 11px;
+  line-height: 11px;
+}
+
+.DropDownList {
+  height: 15px;
+  margin: 0px;
+  padding: 0px;
+  font-size: 11px;
+  line-height: 11px;
+}
+
+span.title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  font-size: 13px;
+  color:black;
+  font-style: italic;
+  font-weight: 900;
+  font-variant: small-caps;
+  z-index: 3;
+  vertical-align: top;
+}
+
+tr.header {
+  background-color:Silver;
+}
+
+div.greyout {
+  background-color:Black;
+  opacity: 0;
+  filter: alpha(opacity=0);
+  position: absolute;
+  z-index: 25;
+}
+
+div.popout {
+  background-color:White;
+  position: absolute;
+  z-index: 50;
+  border: solid 1px black;
+  padding-left: 15px;
+}
+
+.ExitButton {
+  float: right;
+}
+
+.drsElement {
+  position: absolute;
+  border: solid 1px black;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  vertical-align: middle;
+  padding-left: 15px;
+  display: block;
+  z-index: 5;
+}
+.category {
+  position: absolute;
+  border: solid 1px black;
+  background-repeat: no-repeat;
+  vertical-align: middle;
+  padding-left: 15px;
+  display: block;
+  z-index: 5;
+}
+.monthIndex {
+ width: 30px; 
+ height: 30px; 
+ float: left; 
+ position: absolute; 
+ text-align: center; 
+ vertical-align: middle;
 }
