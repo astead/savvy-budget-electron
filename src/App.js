@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import './styles.css';
+import './includes/styles.css';
 import Layout from './components/layout.js';
 import HomePage from './components/homePage.js';
 import Envelopes from './components/envelopes.js';
