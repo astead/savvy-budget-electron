@@ -29,6 +29,8 @@ function createWindow () {
       ? 'http://localhost:3000' // Loading localhost if dev mode
       : `file://${path.join(__dirname, '../build/index.html')}` // Loading build file if in production
   );  
+
+  win.webContents.openDevTools();
 }
 
 // ((OPTIONAL)) Setting the location for the userdata folder created by an Electron app. It default to the AppData folder if you don't set it.
@@ -38,6 +40,7 @@ app.setPath(
     ? path.join(app.getAppPath(), 'userdata/') // In development it creates the userdata folder where package.json is
     : path.join(process.resourcesPath, 'userdata/') // In production it creates userdata folder in the resources folder
 );
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
