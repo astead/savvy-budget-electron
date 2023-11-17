@@ -13,12 +13,13 @@
     "electron-builder": "^24.6.4",
     "electron-is-dev": "^2.0.0",
     "flow-bin": "^0.222.0",
+    "formik": "^2.4.5",
     "nodemon": "^3.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-native-sqlite-storage": "^6.0.1",
     "react-router": "^6.18.0",
-    "react-router-dom": "^6.18.0",
+    "react-router-dom": "^6.19.0",
     "react-scripts": "5.0.1",
     "sqlite3": "^5.1.6",
     "wait-on": "^7.2.0",
@@ -28,7 +29,7 @@
     "start-react": "react-scripts start",
     "build-react": "react-scripts build",
     "start-electron": "nodemon --watch ./public/* --exec \"electron .\"",
-    "dev": "concurrently \"npm run start-react\" \"wait-on http://localhost:3000 && npm run start-electron\" ",
+    "dev": "concurrently \"npm run start-react\" \"wait-on tcp:127.0.0.1:3000 && npm run start-electron\" ",
     "postinstall": "electron-builder install-app-deps",
     "pack-app": "npm run build-react && electron-builder --dir",
     "pack-build": "electron-builder --dir",
@@ -54,5 +55,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15"
   }
 }
