@@ -1,17 +1,22 @@
 // configure.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Header } from './header.tsx';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import  * as yup from 'yup';
+
 
 interface IValue {
   description: string;
 }
 
 
+
+
 export const Configure: React.FC = () => {
+ 
   
+
   //const electron = (window as any).electron;
   const ipcRenderer = (window as any).ipcRenderer;
 
@@ -22,6 +27,9 @@ export const Configure: React.FC = () => {
   const onSubmit = (values: IValue) => {
       console.log('values: ', values);
       ipcRenderer.send('submit:todoForm', values);
+
+      
+
   };
 
   const validationSchema = yup.object().shape({
@@ -36,6 +44,7 @@ export const Configure: React.FC = () => {
       <div>
         Configure<br/>
         
+        <br/>
         <Formik initialValues={initialValues} onSubmit={onSubmit} validationSchema={validationSchema}>
           <Form>
               <div>
