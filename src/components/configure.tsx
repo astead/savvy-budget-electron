@@ -3,14 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faTrash, faUpload } from "@fortawesome/free-solid-svg-icons"
+import { faTrash } from "@fortawesome/free-solid-svg-icons"
 import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
+import NewCategory from '../helpers/NewCategory.tsx';
 import EditableText from '../helpers/EditableText.tsx';
 
 export const Configure: React.FC = () => {
   
-  const [newCategory, setNewCategory] = useState('');
   const [data, setData] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>(data || []);
 
@@ -38,23 +38,6 @@ export const Configure: React.FC = () => {
     // Query new data
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();  
-    if (newCategory) {
-      const data = newCategory;
-      console.log('new category: ', data);
-        
-      // Request we add the new category
-      const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send('add_category', data);
-
-      // Reset the label in the new category
-      //setNewCategory('');
-      
-      // Query new data
-    }
-  };
-
   const handleOnDragEnd = (result) => {
     if (!result?.destination) return;
     
@@ -72,24 +55,6 @@ export const Configure: React.FC = () => {
 
     setCategories(cats);
   };
-
-  const newItemSection = (
-    <form onSubmit={handleSubmit}>
-        <label htmlFor="new-category">Enter a new category</label>
-        <div className="new-category">
-            <input
-                type="text"
-                id="new-category"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                placeholder="Enter new category"
-            />
-        </div>
-        <button className="submit">
-            <FontAwesomeIcon icon={faUpload} />
-        </button>
-    </form>
-  );
 
   let content;
   if (categories) {
@@ -181,9 +146,7 @@ export const Configure: React.FC = () => {
       </header>
       <div>
         Configure<br/>
-        
-        {newItemSection}
-        
+        <NewCategory/>        
         {content}
       </div>
     </div>
