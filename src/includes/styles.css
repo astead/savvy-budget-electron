@@ -1,14 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito&display=swap');
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-size: 15px;
-  color:black;
-  text-decoration: none;
-  margin: 0;
-  padding: 0;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.5rem;
+  background-color: #64748B;
+  color: #18181B;
+}
+
+input[type="text"], button {
+  font: inherit;
+}
+
+main {
+  margin: auto;
+  max-width: 600px;
+  background-color: #F8FAFC;
+  padding: 1rem 2rem;
+  border-radius: 15px;
+  box-shadow: 2px 2px 5px #333;
+}
+
+h1 {
+  margin: 0.5rem 0;
 }
 
 form, article {
@@ -20,155 +33,25 @@ form, article {
   border: 1px solid #18181B;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-a, td, select, option, div, span {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-size: 11px;
-  color:black;
-  text-decoration: none;
-  margin: 0;
-  padding: 0;
-}
-
-img, image {
-  border: none;
-}
-
-.TextBox, .CheckBox {
-  height: 11px;
-  margin: 0px;
-  padding: 0px;
-  font-size: 11px;
-  line-height: 11px;
-}
-
-.DropDownList {
-  height: 15px;
-  margin: 0px;
-  padding: 0px;
-  font-size: 11px;
-  line-height: 11px;
-}
-
-span.title {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  font-size: 13px;
-  color:white;
-  font-style: italic;
-  font-weight: 900;
-  font-variant: small-caps;
-  z-index: 3;
-  vertical-align: top;
-}
-
-tr.header {
-  background-color:Silver;
-}
-
-div.greyout {
-  background-color:Black;
-  opacity: 0;
-  filter: alpha(opacity=0);
-  position: absolute;
-  z-index: 25;
-}
-
-div.popout {
-  background-color:White;
-  position: absolute;
-  z-index: 50;
-  border: solid 1px black;
-  padding-left: 15px;
-}
-
-.ExitButton {
-  float: right;
-}
-
-.drsElement {
-  position: absolute;
-  border: solid 1px black;
-  cursor: pointer;
-  background-repeat: no-repeat;
-  /* vertical-align: middle; */
-  padding-left: 15px;
-  display: block;
-  z-index: 5;
-}
-.category {
-  position: absolute;
-  border: solid 1px black;
-  background-repeat: no-repeat;
-  /* vertical-align: middle; */
-  padding-left: 15px;
-  display: block;
-  z-index: 5;
-}
-.monthIndex {
- width: 30px; 
- height: 30px; 
- float: left; 
- position: absolute; 
- text-align: center; 
- vertical-align: middle;
-}
-
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color:Silver;
-  /* min-height: 100vh; */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-
-
 .category {
   display: flex;
   justify-content: flex-start;
   align-items: center;
 }
 
+input[type="checkbox"] {
+  min-width: 30px;
+  min-height: 30px;
+  margin-right: 1rem;
+}
+
+button {
+  min-width: 50px;
+  min-height: 50px;
+  border: 1px solid #18181B;
+  border-radius: 10%;
+  cursor: pointer;
+}
 
 .trash {
   background-color: #F8FAFC;
@@ -177,6 +60,32 @@ div.popout {
 
 .trash:focus, .trash:hover {
   filter:brightness(120%)
+}
+
+form {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #18181B;
+  margin-bottom: 1rem;
+}
+
+form label {
+  position: absolute;
+  left: -10000px;
+}
+
+.new-category {
+  width: 100%;
+  padding-right: 30px;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: 0.5px solid #18181B;
 }
 
 .submit {

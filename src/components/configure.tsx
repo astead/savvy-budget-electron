@@ -24,6 +24,9 @@ export const Configure: React.FC = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send('del_category', id);
 
+    // Where do we move sub accounts in the deleted category?
+    // We should have an un-categorized section
+
     // Query new data
   };
 
@@ -55,10 +58,10 @@ export const Configure: React.FC = () => {
                 onChange={(e) => setNewCategory(e.target.value)}
                 placeholder="Enter new category"
             />
-            <button className="submit">
-                <FontAwesomeIcon icon={faUpload} />
-            </button>
         </div>
+        <button className="submit">
+            <FontAwesomeIcon icon={faUpload} />
+        </button>
     </form>
   );
 
@@ -69,10 +72,10 @@ export const Configure: React.FC = () => {
         <article key={category.id}>
           <div className="category">
             <label>{category.category}</label>
+          </div>
             <button className="trash" onClick={() => handleDelete( category.id )}>
                 <FontAwesomeIcon icon={faTrash} />
             </button>
-          </div>
         </article>
       );
     });
