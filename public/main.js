@@ -1,7 +1,7 @@
-const { app, BrowserWindow, ipcMain, ipcRenderer } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const isDev = require('electron-is-dev'); // To check if electron is in development mode
 const path = require('path');
-const sqlite3 = require('sqlite3');
+//const sqlite3 = require('sqlite3');
 const knex = require('./db/db.js');
 //const { channels } = require('../src/shared/constants');
 

@@ -1,7 +1,7 @@
 // db/db.js
 
 const path = require('path');
-const { ipcRenderer, contextBridge, ipcMain } = require('electron');
+//const { ipcRenderer, contextBridge, ipcMain } = require('electron');
 
 const dbPath = path.resolve(__dirname, 'db/db.sqlite');
 
@@ -14,6 +14,7 @@ const knex = require('knex')({
     useNullAsDefault: true
 });
 
+/*
 function setup_db() {
     // Create a table in the database called "books"
     knex.schema
@@ -42,17 +43,7 @@ function setup_db() {
                 console.error(`There was an error setting up the database: ${error}`)
             })
 }
-
-function query_category() {
-
-    knex.select('*').from('category')
-        .then(data => {
-            console.log('data:', data);
-            ipcRenderer.send('categories', data);
-            ipcMain.send('categories', data);
-        })
-        .catch(err => console.log(err))
-}
+*/
 
 // Export the database
 module.exports = knex;
