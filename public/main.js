@@ -1,7 +1,10 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, ipcRenderer } = require('electron')
 const isDev = require('electron-is-dev'); // To check if electron is in development mode
 const path = require('path');
 const sqlite3 = require('sqlite3');
+const knex = require('./db/db.js');
+//const { channels } = require('../src/shared/constants');
+
 
 function createWindow () {
   // Create the browser window.
@@ -33,60 +36,11 @@ function createWindow () {
 
   win.webContents.openDevTools();
 
-
-  setup_db();
+  knex.setup_db();
+  
 }
 
-function setup_db() {
 
-  const dbPath = path.resolve(__dirname, 'db/db.sqlite');
-
-  // Create connection to SQLite database
-  const knex = require('knex')({
-    client: 'sqlite3',
-    connection: {
-      filename: dbPath,
-    },
-    useNullAsDefault: true
-  });
-
-  // Create a table in the database called "books"
-  knex.schema
-    // Make sure no "books" table exists
-    // before trying to create new
-    .hasTable('category')
-      .then((exists) => {
-        if (!exists) {
-          // If no "books" table exists
-          // create new, with "id", "author", "title",
-          // "pubDate" and "rating" columns
-          // and use "id" as a primary identification
-          // and increment "id" with every new record (book)
-          return knex.schema.createTable('category', (table)  => {
-            table.increments('id').primary()
-            table.integer('category')
-          })
-          .then(() => {
-            // Log success message
-            console.log('Table \'Category\' created')
-          })
-          .catch((error) => {
-            console.error(`There was an error creating table: ${error}`)
-          })
-        }
-      })
-      .then(() => {
-        // Log success message
-        console.log('done')
-      })
-      .catch((error) => {
-        console.error(`There was an error setting up the database: ${error}`)
-      })
-
-  knex.select('*').from('category')
-    .then(data => console.log('data:', data))
-    .catch(err => console.log(err))
-}
 
 // ((OPTIONAL)) Setting the location for the userdata folder created by an Electron app. It default to the AppData folder if you don't set it.
 app.setPath(
@@ -146,14 +100,43 @@ ipcMain.on('submit:todoForm', (event, data) => {
   });
 
   knex('category').insert({
-    'category': data.description,
+    'category': data.category,
   })
   .then(() => {
-    console.log('Added category: ' + data.description);
+    console.log('Added category: ' + data.category);
   })
   .catch(err => {
     console.log('Error: ' + err);
   })
+});
+
+
+ipcMain.on('get_data', (event, arg) => {
+  console.log('Main: get_data');
+
+  const {table} = arg;
+  console.log(table);
+  
+  const dbPath = path.resolve(__dirname, 'db/db.sqlite');
+
+  // Create connection to SQLite database
+  const knex = require('knex')({
+    client: 'sqlite3',
+    connection: {
+      filename: dbPath,
+    },
+    useNullAsDefault: true
+  });
+
+  knex.select('*').from(table)
+        .then(data => {
+            console.log('data:', data);
+            console.log('sending:', 'ARG-TEST');
+            console.log('calling renderer: list_data');
+            event.sender.send('list_data', data);
+            // Try looking up here: https://www.electronjs.org/docs/latest/tutorial/ipc
+        })
+        .catch(err => console.log(err))
 })
 
 // Youtube: https://www.youtube.com/watch?v=vBjCbYgyznM&list=PLkZU2rKh1mT8cML-VNcUHF3vB8qzzgxuA&index=7
