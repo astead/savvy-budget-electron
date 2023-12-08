@@ -24,13 +24,41 @@ h1 {
   margin: 0.5rem 0;
 }
 
-form, article {
-  padding: 1rem;
+form {
+  padding: 0rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: #F8FAFC;
   border: 1px solid #18181B;
+}
+
+form.new-envelope {
+  padding: 0rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #F8FAFC;
+  border: none;
+}
+
+article.category-container {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #F8FAFC;
+  border: 1px solid #18181B;
+}
+
+article.category-item{
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #F8FAFC;
+  border:none;
 }
 
 .category {

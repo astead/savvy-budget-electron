@@ -8,6 +8,7 @@ import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
 import NewCategory from '../helpers/NewCategory.tsx';
 import EditableText from '../helpers/EditableText.tsx';
+import NewEnvelope from '../helpers/NewEnvelope.tsx';
 
 export const Configure: React.FC = () => {
   
@@ -67,15 +68,18 @@ export const Configure: React.FC = () => {
                 return (
                   <Draggable key={category.id} draggableId={category.id.toString()} index={index}>
                     {(provided) => (
-                      <article {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
-                        <div className="category">
-                          <EditableText
-                            id={category.id.toString()}
-                            initialText={category.category} />
-                        </div>
-                        <button className="trash" onClick={() => handleDelete( category.id )}>
-                            <FontAwesomeIcon icon={faTrash} />
-                        </button>
+                      <article className="category-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                        <article className="category-item">
+                          <div className="category">
+                            <EditableText
+                              id={category.id.toString()}
+                              initialText={category.category} />
+                          </div>
+                          <button className="trash" onClick={() => handleDelete( category.id )}>
+                              <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        </article>
+                        <NewEnvelope id={category.id.toString()}/>
                       </article>
                     )}
                   </Draggable>
