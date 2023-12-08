@@ -6,14 +6,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faTrash, faUpload } from "@fortawesome/free-solid-svg-icons"
 import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
+import EditableText from '../helpers/EditableText.tsx';
 
 export const Configure: React.FC = () => {
   
-  interface CategoryDef {
-      id: number;
-      category: string;
-  };
-
   const [newCategory, setNewCategory] = useState('');
   const [data, setData] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>(data || []);
@@ -108,7 +104,9 @@ export const Configure: React.FC = () => {
                     {(provided) => (
                       <article {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
                         <div className="category">
-                          <label>{category.category}</label>
+                          <EditableText
+                            id={category.id.toString()}
+                            initialText={category.category} />
                         </div>
                         <button className="trash" onClick={() => handleDelete( category.id )}>
                             <FontAwesomeIcon icon={faTrash} />
@@ -157,13 +155,12 @@ export const Configure: React.FC = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     
     // Signal we want to get data
-    console.log('Calling main:get_data');
+    //console.log('Calling main:get_data');
     ipcRenderer.send('get_data', 'category_list');
     
     // Receive the data
-    ipcRenderer.on('list_data', (arg: CategoryDef[]) => {
-      console.log('renderer: list_data2');
-      console.log('arg:' + arg);
+    ipcRenderer.on('list_data', (arg) => {
+      //console.log('arg:' + arg);
       setData(arg);
 
       ipcRenderer.removeAllListeners('list_data');

@@ -85,8 +85,8 @@ process.on('uncaughtException', (error) => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-ipcMain.on('add_category', (event, data) => {
-  console.log(data);
+ipcMain.on('add_category', (event, name) => {
+  //console.log(name);
 
   const dbPath = path.resolve(__dirname, 'db/db.sqlite');
 
@@ -100,18 +100,18 @@ ipcMain.on('add_category', (event, data) => {
   });
 
   knex('category').insert({
-    'category': data,
+    'category': name,
   })
   .then(() => {
-    console.log('Added category: ' + data);
+    console.log('Added category: ' + name);
   })
   .catch(err => {
     console.log('Error: ' + err);
   })
 });
 
-ipcMain.on('del_category', (event, data) => {
-  console.log(data);
+ipcMain.on('del_category', (event, id) => {
+  //console.log(id);
 
   const dbPath = path.resolve(__dirname, 'db/db.sqlite');
 
@@ -124,9 +124,34 @@ ipcMain.on('del_category', (event, data) => {
     useNullAsDefault: true
   });
 
-  knex('category').where({id: data}).del()
+  knex('category').where({id: id}).del()
   .then(() => {
-    console.log('Deleted category: ' + data);
+    console.log('Deleted category: ' + id);
+  })
+  .catch(err => {
+    console.log('Error: ' + err);
+  })
+});
+
+ipcMain.on('rename_category', (event, {id, name}) => {
+  //console.log(id, name);
+
+  const dbPath = path.resolve(__dirname, 'db/db.sqlite');
+
+  // Create connection to SQLite database
+  const knex = require('knex')({
+    client: 'sqlite3',
+    connection: {
+      filename: dbPath,
+    },
+    useNullAsDefault: true
+  });
+
+  knex('category').where({id: id}).update({
+    category: name
+  })
+  .then(() => {
+    console.log('Renamed category: ' + name);
   })
   .catch(err => {
     console.log('Error: ' + err);
@@ -135,7 +160,7 @@ ipcMain.on('del_category', (event, data) => {
 
 
 ipcMain.on('get_data', (event, arg) => {
-  console.log('Main: get_data');
+  //console.log('Main: get_data');
 
   const dbPath = path.resolve(__dirname, 'db/db.sqlite');
 
@@ -148,7 +173,7 @@ ipcMain.on('get_data', (event, arg) => {
     useNullAsDefault: true
   });
 
-  console.log(arg);
+  //console.log(arg);
   switch (arg) {
 
     case 'category_list':
