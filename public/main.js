@@ -85,7 +85,7 @@ process.on('uncaughtException', (error) => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-ipcMain.on('submit:todoForm', (event, data) => {
+ipcMain.on('add_category', (event, data) => {
   console.log(data);
 
   const dbPath = path.resolve(__dirname, 'db/db.sqlite');
@@ -100,23 +100,19 @@ ipcMain.on('submit:todoForm', (event, data) => {
   });
 
   knex('category').insert({
-    'category': data.category,
+    'category': data,
   })
   .then(() => {
-    console.log('Added category: ' + data.category);
+    console.log('Added category: ' + data);
   })
   .catch(err => {
     console.log('Error: ' + err);
   })
 });
 
+ipcMain.on('del_category', (event, data) => {
+  console.log(data);
 
-ipcMain.on('get_data', (event, arg) => {
-  console.log('Main: get_data');
-
-  const {table} = arg;
-  console.log(table);
-  
   const dbPath = path.resolve(__dirname, 'db/db.sqlite');
 
   // Create connection to SQLite database
@@ -128,15 +124,45 @@ ipcMain.on('get_data', (event, arg) => {
     useNullAsDefault: true
   });
 
-  knex.select('*').from(table)
+  knex('category').where({id: data}).del()
+  .then(() => {
+    console.log('Deleted category: ' + data);
+  })
+  .catch(err => {
+    console.log('Error: ' + err);
+  })
+});
+
+
+ipcMain.on('get_data', (event, arg) => {
+  console.log('Main: get_data');
+
+  const dbPath = path.resolve(__dirname, 'db/db.sqlite');
+
+  // Create connection to SQLite database
+  const knex = require('knex')({
+    client: 'sqlite3',
+    connection: {
+      filename: dbPath,
+    },
+    useNullAsDefault: true
+  });
+
+  console.log(arg);
+  switch (arg) {
+
+    case 'category_list':
+      knex.select('*').from('category')
         .then(data => {
-            console.log('data:', data);
-            console.log('sending:', 'ARG-TEST');
-            console.log('calling renderer: list_data');
+            //console.log('data:', data);
+            //console.log('calling renderer: list_data');
             event.sender.send('list_data', data);
-            // Try looking up here: https://www.electronjs.org/docs/latest/tutorial/ipc
         })
         .catch(err => console.log(err))
+      break;
+
+    default:
+  }
 })
 
 // Youtube: https://www.youtube.com/watch?v=vBjCbYgyznM&list=PLkZU2rKh1mT8cML-VNcUHF3vB8qzzgxuA&index=7

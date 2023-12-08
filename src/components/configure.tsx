@@ -2,10 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import  * as yup from 'yup';
-import { channels } from '../shared/constants';
-//const { ipcRenderer } = window.require('electron');
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faTrash, faUpload } from "@fortawesome/free-solid-svg-icons"
 
 
 export const Configure: React.FC = () => {
@@ -15,48 +13,85 @@ export const Configure: React.FC = () => {
       category: string;
   };
 
-  const initialValues: CategoryDef = {
-    id: 0,
-    category: ''
+  const [newCategory, setNewCategory] = useState('');
+  const [categories, setCategories] = useState([{id:-1, category:''}]);
+
+  
+  const handleDelete = (id) => {
+    console.log('del category: ', id);
+    
+    // Request we delete the category
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send('del_category', id);
+
+    // Query new data
   };
 
-  //const [iter, setIter] = React.useState(0);
-  //const [loaded, setLoaded] = React.useState(false);
-
-  function set_data(data : CategoryDef[]) {
-    //console.log('----------' + iter + '----------');
-    console.log('Got list of categories:');
-    console.log('data:', ...data);
-    //setIter(iter+1);
-    console.log('--------------------');
-  };
-
-  const onSubmit = (values: CategoryDef) => {
-      console.log('values: ', values);
+  const handleSubmit = (e) => {
+    e.preventDefault();  
+    if (newCategory) {
+      const data = newCategory;  
+      console.log('new category: ', data);
+        
+      // Request we add the new category
       const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send('submit:todoForm', values);
+      ipcRenderer.send('add_category', data);
+
+      // Reset the label in the new category
+      //setNewCategory('');
+      
+      // Query new data
+    }
   };
 
-  const validationSchema = yup.object().shape({
-    category: yup.string().required(' Required'),
-  });
+  const newItemSection = (
+    <form onSubmit={handleSubmit}>
+        <label htmlFor="new-category">Enter a new category</label>
+        <div className="new-category">
+            <input
+                type="text"
+                id="new-category"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                placeholder="Enter new category"
+            />
+            <button className="submit">
+                <FontAwesomeIcon icon={faUpload} />
+            </button>
+        </div>
+    </form>
+  );
 
+  let content;
+  if (categories) {
+    content = categories.map((category) => {
+      return (
+        <article key={category.id}>
+          <div className="category">
+            <label>{category.category}</label>
+            <button className="trash" onClick={() => handleDelete( category.id )}>
+                <FontAwesomeIcon icon={faTrash} />
+            </button>
+          </div>
+        </article>
+      );
+    });
+  }
 
   useEffect(() => {
-    //const electron = (window as any).electron;
     const ipcRenderer = (window as any).ipcRenderer;
     
-    //if (!loaded) {
-    //  setLoaded(true);
-      console.log('Calling main:get_data');
-      ipcRenderer.send('get_data', { table: 'category' });
-    //}
+    // Signal we want to get data
+    console.log('Calling main:get_data');
+    ipcRenderer.send('get_data', 'category_list');
     
+    // Receive the data
     ipcRenderer.on('list_data', (arg: CategoryDef[]) => {
       console.log('renderer: list_data2');
-      //console.log('arg:' + arg);
+      console.log('arg:' + arg);
+      setCategories(arg);
+
       ipcRenderer.removeAllListeners('list_data');
-      set_data(arg);
     });
 
     // Clean the listener after the component is dismounted
@@ -75,16 +110,9 @@ export const Configure: React.FC = () => {
       <div>
         Configure<br/>
         
-        <br/>
-        <Formik initialValues={initialValues} onSubmit={onSubmit} validationSchema={validationSchema}>
-          <Form>
-              <div>
-              <Field name='category' />
-              <ErrorMessage name='category' />
-              </div>
-              <button type="submit">Save</button>
-          </Form>
-        </Formik>
+        {newItemSection}
+        
+        {content}
       </div>
     </div>
   );

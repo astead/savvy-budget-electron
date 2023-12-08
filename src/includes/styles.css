@@ -11,6 +11,15 @@ body {
   padding: 0;
 }
 
+form, article {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #F8FAFC;
+  border: 1px solid #18181B;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
@@ -150,4 +159,32 @@ div.popout {
   to {
     transform: rotate(360deg);
   }
+}
+
+
+
+.category {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+
+.trash {
+  background-color: #F8FAFC;
+  color: #EF4444;
+}
+
+.trash:focus, .trash:hover {
+  filter:brightness(120%)
+}
+
+.submit {
+  background-color: #F8FAFC;
+  color: gray;
+}
+
+.submit:focus, .submit:hover {
+  background-color: limegreen;
+  color: #F8FAFC;
 }
