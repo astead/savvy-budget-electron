@@ -12,7 +12,7 @@ export const EditableCategory = ({ initialID, initialName}) => {
   };
 
   const handleCatBlur = () => {
-    console.log('handleCatBlur: calling ', channels.REN_CATEGORY, id, name);
+    //console.log('handleCatBlur: calling ', channels.REN_CATEGORY, id, name);
     
     // Request we rename the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
