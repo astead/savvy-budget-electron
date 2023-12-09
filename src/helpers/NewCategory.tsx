@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faUpload } from "@fortawesome/free-solid-svg-icons"
+import { channels } from '../shared/constants.js'
 
 export const NewCategory = () => {
   const [newCategory, setNewCategory] = useState('');
@@ -8,17 +9,14 @@ export const NewCategory = () => {
   const handleSubmit = (e) => {
     e.preventDefault();  
     if (newCategory) {
-      const data = newCategory;
-      console.log('new category: ', data);
+      console.log('new category: ', newCategory);
         
       // Request we add the new category
       const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send('add_category', data);
+      ipcRenderer.send(channels.ADD_CATEGORY, newCategory);
 
       // Reset the label in the new category
       //setNewCategory('');
-      
-      // Query new data
     }
   };  
 

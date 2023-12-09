@@ -1,10 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const isDev = require('electron-is-dev'); // To check if electron is in development mode
 const path = require('path');
-//const sqlite3 = require('sqlite3');
 const knex = require('./db/db.js');
-//const { channels } = require('../src/shared/constants');
-
+const { channels, ops } = require('../src/shared/constants');
 
 function createWindow () {
   // Create the browser window.
@@ -35,11 +33,8 @@ function createWindow () {
   );  
 
   win.webContents.openDevTools();
-
-  knex.setup_db();
-  
+ 
 }
-
 
 
 // ((OPTIONAL)) Setting the location for the userdata folder created by an Electron app. It default to the AppData folder if you don't set it.
@@ -85,23 +80,10 @@ process.on('uncaughtException', (error) => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-ipcMain.on('add_category', (event, name) => {
+ipcMain.on(channels.ADD_CATEGORY, (event, name) => {
   //console.log(name);
 
-  const dbPath = path.resolve(__dirname, 'db/db.sqlite');
-
-  // Create connection to SQLite database
-  const knex = require('knex')({
-    client: 'sqlite3',
-    connection: {
-      filename: dbPath,
-    },
-    useNullAsDefault: true
-  });
-
-  knex('category').insert({
-    'category': name,
-  })
+  knex('category').insert({ 'category': name })
   .then(() => {
     console.log('Added category: ' + name);
   })
@@ -110,21 +92,10 @@ ipcMain.on('add_category', (event, name) => {
   })
 });
 
-ipcMain.on('del_category', (event, id) => {
+ipcMain.on(channels.DEL_CATEGORY, (event, id) => {
   //console.log(id);
 
-  const dbPath = path.resolve(__dirname, 'db/db.sqlite');
-
-  // Create connection to SQLite database
-  const knex = require('knex')({
-    client: 'sqlite3',
-    connection: {
-      filename: dbPath,
-    },
-    useNullAsDefault: true
-  });
-
-  knex('category').where({id: id}).del()
+  knex('category').where({ id: id }).del()
   .then(() => {
     console.log('Deleted category: ' + id);
   })
@@ -133,23 +104,10 @@ ipcMain.on('del_category', (event, id) => {
   })
 });
 
-ipcMain.on('rename_category', (event, {id, name}) => {
+ipcMain.on(channels.REN_CATEGORY, (event, {id, name}) => {
   //console.log(id, name);
 
-  const dbPath = path.resolve(__dirname, 'db/db.sqlite');
-
-  // Create connection to SQLite database
-  const knex = require('knex')({
-    client: 'sqlite3',
-    connection: {
-      filename: dbPath,
-    },
-    useNullAsDefault: true
-  });
-
-  knex('category').where({id: id}).update({
-    category: name
-  })
+  knex('category').where({id: id}).update({ category: name })
   .then(() => {
     console.log('Renamed category: ' + name);
   })
@@ -159,28 +117,14 @@ ipcMain.on('rename_category', (event, {id, name}) => {
 });
 
 
-ipcMain.on('get_data', (event, arg) => {
+ipcMain.on(channels.GET_DATA, (event, arg) => {
   //console.log('Main: get_data');
-
-  const dbPath = path.resolve(__dirname, 'db/db.sqlite');
-
-  // Create connection to SQLite database
-  const knex = require('knex')({
-    client: 'sqlite3',
-    connection: {
-      filename: dbPath,
-    },
-    useNullAsDefault: true
-  });
-
   //console.log(arg);
   switch (arg) {
 
-    case 'category_list':
+    case ops.CAT_LIST:  // Return a list of all categories
       knex.select('*').from('category')
         .then(data => {
-            //console.log('data:', data);
-            //console.log('calling renderer: list_data');
             event.sender.send('list_data', data);
         })
         .catch(err => console.log(err))
@@ -190,4 +134,3 @@ ipcMain.on('get_data', (event, arg) => {
   }
 })
 
-// Youtube: https://www.youtube.com/watch?v=vBjCbYgyznM&list=PLkZU2rKh1mT8cML-VNcUHF3vB8qzzgxuA&index=7

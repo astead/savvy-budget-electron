@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faUpload } from "@fortawesome/free-solid-svg-icons"
+import { channels } from '../shared/constants.js'
 
 export const NewEnvelope = ({ id }) => {
   const [newEnvelope, setNewEnvelope] = useState('');
@@ -8,17 +9,14 @@ export const NewEnvelope = ({ id }) => {
   const handleSubmit = (e) => {
     e.preventDefault();  
     if (newEnvelope) {
-      const data = newEnvelope;
-      console.log('new envelope: ', data);
+      console.log('new envelope: ', newEnvelope);
         
       // Request we add the new category
       const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send('add_envelope', data);
+      ipcRenderer.send(channels.ADD_ENVELOPE, newEnvelope);
 
       // Reset the label in the new category
       //setNewCategory('');
-      
-      // Query new data
     }
   };  
 

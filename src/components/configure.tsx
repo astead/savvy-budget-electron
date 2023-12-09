@@ -9,6 +9,7 @@ import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable
 import NewCategory from '../helpers/NewCategory.tsx';
 import EditableText from '../helpers/EditableText.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
+import { channels } from '../shared/constants.js'
 
 export const Configure: React.FC = () => {
   
@@ -31,7 +32,7 @@ export const Configure: React.FC = () => {
 
     // Request we delete the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send('del_category', id);
+    ipcRenderer.send(channels.DEL_CATEGORY, id);
 
     // Where do we move sub accounts in the deleted category?
     // We should have an un-categorized section
@@ -125,10 +126,10 @@ export const Configure: React.FC = () => {
     
     // Signal we want to get data
     //console.log('Calling main:get_data');
-    ipcRenderer.send('get_data', 'category_list');
+    ipcRenderer.send(channels.GET_DATA, 'category_list');
     
     // Receive the data
-    ipcRenderer.on('list_data', (arg) => {
+    ipcRenderer.on(channels.LIST_DATA, (arg) => {
       //console.log('arg:' + arg);
       setData(arg);
 
