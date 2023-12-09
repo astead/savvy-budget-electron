@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faUpload } from "@fortawesome/free-solid-svg-icons"
+import { faPlus } from "@fortawesome/free-solid-svg-icons"
 import { channels } from '../shared/constants.js'
 
 export const NewCategory = () => {
@@ -21,7 +21,7 @@ export const NewCategory = () => {
   };  
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="new-category">
         <label htmlFor="new-category">Enter a new category</label>
         <div className="new-category">
             <input
@@ -33,7 +33,7 @@ export const NewCategory = () => {
             />
         </div>
         <button className="submit">
-            <FontAwesomeIcon icon={faUpload} />
+            <FontAwesomeIcon icon={faPlus} />
         </button>
     </form>
   );

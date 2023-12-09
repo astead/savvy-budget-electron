@@ -110,6 +110,7 @@ export const Configure: React.FC = () => {
                             </button>
                           </article>
                           <NewEnvelope id={catID} />
+                          <article className="envelope-container">
                           {
                             category.map((env, index2) => {
                               //console.log("env:", env);  
@@ -117,7 +118,7 @@ export const Configure: React.FC = () => {
                                 (env.envID) &&
                                 <Draggable key={env.envID} draggableId={env.envID.toString()} index={index2}>
                                   {(provided) => (
-                                    <article className="envelope-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                                    <article className="envelope-item-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
                                       <article className="envelope-item">
                                         <div className="envelope">
                                           <EditableEnvelope
@@ -134,6 +135,7 @@ export const Configure: React.FC = () => {
                               )
                             })
                           }
+                          </article>
                         </article>
                         { provided.placeholder }
                       </section>

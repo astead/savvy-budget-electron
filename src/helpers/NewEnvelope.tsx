@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faUpload } from "@fortawesome/free-solid-svg-icons"
+import { faPlus } from "@fortawesome/free-solid-svg-icons"
 import { channels } from '../shared/constants.js'
 
 export const NewEnvelope = ({ id }) => {
@@ -33,7 +33,7 @@ export const NewEnvelope = ({ id }) => {
             />
         </div>
         <button className="submit">
-            <FontAwesomeIcon icon={faUpload} />
+            <FontAwesomeIcon icon={faPlus} />
         </button>
     </form>
   );

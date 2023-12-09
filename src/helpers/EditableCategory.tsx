@@ -25,7 +25,9 @@ export const EditableCategory = ({ initialID, initialName}) => {
       defaultValue={name}
       value={name}
       onChange={(e) => handleChange(e, setName)}
-      onBlur={handleBlur} />
+      onBlur={handleBlur}
+      className="category"
+      inputClassName="" />
   );
 };
 
