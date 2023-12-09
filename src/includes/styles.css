@@ -5,6 +5,7 @@ body {
   font-size: 1rem;
   background-color: #728197;
   color: #18181B;
+  margin:0px;
 }
 
 input[type="text"], button {
@@ -22,6 +23,14 @@ main {
 
 h1 {
   margin: 0.5rem 0;
+}
+
+div.NavBar {
+  background-color: #d2d2d2;
+  display: flex;
+  justify-content: space-between;
+  padding-left:10px;
+  padding-right:10px;
 }
 
 form {

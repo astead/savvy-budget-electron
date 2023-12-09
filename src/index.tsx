@@ -5,7 +5,8 @@ import './includes/styles.css';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { HomePage } from './components/homePage.tsx';
-import { Configure } from './components/configure.tsx';
+import { Envelopes } from './components/Envelopes.tsx';
+import { Configure } from './components/Configure.tsx';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -17,7 +18,8 @@ root.render(
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/configure" element={<Configure />} />
+        <Route path="/Envelopes" element={<Envelopes />} />
+        <Route path="/Configure" element={<Configure />} />
       </Routes>
     </Router>
   </React.StrictMode>

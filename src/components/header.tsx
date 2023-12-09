@@ -5,9 +5,10 @@ import { Link } from 'react-router-dom';
 
 export const Header: React.FC = () => {
   return (
-    <div>
+    <div className="NavBar">
       <Link to="/">Home</Link>
-      <Link to="/configure">Configure</Link>
+      <Link to="/Envelopes">Envelopes</Link>
+      <Link to="/Configure">Configure</Link>
     </div>
   );
 };
