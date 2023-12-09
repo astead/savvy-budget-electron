@@ -4,16 +4,17 @@ import { faUpload } from "@fortawesome/free-solid-svg-icons"
 import { channels } from '../shared/constants.js'
 
 export const NewEnvelope = ({ id }) => {
+  const [categoryID, ] = useState(id);
   const [newEnvelope, setNewEnvelope] = useState('');
   
   const handleSubmit = (e) => {
     e.preventDefault();  
     if (newEnvelope) {
-      console.log('new envelope: ', newEnvelope);
+      console.log(categoryID, ' new envelope: ', newEnvelope);
         
       // Request we add the new category
       const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send(channels.ADD_ENVELOPE, newEnvelope);
+      ipcRenderer.send(channels.ADD_ENVELOPE, { categoryID, newEnvelope });
 
       // Reset the label in the new category
       //setNewCategory('');

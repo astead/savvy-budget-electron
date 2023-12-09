@@ -46,7 +46,7 @@ article.category-container {
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  
   align-items: center;
   background-color: #F8FAFC;
   border: 1px solid #18181B;
@@ -55,7 +55,26 @@ article.category-container {
 article.category-item{
   padding: 1rem;
   display: flex;
-  justify-content: space-between;
+  
+  align-items: center;
+  background-color: #F8FAFC;
+  border:none;
+}
+
+article.envelope-container {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  
+  align-items: center;
+  background-color: #F8FAFC;
+  border: none;
+}
+
+article.envelope-item{
+  padding: 1rem;
+  display: flex;
+  
   align-items: center;
   background-color: #F8FAFC;
   border:none;

@@ -3,30 +3,30 @@ import { EditText } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
 import { channels } from '../shared/constants.js'
 
-export const EditableText = ({ id, initialText}) => {
-  const [myId, ] = useState(id);
-  const [text, setText] = useState(initialText);
+export const EditableCategory = ({ initialID, initialName}) => {
+  const [id, ] = useState(initialID);
+  const [name, setName] = useState(initialName);
 
   const handleChange = (e, setFn) => {
     setFn(e.target.value);
   };
 
   const handleBlur = () => {
-    console.log('onBlur: ', myId, text);
+    console.log('onBlur: calling ', channels.REN_CATEGORY, id, name);
     
     // Request we rename the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.REN_CATEGORY, {myId, text});
+    ipcRenderer.send(channels.REN_CATEGORY, { id, name });
   };
 
   return (
     <EditText
-      name={myId}
-      defaultValue={text}
-      value={text}
-      onChange={(e) => handleChange(e, setText)}
+      name={id}
+      defaultValue={name}
+      value={name}
+      onChange={(e) => handleChange(e, setName)}
       onBlur={handleBlur} />
   );
 };
 
-export default EditableText;
+export default EditableCategory;

@@ -7,29 +7,30 @@ import { faTrash } from "@fortawesome/free-solid-svg-icons"
 import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
 import NewCategory from '../helpers/NewCategory.tsx';
-import EditableText from '../helpers/EditableText.tsx';
+import EditableCategory from '../helpers/EditableCategory.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
 import { channels } from '../shared/constants.js'
+import EditableEnvelope from '../helpers/EditableCategory.tsx';
+//import { EnvelopeList } from '../helpers/EnvelopeList.tsx';
 
 export const Configure: React.FC = () => {
   
   const [data, setData] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>(data || []);
 
-  
+  const groupBy = (data, key) => {
+    return data.reduce(function(acc, item) {
+      let groupKey = item[key];
+      if (!acc[groupKey]) {
+        acc[groupKey] = [];
+      }
+      acc[groupKey].push(item);
+      return acc;
+    }, {});
+  };
+
   const handleDelete = (id) => {
     console.log('del category: ', id);
     
-    const orderData = localStorage.getItem('categoryOrder');
-    if (orderData) {
-      const arrayIdsOrder = JSON.parse(orderData);
-      
-      if (arrayIdsOrder?.length) {
-        const newIdsOrderArray = arrayIdsOrder.filter(num => num !== id);
-        localStorage.setItem('categoryOrder', JSON.stringify(newIdsOrderArray));
-      }
-    }
-
     // Request we delete the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.DEL_CATEGORY, id);
@@ -40,105 +41,137 @@ export const Configure: React.FC = () => {
     // Query new data
   };
 
+  const handleEnvDelete = (id) => {
+    console.log('del envelope: ', id);
+    
+    // Request we delete the category in the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.DEL_ENVELOPE, id);
+
+    // Where do we move sub accounts in the deleted category?
+    // We should have an un-categorized section
+
+    // Query new data
+  };
+
   const handleOnDragEnd = (result) => {
     if (!result?.destination) return;
     
+    console.log("result:", result);
+    console.log("src:",result.source);
+    console.log("dest:",result.destination);
+
+    if (result.source.droppableId !== result.destination.droppableId) {
+      
+      // Request we move the envelope in the DB
+      const ipcRenderer = (window as any).ipcRenderer;
+      ipcRenderer.send(channels.MOV_ENVELOPE,  [result.draggableId, result.destination.droppableId] );
+    }
+    
     // This is where we re-order the categories in the database.
-    const cats = [...categories];
-    const [reorderedItem] = cats.splice(result.source.index, 1);
-    cats.splice(result.destination.index, 0, reorderedItem);
+    //const cats = [...categories];
+    //const [reorderedItem] = cats.splice(result.source.index, 1);
+    //cats.splice(result.destination.index, 0, reorderedItem);
 
     // Save this order in local storage.
     // TODO: Need a better way to store this, if its something we 
     // even want, since we'll have to re-sort the categories in
     // several places.
-    const idsOrderArray = cats.map(cat => cat.id);
-    localStorage.setItem('categoryOrder', JSON.stringify(idsOrderArray));
+    //const idsOrderArray = cats.map(cat => cat.id);
+    //localStorage.setItem('categoryOrder', JSON.stringify(idsOrderArray));
 
-    setCategories(cats);
+    //setCategories(cats);
   };
 
   let content;
-  if (categories) {
+  if (data) {
     content = (
       <DragDropContext onDragEnd={handleOnDragEnd}>
-        <Droppable droppableId='categories'>
-          {(provided) => (
-            <section {...provided.droppableProps} ref={provided.innerRef}>
-              {categories.map((category, index) => {
+        
+          
+            
+              {Object.values(data).map((category, index) => {
+                const { catID, category:cat_name, envID, envelope:env_name } = category[0];
+                //console.log("data:", category[0]);
+              
                 return (
-                  <Draggable key={category.id} draggableId={category.id.toString()} index={index}>
+                  
+                  <Droppable droppableId={catID.toString()}>
                     {(provided) => (
-                      <article className="category-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
-                        <article className="category-item">
-                          <div className="category">
-                            <EditableText
-                              id={category.id.toString()}
-                              initialText={category.category} />
-                          </div>
-                          <button className="trash" onClick={() => handleDelete( category.id )}>
-                              <FontAwesomeIcon icon={faTrash} />
-                          </button>
+                      <section  {...provided.droppableProps} ref={provided.innerRef}>
+                        <article className="category-container">
+                          <article className="category-item">
+                            <div className="category">
+                              <EditableCategory
+                                initialID={catID}
+                                initialName={cat_name} />
+                            </div>
+                            <button className="trash" onClick={() => handleDelete( catID )}>
+                                <FontAwesomeIcon icon={faTrash} />
+                            </button>
+                          </article>
+                          <NewEnvelope id={catID} />
+                          {
+                            category.map((env, index2) => {
+                              //console.log("env:", env);  
+                              return (
+                                (env.envID) &&
+                                <Draggable key={env.envID} draggableId={env.envID.toString()} index={index2}>
+                                  {(provided) => (
+                                    <article className="envelope-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                                      <article className="envelope-item">
+                                        <div className="envelope">
+                                          <EditableEnvelope
+                                            initialID={env.envID}
+                                            initialName={env.envelope} />
+                                        </div>
+                                        <button className="trash" onClick={() => handleEnvDelete( env.envID )}>
+                                            <FontAwesomeIcon icon={faTrash} />
+                                        </button>
+                                      </article>
+                                    </article>
+                                )}
+                                </Draggable>
+                              )
+                            })
+                          }
                         </article>
-                        <NewEnvelope id={category.id.toString()}/>
-                      </article>
+                        { provided.placeholder }
+                      </section>
+                        
                     )}
-                  </Draggable>
+                    
+                  </Droppable>
                 );
               })}
-              {provided.placeholder}
-            </section>
-          )}
-        </Droppable>
+              
+            
+         
+        
       </DragDropContext>
     )
   }
 
-  useEffect(() => {
-    const orderData = localStorage.getItem('categoryOrder');
-    let arrayIdsOrder;
-
-    if (!orderData && data?.length) {
-      const idsOrderArray = data.map(category => category.id);
-      localStorage.setItem('categoryOrder', JSON.stringify(idsOrderArray));
-    }
-    if (orderData) {
-      arrayIdsOrder = JSON.parse(orderData);
-    }
-
-    let myArray;    
-    if (arrayIdsOrder?.length && data?.length) {
-      myArray = arrayIdsOrder.map(pos => {
-        return data.find(el => el.id === pos)
-      });
-
-      const newItems = data.filter(el => {
-        return !arrayIdsOrder.includes(el.id);
-      });
-      if (newItems?.length) myArray = [...newItems, ...myArray];
-    }
-
-    setCategories(myArray || data);
-  }, [data]);
+  
 
   useEffect(() => {
     const ipcRenderer = (window as any).ipcRenderer;
     
     // Signal we want to get data
     //console.log('Calling main:get_data');
-    ipcRenderer.send(channels.GET_DATA, 'category_list');
+    ipcRenderer.send(channels.GET_CAT_ENV);
     
     // Receive the data
-    ipcRenderer.on(channels.LIST_DATA, (arg) => {
+    ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
       //console.log('arg:' + arg);
-      setData(arg);
+      setData(groupBy(arg, 'catID'));
 
-      ipcRenderer.removeAllListeners('list_data');
+      ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
     });
 
     // Clean the listener after the component is dismounted
     return () => {
-      ipcRenderer.removeAllListeners('list_data');
+      ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
     };
 
   }, []);
