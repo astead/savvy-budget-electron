@@ -16,16 +16,37 @@ export const Configure: React.FC = () => {
   
   const [data, setData] = useState<any[]>([]);
 
-  const groupBy = (data, key) => {
+  const groupBy = (data, key, label) => {
     return data.reduce(function(acc, item) {
       let groupKey = item[key];
+      let groupLabel = item[label];
       if (!acc[groupKey]) {
-        acc[groupKey] = [];
+        acc[groupKey] = {catID:groupKey, cat:groupLabel, items:[]};
       }
-      acc[groupKey].push(item);
+      acc[groupKey].items.push(item);
       return acc;
     }, {});
   };
+
+  const compare = (a,b) => {
+    if (a.cat === 'Income' || b.cat === 'Income') {
+      if (a.cat === 'Income' && b.cat !== 'Income') {
+        return -1;
+      }
+      if (a.cat !== 'Income' && b.cat === 'Income') {
+        return 1;
+      }
+      return 0;
+    } else {
+      if (a.cat < b.cat) {
+        return -1;
+      }
+      if (a.cat > b.cat) {
+        return 1;
+      }
+      return 0;
+    }
+  }
 
   const handleDelete = (id) => {
     console.log('del category: ', id);
@@ -89,8 +110,8 @@ export const Configure: React.FC = () => {
         
           
             
-              {Object.values(data).map((category, index) => {
-                const { catID, category:cat_name, envID, envelope:env_name } = category[0];
+              {data.map((category, index) => {
+                const { catID, cat:cat_name, items } = category;
                 //console.log("data:", category[0]);
               
                 return (
@@ -113,7 +134,7 @@ export const Configure: React.FC = () => {
                           
                           <article className="envelope-container">
                           {
-                            category.map((env, index2) => {
+                            items.map((env, index2) => {
                               //console.log("env:", env);  
                               return (
                                 (env.envID) &&
@@ -158,15 +179,23 @@ export const Configure: React.FC = () => {
 
   useEffect(() => {
     const ipcRenderer = (window as any).ipcRenderer;
-    
+
     // Signal we want to get data
     //console.log('Calling main:get_data');
     ipcRenderer.send(channels.GET_CAT_ENV);
-    
+
     // Receive the data
     ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
-      //console.log('arg:' + arg);
-      setData(groupBy(arg, 'catID'));
+
+      //console.log('arg:', {...arg});
+
+      const groupedData = groupBy(arg, 'catID', 'category');
+      //console.log('grouped:', groupedData);
+
+      const sortedData = Object.values(groupedData).sort(compare);
+      //console.log('sorted:', sortedData);
+
+      setData(sortedData);
 
       ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
     });
