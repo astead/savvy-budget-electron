@@ -77,6 +77,30 @@ div.new-envelope {
   padding-right: 15px;
 }
 
+article.months-container {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction:row ;
+  align-items: top;
+  background-color: none;
+  border: none;
+}
+
+div.month-item {
+  font-size:.75rem;
+  margin-left:2px;
+  margin-right:2px;
+  padding: 4px;
+  padding-left: 7px;
+  padding-right: 7px;
+  text-align: center;
+  border: 1px solid black;
+  border-radius: 8px;
+  white-space: pre-wrap;
+}
+
+
 article.category-container {
   padding: 0;
   margin: .5rem;
