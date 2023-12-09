@@ -77,13 +77,13 @@ process.on('uncaughtException', (error) => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-ipcMain.on(channels.ADD_ENVELOPE, (event, { categoryID, newEnvelope }) => {
-  console.log(channels.ADD_ENVELOPE, categoryID, newEnvelope);
+ipcMain.on(channels.ADD_ENVELOPE, (event, { categoryID }) => {
+  console.log(channels.ADD_ENVELOPE, categoryID);
 
   knex('envelope')
-    .insert({ categoryID: categoryID, envelope: newEnvelope })
+    .insert({ categoryID: categoryID, envelope: 'New Envelope' })
     .then(() => {
-      console.log('Added envelope: ' + newEnvelope);
+      console.log('Added envelope ');
     })
     .catch((err) => {
       console.log('Error: ' + err);

@@ -51,9 +51,8 @@ form.new-envelope {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #F8FAFC;
+  background-color: #909090;
   border: none;
-  width: 90%;
 }
 
 div.new-category {

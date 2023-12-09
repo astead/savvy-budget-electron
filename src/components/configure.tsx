@@ -105,11 +105,12 @@ export const Configure: React.FC = () => {
                                 initialID={catID}
                                 initialName={cat_name} />
                             </div>
+                            <NewEnvelope id={catID} />
                             <button className="trash" onClick={() => handleDelete( catID )}>
                                 <FontAwesomeIcon icon={faTrash} />
                             </button>
                           </article>
-                          <NewEnvelope id={catID} />
+                          
                           <article className="envelope-container">
                           {
                             category.map((env, index2) => {
