@@ -172,15 +172,6 @@ button {
   margin-left:.5rem;
 }
 
-.trash {
-  background-color: #F8FAFC;
-  color: #EF4444;
-}
-
-.trash:focus, .trash:hover {
-  filter:brightness(120%)
-}
-
 form {
   padding: 1rem;
   display: flex;
@@ -199,6 +190,17 @@ input[type="text"] {
   width: 100%;
   border-radius: 5px;
   border: 0.5px solid #18181B;
+}
+
+.trash {
+  background-color: #F8FAFC;
+  color: #EF4444;
+}
+
+.trash:focus, .trash:hover {
+  filter:brightness(120%);
+  color: #F8FAFC;
+  background-color: #EF4444;
 }
 
 .submit {
