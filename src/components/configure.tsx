@@ -11,7 +11,6 @@ import EditableCategory from '../helpers/EditableCategory.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
 import { channels } from '../shared/constants.js'
 import EditableEnvelope from '../helpers/EditableCategory.tsx';
-//import { EnvelopeList } from '../helpers/EnvelopeList.tsx';
 
 export const Configure: React.FC = () => {
   
