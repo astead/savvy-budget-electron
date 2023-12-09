@@ -8,6 +8,8 @@ import { getTheme } from '@table-library/react-table-library/baseline';
 
 export const Envelopes: React.FC = () => {
   
+  const [curMonthNode, setCurMonthNode] = useState(0);
+
   const numMonths = 10;
   const today = new Date();
   const month = today.getMonth();
@@ -20,8 +22,6 @@ export const Envelopes: React.FC = () => {
   });
 
   
-
-
   
   
 
@@ -35,7 +35,7 @@ export const Envelopes: React.FC = () => {
         <article className="months-container">
           {arrayMonths.map((myMonth, index) => {
             return (
-              <div className="month-item">
+              <div className={"month-item"+(curMonthNode === index ? "-selected":"")}>
                 {myMonth.label.toString()}
               </div>
             )
