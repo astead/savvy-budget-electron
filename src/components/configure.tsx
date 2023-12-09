@@ -8,9 +8,9 @@ import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
 import NewCategory from '../helpers/NewCategory.tsx';
 import EditableCategory from '../helpers/EditableCategory.tsx';
+import EditableEnvelope from '../helpers/EditableEnvelope.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
 import { channels } from '../shared/constants.js'
-import EditableEnvelope from '../helpers/EditableCategory.tsx';
 
 export const Configure: React.FC = () => {
   
