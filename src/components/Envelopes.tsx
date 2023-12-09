@@ -21,8 +21,29 @@ export const Envelopes: React.FC = () => {
     return { 'label': monthString };
   });
 
-  
-  
+
+  const COLUMNS = [
+    { label: '', renderCell: (item) => null },
+    { label: 'Envelope', renderCell: (item) => item.envelope },
+    { label: 'Prev Budget', renderCell: (item) => item.prevBudget },
+    { label: 'Prev Actual', renderCell: (item) => item.prevActual },
+    { label: 'Curr Balance', renderCell: (item) => item.currBalance },
+    { label: 'Budget', renderCell: (item) => item.budget },
+    { label: 'Monthly Avg', renderCell: (item) => item.monthlyAvg },
+    { label: '', renderCell: (item) => null },
+  ];
+
+  const nodes = [
+    {
+      envelope: 'env',
+      prevBudget: 'prevBudget',
+      prevActual: 'prevActual',
+      currBalance: 'currBalance',
+      budget: 'budget',
+      monthlyAvg: 'monthlyAvg',
+    },
+  ];
+  const data = { nodes };
   
 
   return (
@@ -42,7 +63,7 @@ export const Envelopes: React.FC = () => {
           })}
         </article>
         <br/>
-        
+        <CompactTable columns={COLUMNS} data={data} />
       </div>
     </div>
   );
