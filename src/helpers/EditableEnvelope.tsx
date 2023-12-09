@@ -11,7 +11,7 @@ export const EditableEnvelope = ({ initialID, initialName}) => {
     setFn(e.target.value);
   };
 
-  const handleBlur = () => {
+  const handleEnvBlur = () => {
     console.log('onBlur: calling ', channels.REN_ENVELOPE, id, name);
     
     // Request we rename the category in the DB
@@ -25,7 +25,7 @@ export const EditableEnvelope = ({ initialID, initialName}) => {
       defaultValue={name}
       value={name}
       onChange={(e) => handleChange(e, setName)}
-      onBlur={handleBlur}
+      onBlur={handleEnvBlur}
       className="envelope"
       inputClassName="" />
   );

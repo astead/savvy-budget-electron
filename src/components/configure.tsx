@@ -116,14 +116,14 @@ export const Configure: React.FC = () => {
               
                 return (
                   
-                  <Droppable droppableId={catID.toString()}>
+                  <Droppable droppableId={catID.toString()} key={"cat"+catID.toString()}>
                     {(provided) => (
                       <section  {...provided.droppableProps} ref={provided.innerRef}>
                         <article className="category-container">
                           <article className="category-item">
                             <div className="category">
                               <EditableCategory
-                                initialID={catID}
+                                initialID={catID.toString()}
                                 initialName={cat_name} />
                             </div>
                             <NewEnvelope id={catID} />
@@ -138,13 +138,13 @@ export const Configure: React.FC = () => {
                               //console.log("env:", env);  
                               return (
                                 (env.envID) &&
-                                <Draggable key={env.envID} draggableId={env.envID.toString()} index={index2}>
+                                <Draggable key={env.envID.toString()} draggableId={env.envID.toString()} index={index2}>
                                   {(provided) => (
                                     <article className="envelope-item-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
                                       <article className="envelope-item">
                                         <div className="envelope">
                                           <EditableEnvelope
-                                            initialID={env.envID}
+                                            initialID={env.envID.toString()}
                                             initialName={env.envelope} />
                                         </div>
                                         <button className="trash" onClick={() => handleEnvDelete( env.envID )}>

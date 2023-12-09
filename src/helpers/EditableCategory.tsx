@@ -11,7 +11,7 @@ export const EditableCategory = ({ initialID, initialName}) => {
     setFn(e.target.value);
   };
 
-  const handleBlur = () => {
+  const handleCatBlur = () => {
     console.log('onBlur: calling ', channels.REN_CATEGORY, id, name);
     
     // Request we rename the category in the DB
@@ -25,7 +25,7 @@ export const EditableCategory = ({ initialID, initialName}) => {
       defaultValue={name}
       value={name}
       onChange={(e) => handleChange(e, setName)}
-      onBlur={handleBlur}
+      onBlur={handleCatBlur}
       className="category"
       inputClassName="" />
   );
