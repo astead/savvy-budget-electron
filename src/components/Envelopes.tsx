@@ -134,6 +134,39 @@ export const Envelopes: React.FC = () => {
     };
   }
 
+  const load_CurrBalance = () => {
+    const ipcRenderer = (window as any).ipcRenderer;
+    
+    // Signal we want to get data
+    ipcRenderer.send(channels.GET_CURR_BALANCE);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_CURR_BALANCE, (arg) => {
+      
+      const tmpData = [...budgetData] as BudgetNodeData[]; 
+      //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
+
+      for (let i=0; i < arg.length; i++) {
+        for (let j=0; j < tmpData.length; j++) {
+          if (arg[i].envelopeID === tmpData[j].envID) {
+            tmpData[j] = Object.assign(tmpData[j], { currBalance: arg[i].balance });
+          }
+        }
+      };
+      //console.log('load_current: tmpData2:', tmpData as BudgetNodeData[]);
+
+      setBudgetData(tmpData as BudgetNodeData[]); 
+      setLoadedCurrBalance(true);     
+
+      ipcRenderer.removeAllListeners(channels.LIST_CURR_BALANCE);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_CURR_BALANCE);
+    };
+  }
+
   const load_CurrBudget = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     
@@ -225,6 +258,7 @@ export const Envelopes: React.FC = () => {
   const [loadedPrevBudget, setLoadedPrevBudget] = useState(false);
   const [loadedCurrBudget, setLoadedCurrBudget] = useState(false);
   const [loadedPrevActual, setLoadedPrevActual] = useState(false);
+  const [loadedCurrBalance, setLoadedCurrBalance] = useState(false);
   const [loadedMonthlyAvg, setLoadedMonthlyAvg] = useState(false);
   
   
@@ -301,9 +335,15 @@ export const Envelopes: React.FC = () => {
 
   useEffect(() => {
     if (loadedPrevActual) {      
-      load_MonthlyAvg();
+      load_CurrBalance();
     }
   }, [loadedPrevActual]);
+
+  useEffect(() => {
+    if (loadedCurrBalance) {      
+      load_MonthlyAvg();
+    }
+  }, [loadedCurrBalance]);
 
   useEffect(() => {
     if (Object.keys(data).length > 0 &&
@@ -311,6 +351,7 @@ export const Envelopes: React.FC = () => {
       loadedCurrBudget &&
       loadedPrevBudget &&
       loadedPrevActual &&
+      loadedCurrBalance &&
       loadedMonthlyAvg) {
       
       //console.log('data:', data);

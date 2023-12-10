@@ -305,6 +305,19 @@ ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
     .catch((err) => console.log(err));
 });
 
+ipcMain.on(channels.GET_CURR_BALANCE, (event) => {
+  console.log(channels.GET_CURR_BALANCE);
+
+  knex
+    .select('balance')
+    .from('envelope')
+    .orderBy('id')
+    .then((data) => {
+      event.sender.send(channels.LIST_CURR_BALANCE, data);
+    })
+    .catch((err) => console.log(err));
+});
+
 ipcMain.on(channels.GET_MONTHLY_AVG, (event, find_date) => {
   console.log(channels.GET_MONTHLY_AVG);
 
