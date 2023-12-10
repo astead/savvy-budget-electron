@@ -269,3 +269,26 @@ input.inputCurrency {
   background-color: limegreen;
   color: #F8FAFC;
 }
+
+.BudgetTableHeaderRow {
+  background-color: #F8FAFC;
+  white-space: pre-wrap;
+}
+
+.BudgetTableHeaderCell {
+  border: 1px solid black;
+}
+
+.BudgetTableHeaderCellCurr {
+  border: 1px solid black;
+  text-align:right;
+}
+
+.BudgetTableCellCurr {
+  border: 1px solid black;
+  text-align:right;
+}
+
+.BudgetTableCell {
+  border: 1px solid black;  
+}

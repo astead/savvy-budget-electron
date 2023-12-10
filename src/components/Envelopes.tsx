@@ -9,7 +9,7 @@ import {
   Row,
   HeaderCell,
   Cell,
- } from '@table-library/react-table-library/table';
+} from '@table-library/react-table-library/table';
 import { useTheme } from '@table-library/react-table-library/theme';
 import { getTheme } from '@table-library/react-table-library/baseline';
 import { EditableBudget } from '../helpers/EditableBudget.tsx';
@@ -17,8 +17,7 @@ import Moment from 'moment';
 
 
 export const Envelopes: React.FC = () => {
-  
-  
+    
   const numMonths = 10;
   const today = new Date();
   const month = today.getMonth();
@@ -228,6 +227,8 @@ export const Envelopes: React.FC = () => {
   const [loadedPrevActual, setLoadedPrevActual] = useState(false);
   const [loadedMonthlyAvg, setLoadedMonthlyAvg] = useState(false);
   
+  
+
   useEffect(() => {
     const ipcRenderer = (window as any).ipcRenderer;
 
@@ -311,7 +312,7 @@ export const Envelopes: React.FC = () => {
       loadedPrevBudget &&
       loadedPrevActual &&
       loadedMonthlyAvg) {
-
+      
       //console.log('data:', data);
       setLoaded(true);
     }
@@ -339,34 +340,34 @@ export const Envelopes: React.FC = () => {
             {(tableList) => (
             <>
               <TableHeader>
-                <HeaderRow>
-                  <HeaderCell></HeaderCell>
-                  <HeaderCell>Envelope</HeaderCell>
-                  <HeaderCell>Prev Budget</HeaderCell>
-                  <HeaderCell>Prev Actual</HeaderCell>
-                  <HeaderCell>Curr Balance</HeaderCell>
-                  <HeaderCell>Budget</HeaderCell>
-                  <HeaderCell>Monthly Avg</HeaderCell>
-                  <HeaderCell></HeaderCell>
+                <HeaderRow className="BudgetTableHeaderRow">
+                  <HeaderCell className="BudgetTableHeaderCell"></HeaderCell>
+                  <HeaderCell className="BudgetTableHeaderCell">{'Envelope'}</HeaderCell>
+                  <HeaderCell className="BudgetTableHeaderCellCurr">{'Prev\nBudget'}</HeaderCell>
+                  <HeaderCell className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</HeaderCell>
+                  <HeaderCell className="BudgetTableHeaderCellCurr">{'Curr\nBalance'}</HeaderCell>
+                  <HeaderCell className="BudgetTableHeaderCellCurr">{'Budget'}</HeaderCell>
+                  <HeaderCell className="BudgetTableHeaderCellCurr">{'Monthly\nAvg'}</HeaderCell>
+                  <HeaderCell className="BudgetTableHeaderCell"></HeaderCell>
                 </HeaderRow>
               </TableHeader>
     
               <Body>
                 {tableList.map((item) => (
                   <Row key={item.envID} item={item}>
-                    <Cell></Cell>
-                    <Cell>{item.envelope}</Cell>
-                    <Cell>{formatCurrency(item.prevBudget)}</Cell>
-                    <Cell>{formatCurrency(item.prevActual)}</Cell>
-                    <Cell>{formatCurrency(item.currBalance)}</Cell>
+                    <Cell className="BudgetTableCellCurr"></Cell>
+                    <Cell className="BudgetTableCell">{item.envelope}</Cell>
+                    <Cell className="BudgetTableCellCurr">{formatCurrency(item.prevBudget)}</Cell>
+                    <Cell className="BudgetTableCellCurr">{formatCurrency(item.prevActual)}</Cell>
+                    <Cell className="BudgetTableCellCurr">{formatCurrency(item.currBalance)}</Cell>
                     <Cell>
                       <EditableBudget 
                         initialID={item.envID}
                         initialDate={curMonth}
                         initialValue={item.currBudget}/>
                     </Cell>
-                    <Cell>{formatCurrency(item.monthlyAvg)}</Cell>
-                    <Cell></Cell>
+                    <Cell className="BudgetTableCellCurr">{formatCurrency(item.monthlyAvg)}</Cell>
+                    <Cell className="BudgetTableCellCurr"></Cell>
                   </Row>
                 ))}
               </Body>
