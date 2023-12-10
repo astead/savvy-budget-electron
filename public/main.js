@@ -308,6 +308,26 @@ ipcMain.on(channels.GET_CUR_BUDGET, (event, find_date) => {
 ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
   console.log(channels.GET_PREV_ACTUAL);
 
+  knex
+    .select('envelopeID')
+    .sum({ totalAmount: 'txAmt' })
+    .min({ firstDate: 'txDate' })
+    .from('transaction')
+    .orderBy('envelopeID')
+    .where({ isBudget: 0 })
+    .andWhereRaw(`julianday(?) - julianday(txDate) < 365`, [find_date])
+    .where({ isDuplicate: 0 })
+    .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
+    .groupBy('envelopeID')
+    .then((data) => {
+      event.sender.send(channels.LIST_PREV_ACTUAL, data);
+    })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.GET_MONTHLY_AVG, (event, find_date) => {
+  console.log(channels.GET_MONTHLY_AVG);
+
   const month = new Date(find_date).getMonth();
   const year = new Date(find_date).getFullYear();
 
@@ -322,7 +342,7 @@ ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
     .andWhereRaw(`strftime('%Y', txDate) = ?`, [year])
     .groupBy('envelopeID')
     .then((data) => {
-      event.sender.send(channels.LIST_PREV_ACTUAL, data);
+      event.sender.send(channels.LIST_MONTHLY_AVG, data);
     })
     .catch((err) => console.log(err));
 });

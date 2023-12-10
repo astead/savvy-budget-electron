@@ -69,36 +69,36 @@ export const Envelopes: React.FC = () => {
     prevBudget: number; 
   }
 
-  const load_CurrBudget = () => {
+  const load_PrevBudget = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     
     // Signal we want to get data
-    ipcRenderer.send(channels.GET_CUR_BUDGET, Moment(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_PREV_BUDGET, Moment(new Date(year, month-1)).format('YYYY-MM-DD'));
 
     // Receive the data
-    ipcRenderer.on(channels.LIST_CUR_BUDGET, (arg) => {
-      
+    ipcRenderer.on(channels.LIST_PREV_BUDGET, (arg) => {
+
       const tmpData = [...budgetData] as BudgetNodeData[]; 
       //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
 
       for (let i=0; i < arg.length; i++) {
         for (let j=0; j < tmpData.length; j++) {
           if (arg[i].envelopeID === tmpData[j].envID) {
-            tmpData[j] = Object.assign(tmpData[j], { currBudget: arg[i].txAmt });
+            tmpData[j] = Object.assign(tmpData[j], { prevBudget: arg[i].txAmt });
           }
         }
       };
       //console.log('load_current: tmpData2:', tmpData as BudgetNodeData[]);
 
       setBudgetData(tmpData as BudgetNodeData[]); 
-      setLoadedCurrBudget(true);     
+      setLoadedPrevBudget(true);     
 
-      ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
+      ipcRenderer.removeAllListeners(channels.LIST_PREV_BUDGET);
     });
 
     // Clean the listener after the component is dismounted
     return () => {
-      ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
+      ipcRenderer.removeAllListeners(channels.LIST_PREV_BUDGET);
     };
   }
 
@@ -135,36 +135,87 @@ export const Envelopes: React.FC = () => {
     };
   }
 
-  const load_PrevBudget = () => {
+  const load_CurrBudget = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     
     // Signal we want to get data
-    ipcRenderer.send(channels.GET_PREV_BUDGET, Moment(new Date(year, month-1)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_CUR_BUDGET, Moment(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
-    ipcRenderer.on(channels.LIST_PREV_BUDGET, (arg) => {
-
+    ipcRenderer.on(channels.LIST_CUR_BUDGET, (arg) => {
+      
       const tmpData = [...budgetData] as BudgetNodeData[]; 
       //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
 
       for (let i=0; i < arg.length; i++) {
         for (let j=0; j < tmpData.length; j++) {
           if (arg[i].envelopeID === tmpData[j].envID) {
-            tmpData[j] = Object.assign(tmpData[j], { prevBudget: arg[i].txAmt });
+            tmpData[j] = Object.assign(tmpData[j], { currBudget: arg[i].txAmt });
           }
         }
       };
       //console.log('load_current: tmpData2:', tmpData as BudgetNodeData[]);
 
       setBudgetData(tmpData as BudgetNodeData[]); 
-      setLoadedPrevBudget(true);     
+      setLoadedCurrBudget(true);     
 
-      ipcRenderer.removeAllListeners(channels.LIST_PREV_BUDGET);
+      ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
     });
 
     // Clean the listener after the component is dismounted
     return () => {
-      ipcRenderer.removeAllListeners(channels.LIST_PREV_BUDGET);
+      ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
+    };
+  }
+
+  function monthDiff(d1, d2) {
+    var months;
+    months = (d2.getFullYear() - d1.getFullYear()) * 12;
+    months -= d1.getMonth();
+    months += d2.getMonth();
+    return months <= 0 ? 0 : months;
+  }
+
+  const load_MonthlyAvg = () => {
+    const ipcRenderer = (window as any).ipcRenderer;
+    
+    // Signal we want to get data
+    ipcRenderer.send(channels.GET_MONTHLY_AVG, Moment(new Date(year, month)).format('YYYY-MM-DD'));
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_MONTHLY_AVG, (arg) => {
+      
+      const tmpData = [...budgetData] as BudgetNodeData[]; 
+      //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
+
+      let firstDate = new Date();
+      for (let i=0; i < arg.length; i++) {
+        const tmpDate = new Date(arg[i].firstDate);
+        if (tmpDate < firstDate) {
+          firstDate = tmpDate;
+        }
+      }
+      const numMonths = monthDiff(new Date(year, month), firstDate);
+
+      for (let i=0; i < arg.length; i++) {
+        for (let j=0; j < tmpData.length; j++) {
+          if (arg[i].envelopeID === tmpData[j].envID) {
+            const ttmAvg = arg[i].totalAmt / numMonths;
+            tmpData[j] = Object.assign(tmpData[j], { monthlyAvg: ttmAvg });
+          }
+        }
+      };
+      //console.log('load_current: tmpData2:', tmpData as BudgetNodeData[]);
+
+      setBudgetData(tmpData as BudgetNodeData[]); 
+      setLoadedMonthlyAvg(true);     
+
+      ipcRenderer.removeAllListeners(channels.LIST_MONTHLY_AVG);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_MONTHLY_AVG);
     };
   }
   
@@ -175,6 +226,7 @@ export const Envelopes: React.FC = () => {
   const [loadedPrevBudget, setLoadedPrevBudget] = useState(false);
   const [loadedCurrBudget, setLoadedCurrBudget] = useState(false);
   const [loadedPrevActual, setLoadedPrevActual] = useState(false);
+  const [loadedMonthlyAvg, setLoadedMonthlyAvg] = useState(false);
   
   useEffect(() => {
     const ipcRenderer = (window as any).ipcRenderer;
@@ -247,11 +299,18 @@ export const Envelopes: React.FC = () => {
   }, [loadedPrevBudget]);
 
   useEffect(() => {
+    if (loadedPrevActual) {      
+      load_MonthlyAvg();
+    }
+  }, [loadedPrevActual]);
+
+  useEffect(() => {
     if (Object.keys(data).length > 0 &&
       loadedEnvelopes &&
       loadedCurrBudget &&
       loadedPrevBudget &&
-      loadedPrevActual) {
+      loadedPrevActual &&
+      loadedMonthlyAvg) {
 
       //console.log('data:', data);
       setLoaded(true);

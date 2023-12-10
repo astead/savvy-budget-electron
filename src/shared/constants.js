@@ -8,6 +8,8 @@ module.exports = {
     LIST_CUR_BUDGET: 'list_cur_budget',
     GET_PREV_ACTUAL: 'get_prev_actual',
     LIST_PREV_ACTUAL: 'list_prev_actual',
+    GET_MONTHLY_AVG: 'get_monthly_avg',
+    LIST_MONTHLY_AVG: 'list_monthly_avg',
 
     REN_CATEGORY: 'ren_category',
     DEL_CATEGORY: 'del_category',
