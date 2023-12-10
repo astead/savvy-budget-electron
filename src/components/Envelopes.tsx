@@ -91,12 +91,45 @@ export const Envelopes: React.FC = () => {
       setBudgetData(tmpData as BudgetNodeData[]); 
       setLoadedCurrBudget(true);     
 
-      ipcRenderer.removeAllListeners(channels.GET_CUR_BUDGET);
+      ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
     });
 
     // Clean the listener after the component is dismounted
     return () => {
-      ipcRenderer.removeAllListeners(channels.GET_CUR_BUDGET);
+      ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
+    };
+  }
+
+  const load_PrevActual = () => {
+    const ipcRenderer = (window as any).ipcRenderer;
+    
+    // Signal we want to get data
+    ipcRenderer.send(channels.GET_PREV_ACTUAL, new Date(year, month-1));
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_PREV_ACTUAL, (arg) => {
+      
+      const tmpData = [...budgetData] as BudgetNodeData[]; 
+      //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
+
+      for (let i=0; i < arg.length; i++) {
+        for (let j=0; j < tmpData.length; j++) {
+          if (arg[i].envelopeID === tmpData[j].envID) {
+            tmpData[j] = Object.assign(tmpData[j], { prevActual: arg[i].txAmt });
+          }
+        }
+      };
+      //console.log('load_current: tmpData2:', tmpData as BudgetNodeData[]);
+
+      setBudgetData(tmpData as BudgetNodeData[]); 
+      setLoadedPrevActual(true);     
+
+      ipcRenderer.removeAllListeners(channels.LIST_PREV_ACTUAL);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_PREV_ACTUAL);
     };
   }
 
@@ -139,6 +172,7 @@ export const Envelopes: React.FC = () => {
   const [loadedEnvelopes, setLoadedEnvelopes] = useState(false);
   const [loadedPrevBudget, setLoadedPrevBudget] = useState(false);
   const [loadedCurrBudget, setLoadedCurrBudget] = useState(false);
+  const [loadedPrevActual, setLoadedPrevActual] = useState(false);
   
   useEffect(() => {
     const ipcRenderer = (window as any).ipcRenderer;
@@ -205,10 +239,17 @@ export const Envelopes: React.FC = () => {
   }, [loadedCurrBudget]);
 
   useEffect(() => {
+    if (loadedPrevBudget) {      
+      load_PrevActual();
+    }
+  }, [loadedPrevBudget]);
+
+  useEffect(() => {
     if (Object.keys(data).length > 0 &&
       loadedEnvelopes &&
       loadedCurrBudget &&
-      loadedPrevBudget) {
+      loadedPrevBudget &&
+      loadedPrevActual) {
 
       //console.log('data:', data);
       setLoaded(true);

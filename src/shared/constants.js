@@ -6,6 +6,8 @@ module.exports = {
     LIST_PREV_BUDGET: 'list_prev_budget',
     GET_CUR_BUDGET: 'get_cur_budget',
     LIST_CUR_BUDGET: 'list_cur_budget',
+    GET_PREV_ACTUAL: 'get_prev_actual',
+    LIST_PREV_ACTUAL: 'list_prev_actual',
 
     REN_CATEGORY: 'ren_category',
     DEL_CATEGORY: 'del_category',

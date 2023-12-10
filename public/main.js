@@ -181,8 +181,8 @@ ipcMain.on(
     return knex('transaction')
       .select()
       .where('envelopeID', newEnvelopeID)
-      .where('txDate', newtxDate)
-      .where('isBudget', 1)
+      .andWhere('txDate', newtxDate)
+      .andWhere('isBudget', 1)
       .then(function (rows) {
         if (rows.length === 0) {
           // no matching records found
@@ -200,8 +200,8 @@ ipcMain.on(
           // Already exist
           knex('transaction')
             .where('envelopeID', newEnvelopeID)
-            .where('txDate', newtxDate)
-            .where('isBudget', 1)
+            .andWhere('txDate', newtxDate)
+            .andWhere('isBudget', 1)
             .update({ txAmt: newtxAmt })
             .then(() => {
               console.log('Updated budget amt.');
@@ -272,7 +272,7 @@ ipcMain.on(channels.GET_PREV_BUDGET, (event, find_date) => {
     .from('transaction')
     .orderBy('envelopeID')
     .where({ isBudget: 1 })
-    .where({ txDate: find_date })
+    .andWhere({ txDate: find_date })
     .then((data) => {
       event.sender.send(channels.LIST_PREV_BUDGET, data);
     })
@@ -286,9 +286,31 @@ ipcMain.on(channels.GET_CUR_BUDGET, (event, find_date) => {
     .from('transaction')
     .orderBy('envelopeID')
     .where({ isBudget: 1 })
-    .where({ txDate: find_date })
+    .andWhere({ txDate: find_date })
     .then((data) => {
       event.sender.send(channels.LIST_CUR_BUDGET, data);
+    })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
+  console.log(channels.GET_PREV_ACTUAL);
+
+  const month = find_date.getMonth();
+  const year = find_date.getFullYear();
+
+  knex
+    .select('envelopeID')
+    .sum({ totalPrevActual: 'txAmt' })
+    .from('transaction')
+    .orderBy('envelopeID')
+    .where({ isBudget: 0 })
+    .andWhereRaw(`strftime('%m', txDate) = ?`, [month])
+    .where({ isDuplicate: 0 })
+    .andWhereRaw(`strftime('%Y', txDate) = ?`, [year])
+    .groupBy('envelopeID')
+    .then((data) => {
+      event.sender.send(channels.LIST_PREV_ACTUAL, data);
     })
     .catch((err) => console.log(err));
 });
