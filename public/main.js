@@ -193,22 +193,16 @@ ipcMain.on(channels.GET_CAT_ENV, (event) => {
     .catch((err) => console.log(err));
 });
 
-ipcMain.on(channels.GET_BUDGET, (event) => {
-  console.log(channels.GET_BUDGET);
+ipcMain.on(channels.GET_PREV_BUDGET, (event, find_date) => {
+  console.log(channels.GET_PREV_BUDGET);
   knex
-    .select(
-      'category.id as catID',
-      'category.category',
-      'envelope.id as envID',
-      'envelope.envelope'
-    )
-    .from('category')
-    .leftJoin('envelope', function () {
-      this.on('category.id', '=', 'envelope.categoryID');
-    })
-    .orderBy('category.id')
+    .select('envelopeID', 'txAmt')
+    .from('transaction')
+    .orderBy('envelopeID')
+    .where({ isBudget: 1 })
+    .where({ txDate: find_date })
     .then((data) => {
-      event.sender.send(channels.LIST_BUDGET, data);
+      event.sender.send(channels.LIST_PREV_BUDGET, data);
     })
     .catch((err) => console.log(err));
 });
