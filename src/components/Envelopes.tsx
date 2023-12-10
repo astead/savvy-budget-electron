@@ -21,30 +21,66 @@ export const Envelopes: React.FC = () => {
     return { 'label': monthString };
   });
 
+  const compare = (a,b) => {
+    if (a.category === 'Income' || b.category === 'Income') {
+      if (a.category === 'Income' && b.category !== 'Income') {
+        return -1;
+      }
+      if (a.category !== 'Income' && b.category === 'Income') {
+        return 1;
+      }
+      return 0;
+    } else {
+      if (a.category < b.category) {
+        return -1;
+      }
+      if (a.category > b.category) {
+        return 1;
+      }
+      return 0;
+    }
+  };
 
   const COLUMNS = [
     { label: '', renderCell: (item) => null },
     { label: 'Envelope', renderCell: (item) => item.envelope },
-    { label: 'Prev Budget', renderCell: (item) => item.prevBudget },
-    { label: 'Prev Actual', renderCell: (item) => item.prevActual },
-    { label: 'Curr Balance', renderCell: (item) => item.currBalance },
-    { label: 'Budget', renderCell: (item) => item.budget },
-    { label: 'Monthly Avg', renderCell: (item) => item.monthlyAvg },
+    { label: 'Prev Budget', renderCell: (item) => null },
+    { label: 'Prev Actual', renderCell: (item) => null },
+    { label: 'Curr Balance', renderCell: (item) => null },
+    { label: 'Budget', renderCell: (item) => null },
+    { label: 'Monthly Avg', renderCell: (item) => null },
     { label: '', renderCell: (item) => null },
   ];
-
-  const nodes = [
-    {
-      envelope: 'env',
-      prevBudget: 'prevBudget',
-      prevActual: 'prevActual',
-      currBalance: 'currBalance',
-      budget: 'budget',
-      monthlyAvg: 'monthlyAvg',
-    },
-  ];
-  const data = { nodes };
   
+  const [data, setData] = useState({});
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const ipcRenderer = (window as any).ipcRenderer;
+
+    // Signal we want to get data
+    //console.log('Calling main:get_data');
+    ipcRenderer.send(channels.GET_BUDGET);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_BUDGET, (arg) => {
+
+      const sortedData = Object.values(arg).sort(compare);
+      //console.log('sorted:', {nodes:sortedData});
+      
+      setData({nodes:sortedData});
+      
+      setLoaded(true);
+      
+      ipcRenderer.removeAllListeners(channels.LIST_BUDGET);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_BUDGET);
+    };
+
+  }, []);
 
   return (
     <div className="App">
@@ -54,16 +90,18 @@ export const Envelopes: React.FC = () => {
       <div>
         Envelopes<br/>
         <article className="months-container">
-          {arrayMonths.map((myMonth, index) => {
+          {arrayMonths && arrayMonths.map((myMonth, index) => {
             return (
-              <div className={"month-item"+(curMonthNode === index ? "-selected":"")}>
+              <div key={"month-"+index} className={"month-item"+(curMonthNode === index ? "-selected":"")}>
                 {myMonth.label.toString()}
               </div>
             )
           })}
         </article>
         <br/>
-        <CompactTable columns={COLUMNS} data={data} />
+        {loaded &&
+          <CompactTable columns={COLUMNS} data={data} />
+        }
       </div>
     </div>
   );

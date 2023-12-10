@@ -192,3 +192,23 @@ ipcMain.on(channels.GET_CAT_ENV, (event) => {
     })
     .catch((err) => console.log(err));
 });
+
+ipcMain.on(channels.GET_BUDGET, (event) => {
+  console.log(channels.GET_BUDGET);
+  knex
+    .select(
+      'category.id as catID',
+      'category.category',
+      'envelope.id as envID',
+      'envelope.envelope'
+    )
+    .from('category')
+    .leftJoin('envelope', function () {
+      this.on('category.id', '=', 'envelope.categoryID');
+    })
+    .orderBy('category.id')
+    .then((data) => {
+      event.sender.send(channels.LIST_BUDGET, data);
+    })
+    .catch((err) => console.log(err));
+});
