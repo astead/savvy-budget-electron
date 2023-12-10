@@ -184,7 +184,17 @@ ipcMain.on(
       .andWhere('txDate', newtxDate)
       .andWhere('isBudget', 1)
       .then(function (rows) {
+        console.log(
+          knex('transaction')
+            .select()
+            .where('envelopeID', newEnvelopeID)
+            .andWhere('txDate', newtxDate)
+            .andWhere('isBudget', 1)
+            .toSQL()
+            .toNative()
+        );
         if (rows.length === 0) {
+          console.log('no budget entries');
           // no matching records found
           return knex('transaction')
             .insert({
@@ -197,6 +207,7 @@ ipcMain.on(
               console.log('Error inserting budget: ' + err);
             });
         } else {
+          console.log('budget entries already exist');
           // Already exist
           knex('transaction')
             .where('envelopeID', newEnvelopeID)
@@ -296,8 +307,8 @@ ipcMain.on(channels.GET_CUR_BUDGET, (event, find_date) => {
 ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
   console.log(channels.GET_PREV_ACTUAL);
 
-  const month = find_date.getMonth();
-  const year = find_date.getFullYear();
+  const month = new Date(find_date).getMonth();
+  const year = new Date(find_date).getFullYear();
 
   knex
     .select('envelopeID')

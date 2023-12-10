@@ -13,6 +13,7 @@ import {
 import { useTheme } from '@table-library/react-table-library/theme';
 import { getTheme } from '@table-library/react-table-library/baseline';
 import { EditableBudget } from '../helpers/EditableBudget.tsx';
+import Moment from 'moment';
 
 
 export const Envelopes: React.FC = () => {
@@ -22,7 +23,8 @@ export const Envelopes: React.FC = () => {
   const today = new Date();
   const month = today.getMonth();
   const year = today.getFullYear();
-  const [curMonth, setCurMonth] = useState(new Date(year, month));
+  
+  const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
   const [curMonthIter, setCurMonthIter] = useState(0);
   
   const arrayMonths = Array.from({length: numMonths}, (item, i) => {
@@ -71,7 +73,7 @@ export const Envelopes: React.FC = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     
     // Signal we want to get data
-    ipcRenderer.send(channels.GET_CUR_BUDGET, new Date(year, month));
+    ipcRenderer.send(channels.GET_CUR_BUDGET, Moment(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CUR_BUDGET, (arg) => {
@@ -104,7 +106,7 @@ export const Envelopes: React.FC = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     
     // Signal we want to get data
-    ipcRenderer.send(channels.GET_PREV_ACTUAL, new Date(year, month-1));
+    ipcRenderer.send(channels.GET_PREV_ACTUAL, Moment(new Date(year, month-1)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_ACTUAL, (arg) => {
@@ -137,7 +139,7 @@ export const Envelopes: React.FC = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     
     // Signal we want to get data
-    ipcRenderer.send(channels.GET_PREV_BUDGET, new Date(year, month-1));
+    ipcRenderer.send(channels.GET_PREV_BUDGET, Moment(new Date(year, month-1)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_BUDGET, (arg) => {
