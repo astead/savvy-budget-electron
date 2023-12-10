@@ -81,7 +81,7 @@ ipcMain.on(channels.ADD_ENVELOPE, (event, { categoryID }) => {
   console.log(channels.ADD_ENVELOPE, categoryID);
 
   knex('envelope')
-    .insert({ categoryID: categoryID, envelope: 'New Envelope' })
+    .insert({ categoryID: categoryID, envelope: 'New Envelope', balance: 0 })
     .then(() => {
       console.log('Added envelope ');
     })
@@ -263,10 +263,11 @@ ipcMain.on(channels.GET_CAT_ENV, (event) => {
       'category.id as catID',
       'category.category',
       'envelope.id as envID',
-      'envelope.envelope'
+      'envelope.envelope',
+      'envelope.balance as currBalance'
     )
-    .from('category')
-    .leftJoin('envelope', function () {
+    .from('envelope')
+    .leftJoin('category', function () {
       this.on('category.id', '=', 'envelope.categoryID');
     })
     .orderBy('category.id')
