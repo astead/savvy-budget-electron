@@ -238,6 +238,15 @@ input[type="text"] {
   width: 100%;
   border-radius: 5px;
   border: 0.5px solid #18181B;
+  padding:0;
+  margin:0;
+}
+
+input.inputCurrency {
+  text-align:right;
+  width: 100%;
+  border-radius: 5px;
+  border: 0.5px solid #18181B;
 }
 
 .trash {

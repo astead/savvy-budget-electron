@@ -14,5 +14,7 @@ module.exports = {
     REN_ENVELOPE: 'ren_envelope',
     DEL_ENVELOPE: 'del_envelope',
     MOV_ENVELOPE: 'move_envelope',
+
+    UPDATE_BUDGET: 'update_budget',
   },
 };

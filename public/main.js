@@ -173,6 +173,78 @@ ipcMain.on(channels.MOV_ENVELOPE, (event, [id, newCatID]) => {
     });
 });
 
+ipcMain.on(
+  channels.UPDATE_BUDGET,
+  (event, [newEnvelopeID, newtxDate, newtxAmt]) => {
+    console.log(channels.UPDATE_BUDGET, newEnvelopeID, newtxDate, newtxAmt);
+
+    return knex('transaction')
+      .select()
+      .where('envelopeID', newEnvelopeID)
+      .where('txDate', newtxDate)
+      .where('isBudget', 1)
+      .then(function (rows) {
+        if (rows.length === 0) {
+          // no matching records found
+          return knex('transaction')
+            .insert({
+              envelopeID: newEnvelopeID,
+              txDate: newtxDate,
+              isBudget: 1,
+              txAmt: newtxAmt,
+            })
+            .catch((err) => {
+              console.log('Error inserting budget: ' + err);
+            });
+        } else {
+          // Already exist
+          knex('transaction')
+            .where('envelopeID', newEnvelopeID)
+            .where('txDate', newtxDate)
+            .where('isBudget', 1)
+            .update({ txAmt: newtxAmt })
+            .then(() => {
+              console.log('Updated budget amt.');
+            })
+            .catch((err) => {
+              console.log('Error updating budget: ' + err);
+            });
+        }
+      })
+      .catch((err) => {
+        console.log('Error checking if budget exists: ' + err);
+      });
+
+    /*
+    knex.table('transaction', function (table) {
+      table.index(['envelopeID', 'txDate'], 'idx_envID_txDate_budget', {
+        indexType: 'unique',
+        storageEngineIndexType: 'hash',
+        predicate: knex.whereRaw('isBudget=1'),
+      });
+    });
+
+    console.log('Added budget item constraint.');
+
+    knex('transaction')
+      .insert({
+        envelopeID: newEnvelopeID,
+        txDate: newtxDate,
+        isBudget: 1,
+        txAmt: newtxAmt,
+      })
+      .onConflict('idx_envID_txDate_budget')
+      .merge()
+      .then(() => {
+        console.log('Added budget item.');
+      })
+      .catch((err) => {
+        console.log('Error: ' + err);
+      });
+      */
+  }
+);
+
 ipcMain.on(channels.GET_CAT_ENV, (event) => {
   console.log(channels.GET_CAT_ENV);
   knex
@@ -203,6 +275,20 @@ ipcMain.on(channels.GET_PREV_BUDGET, (event, find_date) => {
     .where({ txDate: find_date })
     .then((data) => {
       event.sender.send(channels.LIST_PREV_BUDGET, data);
+    })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.GET_CUR_BUDGET, (event, find_date) => {
+  console.log(channels.GET_CUR_BUDGET);
+  knex
+    .select('envelopeID', 'txAmt')
+    .from('transaction')
+    .orderBy('envelopeID')
+    .where({ isBudget: 1 })
+    .where({ txDate: find_date })
+    .then((data) => {
+      event.sender.send(channels.LIST_CUR_BUDGET, data);
     })
     .catch((err) => console.log(err));
 });
