@@ -179,22 +179,14 @@ ipcMain.on(
     console.log(channels.UPDATE_BUDGET, newEnvelopeID, newtxDate, newtxAmt);
 
     return knex('transaction')
-      .select()
+      .select('id', 'txAmt')
       .where('envelopeID', newEnvelopeID)
       .andWhere('txDate', newtxDate)
       .andWhere('isBudget', 1)
       .then(function (rows) {
-        console.log(
-          knex('transaction')
-            .select()
-            .where('envelopeID', newEnvelopeID)
-            .andWhere('txDate', newtxDate)
-            .andWhere('isBudget', 1)
-            .toSQL()
-            .toNative()
-        );
         if (rows.length === 0) {
           console.log('no budget entries');
+
           // no matching records found
           return knex('transaction')
             .insert({
@@ -203,19 +195,35 @@ ipcMain.on(
               isBudget: 1,
               txAmt: newtxAmt,
             })
+            .then(() => {
+              knex('envelope')
+                .update(knex.raw(`balance = balance + ` + newtxAmt))
+                .where('id', newEnvelopeID);
+            })
             .catch((err) => {
               console.log('Error inserting budget: ' + err);
             });
         } else {
-          console.log('budget entries already exist');
           // Already exist
-          knex('transaction')
-            .where('envelopeID', newEnvelopeID)
-            .andWhere('txDate', newtxDate)
-            .andWhere('isBudget', 1)
-            .update({ txAmt: newtxAmt })
+          knex
+            .raw(
+              `update 'envelope' set balance = balance + ` +
+                (newtxAmt - rows[0].txAmt) +
+                ` where id = ` +
+                newEnvelopeID
+            )
             .then(() => {
-              console.log('Updated budget amt.');
+              knex('transaction')
+                .update({ txAmt: newtxAmt })
+                .where('envelopeID', newEnvelopeID)
+                .andWhere('txDate', newtxDate)
+                .andWhere('isBudget', 1)
+                .then(() => {
+                  console.log('Updated budget amt.');
+                })
+                .catch((err) => {
+                  console.log('Error updating budget: ' + err);
+                });
             })
             .catch((err) => {
               console.log('Error updating budget: ' + err);
@@ -225,34 +233,6 @@ ipcMain.on(
       .catch((err) => {
         console.log('Error checking if budget exists: ' + err);
       });
-
-    /*
-    knex.table('transaction', function (table) {
-      table.index(['envelopeID', 'txDate'], 'idx_envID_txDate_budget', {
-        indexType: 'unique',
-        storageEngineIndexType: 'hash',
-        predicate: knex.whereRaw('isBudget=1'),
-      });
-    });
-
-    console.log('Added budget item constraint.');
-
-    knex('transaction')
-      .insert({
-        envelopeID: newEnvelopeID,
-        txDate: newtxDate,
-        isBudget: 1,
-        txAmt: newtxAmt,
-      })
-      .onConflict('idx_envID_txDate_budget')
-      .merge()
-      .then(() => {
-        console.log('Added budget item.');
-      })
-      .catch((err) => {
-        console.log('Error: ' + err);
-      });
-      */
   }
 );
 
