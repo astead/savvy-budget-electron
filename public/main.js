@@ -309,7 +309,7 @@ ipcMain.on(channels.GET_CURR_BALANCE, (event) => {
   console.log(channels.GET_CURR_BALANCE);
 
   knex
-    .select('balance')
+    .select('id', 'balance')
     .from('envelope')
     .orderBy('id')
     .then((data) => {

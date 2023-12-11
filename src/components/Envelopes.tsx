@@ -144,11 +144,12 @@ export const Envelopes: React.FC = () => {
     ipcRenderer.on(channels.LIST_CURR_BALANCE, (arg) => {
       
       const tmpData = [...budgetData] as BudgetNodeData[]; 
-      //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
+      console.log('load_current: arg:', arg);
+      console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
 
       for (let i=0; i < arg.length; i++) {
         for (let j=0; j < tmpData.length; j++) {
-          if (arg[i].envelopeID === tmpData[j].envID) {
+          if (arg[i].id === tmpData[j].envID) {
             tmpData[j] = Object.assign(tmpData[j], { currBalance: arg[i].balance });
           }
         }
