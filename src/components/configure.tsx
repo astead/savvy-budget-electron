@@ -58,8 +58,6 @@ export const Configure: React.FC = () => {
   }
 
   const handleDelete = (id, name) => {
-    console.log('del category: ', id);
-    
     if (name === 'Income') {
       return;
     }
@@ -137,16 +135,29 @@ export const Configure: React.FC = () => {
               {(provided) => (
                 <section  {...provided.droppableProps} ref={provided.innerRef}>
                   <article className="category-container">
-                    <article className="category-item">
+                    <article
+                      className={
+                        cat_name === 'Income'?'category-item-income':
+                        cat_name === 'Uncategorized'?'category-item-uncategorized':
+                        'category-item'}>
                       <div className="category">
-                        <EditableCategory
-                          initialID={catID.toString()}
-                          initialName={cat_name} />
+                        {(cat_name === 'Income' || cat_name === 'Uncategorized')?
+                          <div className="category">{cat_name}</div>
+                          :
+                          <EditableCategory
+                            initialID={catID.toString()}
+                            initialName={cat_name} />
+                        }
                       </div>
                       <NewEnvelope id={catID} />
-                      <button className={(cat_name === 'Income' || cat_name === 'Uncategorized')?'trash-block':'trash'} onClick={() => handleDelete( catID, cat_name )}>
-                          <FontAwesomeIcon icon={faTrash} />
-                      </button>
+                      {(cat_name !== 'Income' && cat_name !== 'Uncategorized')?
+                        <button 
+                          className={(cat_name === 'Income' || cat_name === 'Uncategorized')?'trash-block':'trash'}
+                          onClick={() => handleDelete( catID, cat_name )}>
+                            <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                        :''
+                      }
                     </article>
                     
                     <article className="envelope-container">
