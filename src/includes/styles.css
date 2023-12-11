@@ -112,6 +112,7 @@ div.month-item:focus, div.month-item:hover {
   border-radius: 8px;
   white-space: pre-wrap;
   filter:brightness(120%);
+  background-color: rgb(162, 165, 162);
 }
 
 div.month-item-selected {
