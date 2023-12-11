@@ -1,23 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js'
-import { useTheme } from '@table-library/react-table-library/theme';
-import { getTheme } from '@table-library/react-table-library/baseline';
 import { EditableBudget } from '../helpers/EditableBudget.tsx';
 import { MonthSelector } from '../helpers/MonthSelector.tsx'
 import Moment from 'moment';
 
 
 export const Envelopes: React.FC = () => {
-    
+  
+  /* Month Selector code -------------------------------------------*/
   const [year, setYear] = useState((new Date()).getFullYear());
   const [month, setMonth] = useState((new Date()).getMonth());
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
   const [myStartMonth, setMyStartMonth] = useState(0);
   const [myCurMonth, setMyCurMonth] = useState(0);
   
-  
-    
   const monthSelectorCallback = ({ childStartMonth, childCurMonth }) => {
     
     // Need to adjust our month/year to reflect the change
@@ -28,11 +25,24 @@ export const Envelopes: React.FC = () => {
     setYear(tmpDate.getFullYear());
     setMonth(tmpDate.getMonth());
     setCurMonth(Moment(tmpDate).format('YYYY-MM-DD'));
-  }
+  };
+  /* End Month Selector code ---------------------------------------*/
+  
+  interface BudgetNodeData {
+    catID: number; 
+    category: string;
+    currBalance: number; 
+    currBudget: number; 
+    envID: number; 
+    envelope: string;
+    monthlyAvg: number; 
+    prevActual: number; 
+    prevBudget: number; 
+  };
 
   function formatCurrency(currencyNumber:number) {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
-  }
+  };
 
   const compare = (a,b) => {
     if (a.category === 'Income' || b.category === 'Income') {
@@ -54,30 +64,34 @@ export const Envelopes: React.FC = () => {
     }
   };
 
-  interface BudgetNodeData {
-    catID: number; 
-    category: string;
-    currBalance: number; 
-    currBudget: number; 
-    envID: number; 
-    envelope: string;
-    monthlyAvg: number; 
-    prevActual: number; 
-    prevBudget: number; 
-  }
+  function monthDiff(d1, d2) {
+    var months;
+    months = (d2.getFullYear() - d1.getFullYear()) * 12;
+    months -= d1.getMonth();
+    months += d2.getMonth();
+    return months <= 0 ? 0 : months;
+  };
+  
+  const [budgetData, setBudgetData] = useState<BudgetNodeData[]>([]);
+  const [data, setData] = useState({});
+  const [loaded, setLoaded] = useState(false);
+  const [loadedEnvelopes, setLoadedEnvelopes] = useState(false);
+  const [loadedPrevBudget, setLoadedPrevBudget] = useState(false);
+  const [loadedCurrBudget, setLoadedCurrBudget] = useState(false);
+  const [loadedPrevActual, setLoadedPrevActual] = useState(false);
+  const [loadedCurrBalance, setLoadedCurrBalance] = useState(false);
+  const [loadedMonthlyAvg, setLoadedMonthlyAvg] = useState(false);
 
   const load_PrevBudget = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    
     // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_PREV_BUDGET, Moment(new Date(year, month-1)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_BUDGET, (arg) => {
 
       const tmpData = [...budgetData] as BudgetNodeData[]; 
-      //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
-
+    
       for (let i=0; i < arg.length; i++) {
         for (let j=0; j < tmpData.length; j++) {
           if (arg[i].envelopeID === tmpData[j].envID) {
@@ -85,8 +99,7 @@ export const Envelopes: React.FC = () => {
           }
         }
       };
-      //console.log('load_current: tmpData2:', tmpData as BudgetNodeData[]);
-
+    
       setBudgetData(tmpData as BudgetNodeData[]); 
       setLoadedPrevBudget(true);     
 
@@ -97,20 +110,18 @@ export const Envelopes: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_PREV_BUDGET);
     };
-  }
+  };
 
   const load_PrevActual = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    
     // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_PREV_ACTUAL, Moment(new Date(year, month-1)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_ACTUAL, (arg) => {
       
       const tmpData = [...budgetData] as BudgetNodeData[]; 
-      //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
-
+    
       for (let i=0; i < arg.length; i++) {
         for (let j=0; j < tmpData.length; j++) {
           if (arg[i].envelopeID === tmpData[j].envID) {
@@ -118,8 +129,7 @@ export const Envelopes: React.FC = () => {
           }
         }
       };
-      //console.log('load_current: tmpData2:', tmpData as BudgetNodeData[]);
-
+    
       setBudgetData(tmpData as BudgetNodeData[]); 
       setLoadedPrevActual(true);     
 
@@ -130,21 +140,18 @@ export const Envelopes: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_PREV_ACTUAL);
     };
-  }
+  };
 
   const load_CurrBalance = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    
     // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_CURR_BALANCE);
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CURR_BALANCE, (arg) => {
       
       const tmpData = [...budgetData] as BudgetNodeData[]; 
-      //console.log('load_current: arg:', arg);
-      //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
-
+    
       for (let i=0; i < arg.length; i++) {
         for (let j=0; j < tmpData.length; j++) {
           if (arg[i].id === tmpData[j].envID) {
@@ -152,8 +159,7 @@ export const Envelopes: React.FC = () => {
           }
         }
       };
-      //console.log('load_current: tmpData2:', tmpData as BudgetNodeData[]);
-
+    
       setBudgetData(tmpData as BudgetNodeData[]); 
       setLoadedCurrBalance(true);     
 
@@ -164,20 +170,18 @@ export const Envelopes: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_CURR_BALANCE);
     };
-  }
+  };
 
   const load_CurrBudget = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    
     // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_CUR_BUDGET, Moment(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CUR_BUDGET, (arg) => {
       
       const tmpData = [...budgetData] as BudgetNodeData[]; 
-      //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
-
+    
       for (let i=0; i < arg.length; i++) {
         for (let j=0; j < tmpData.length; j++) {
           if (arg[i].envelopeID === tmpData[j].envID) {
@@ -185,8 +189,7 @@ export const Envelopes: React.FC = () => {
           }
         }
       };
-      //console.log('load_current: tmpData2:', tmpData as BudgetNodeData[]);
-
+    
       setBudgetData(tmpData as BudgetNodeData[]); 
       setLoadedCurrBudget(true);     
 
@@ -197,28 +200,18 @@ export const Envelopes: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
     };
-  }
-
-  function monthDiff(d1, d2) {
-    var months;
-    months = (d2.getFullYear() - d1.getFullYear()) * 12;
-    months -= d1.getMonth();
-    months += d2.getMonth();
-    return months <= 0 ? 0 : months;
-  }
+  };
 
   const load_MonthlyAvg = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    
     // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_MONTHLY_AVG, Moment(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_MONTHLY_AVG, (arg) => {
       
       const tmpData = [...budgetData] as BudgetNodeData[]; 
-      //console.log('load_current: tmpData:', tmpData as BudgetNodeData[]);
-
+      
       let firstDate = new Date();
       for (let i=0; i < arg.length; i++) {
         const tmpDate = new Date(arg[i].firstDate);
@@ -236,8 +229,7 @@ export const Envelopes: React.FC = () => {
           }
         }
       };
-      //console.log('load_current: tmpData2:', tmpData as BudgetNodeData[]);
-
+      
       setBudgetData(tmpData as BudgetNodeData[]); 
       setLoadedMonthlyAvg(true);     
 
@@ -248,23 +240,11 @@ export const Envelopes: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_MONTHLY_AVG);
     };
-  }
-  
-  const [budgetData, setBudgetData] = useState<BudgetNodeData[]>([]);
-  const [data, setData] = useState({});
-  const [loaded, setLoaded] = useState(false);
-  const [loadedEnvelopes, setLoadedEnvelopes] = useState(false);
-  const [loadedPrevBudget, setLoadedPrevBudget] = useState(false);
-  const [loadedCurrBudget, setLoadedCurrBudget] = useState(false);
-  const [loadedPrevActual, setLoadedPrevActual] = useState(false);
-  const [loadedCurrBalance, setLoadedCurrBalance] = useState(false);
-  const [loadedMonthlyAvg, setLoadedMonthlyAvg] = useState(false);
+  };
   
   const load_initialEnvelopes = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-
     // Signal we want to get data
-    //console.log('Calling main:get_data');
+    const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_CAT_ENV);
 
     // Receive the data
@@ -282,9 +262,6 @@ export const Envelopes: React.FC = () => {
         arg[i] = {...arg[i], ...defaultValues} as BudgetNodeData;
       };
       const sortedData = Object.values(arg).sort(compare) as BudgetNodeData[];
-      //console.log('initial load: sortedData:', sortedData);
-     
-      //console.log('initial load: setting budgetData from sortedData')
       setBudgetData(sortedData as BudgetNodeData[]);
             
       ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
@@ -301,19 +278,12 @@ export const Envelopes: React.FC = () => {
   }, [curMonth]);  
 
   useEffect(() => {
-    load_initialEnvelopes();
-  }, []);
-
-  useEffect(() => {
     if (budgetData?.length > 0) {
-      //console.log('budgetData:', budgetData);
-      
-      if (!loadedEnvelopes) {
+       if (!loadedEnvelopes) {
         setLoadedEnvelopes(true);
+      } else {
+        setData({nodes:budgetData});
       }
-
-      //console.log('change in budgetData: setting data from budgetData');
-      setData({nodes:budgetData});
     } else {
       load_initialEnvelopes();
     }
@@ -329,6 +299,12 @@ export const Envelopes: React.FC = () => {
     } else {
       // We must be re-setting due to a month selection change.
       // Lets wipe this out and force it to start over.
+      setLoaded(false);
+      setLoadedPrevBudget(false);
+      setLoadedCurrBudget(false);
+      setLoadedPrevActual(false);
+      setLoadedCurrBalance(false);
+      setLoadedMonthlyAvg(false);
       setBudgetData([]);
     }
   }, [loadedEnvelopes]);
@@ -366,10 +342,13 @@ export const Envelopes: React.FC = () => {
       loadedCurrBalance &&
       loadedMonthlyAvg) {
       
-      //console.log('data:', data);
       setLoaded(true);
     }
   }, [loadedMonthlyAvg]);
+
+  useEffect(() => {
+    load_initialEnvelopes();
+  }, []);
 
   return (
     <div className="App">
