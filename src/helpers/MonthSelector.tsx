@@ -33,7 +33,7 @@ export const MonthSelector = ({ numMonths, startMonth, curMonth, parentCallback}
             className={"month-item"+(myCurMonth === index ? "-selected":"")}
             onClick={() => {
               setMyCurMonth(index);
-              parentCallback({ startMonth: myStartMonth, curMonth: myCurMonth });
+              parentCallback({ childStartMonth: myStartMonth, childCurMonth: index });
           }}>
             {myMonth}
           </div>

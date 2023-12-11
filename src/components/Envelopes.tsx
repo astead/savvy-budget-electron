@@ -16,15 +16,18 @@ export const Envelopes: React.FC = () => {
   const [myStartMonth, setMyStartMonth] = useState(0);
   const [myCurMonth, setMyCurMonth] = useState(0);
   
-  const monthSelectorCallback = ({ startMonth, curMonth }) => {
-    setMyStartMonth(startMonth);
-    setMyCurMonth(curMonth);
-
+  
+    
+  const monthSelectorCallback = ({ childStartMonth, childCurMonth }) => {
+    
     // Need to adjust our month/year to reflect the change
-    let tmpDate = new Date(year, month + startMonth + curMonth);
+    let tmpDate = new Date(year, month + childStartMonth + childCurMonth - myCurMonth);
+        
+    setMyStartMonth(childStartMonth);
+    setMyCurMonth(childCurMonth);
     setYear(tmpDate.getFullYear());
     setMonth(tmpDate.getMonth());
-    setCurMonth(Moment(new Date(year, month)).format('YYYY-MM-DD'));
+    setCurMonth(Moment(tmpDate).format('YYYY-MM-DD'));
   }
 
   function formatCurrency(currencyNumber:number) {
@@ -257,9 +260,7 @@ export const Envelopes: React.FC = () => {
   const [loadedCurrBalance, setLoadedCurrBalance] = useState(false);
   const [loadedMonthlyAvg, setLoadedMonthlyAvg] = useState(false);
   
-  
-
-  useEffect(() => {
+  const load_initialEnvelopes = () => {
     const ipcRenderer = (window as any).ipcRenderer;
 
     // Signal we want to get data
@@ -293,7 +294,14 @@ export const Envelopes: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
     };
+  }
 
+  useEffect(() => {
+    setLoadedEnvelopes(false);
+  }, [curMonth]);  
+
+  useEffect(() => {
+    load_initialEnvelopes();
   }, []);
 
   useEffect(() => {
@@ -306,14 +314,22 @@ export const Envelopes: React.FC = () => {
 
       //console.log('change in budgetData: setting data from budgetData');
       setData({nodes:budgetData});
+    } else {
+      load_initialEnvelopes();
     }
   }, [budgetData]);
 
   useEffect(() => {
     // Once we have the main table data, we can go get
     // the details and fill it in.
-    if (budgetData?.length > 0 && loadedEnvelopes) {      
-      load_CurrBudget();
+    if (loadedEnvelopes) {
+      if (budgetData?.length > 0) {      
+        load_CurrBudget();
+      }
+    } else {
+      // We must be re-setting due to a month selection change.
+      // Lets wipe this out and force it to start over.
+      setBudgetData([]);
     }
   }, [loadedEnvelopes]);
 
@@ -375,7 +391,7 @@ export const Envelopes: React.FC = () => {
                   <th className="BudgetTableHeaderCellCurr">{'Prev\nBudget'}</th>
                   <th className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</th>
                   <th className="BudgetTableHeaderCellCurr">{'Curr\nBalance'}</th>
-                  <th className="BudgetTableHeaderCellCurr">{' \nBudget'}</th>
+                  <th className="BudgetTableHeaderCellCurr">{curMonth.slice(0,7) + '\nBudget'}</th>
                   <th className="BudgetTableHeaderCellCurr">{'Monthly\nAvg'}</th>
                   <th className="BudgetTableHeaderCell">{' \n '}</th>
                 </tr>
