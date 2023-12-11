@@ -12,9 +12,21 @@ export const EditableCategory = ({ initialID, initialName}) => {
   };
 
   const handleCatBlur = () => {
+    
+    let tmpName = name;
+
+    if (name === 'Income') {
+      setName('Income 2');
+      tmpName = 'Income 2'; 
+    }
+    if (name === 'Uncategorized') {
+      setName('Uncategorized 2');
+      tmpName = 'Uncategorized 2';
+    }
+    
     // Request we rename the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.REN_CATEGORY, { id, name });
+    ipcRenderer.send(channels.REN_CATEGORY, { id, tmpName });
   };
 
   return (
