@@ -13,6 +13,9 @@ module.exports = {
     GET_MONTHLY_AVG: 'get_monthly_avg',
     LIST_MONTHLY_AVG: 'list_monthly_avg',
 
+    GET_TX_DATA: 'get_tx_date',
+    LIST_TX_DATA: 'list_tx_data',
+
     REN_CATEGORY: 'ren_category',
     DEL_CATEGORY: 'del_category',
     ADD_CATEGORY: 'add_category',
