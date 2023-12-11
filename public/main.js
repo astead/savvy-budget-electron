@@ -111,8 +111,26 @@ ipcMain.on(channels.ADD_CATEGORY, (event, name) => {
 ipcMain.on(channels.DEL_CATEGORY, (event, id) => {
   console.log(channels.DEL_CATEGORY, id);
 
-  // TODO: if any sub envelopes, need to move them to Un-categorized
+  // Move any sub-envelopes to Uncategorized
+  knex
+    .select('category.id as catID')
+    .from('category')
+    .where('category', 'Uncategorized')
+    .then((rows) => {
+      if (rows.length > 0) {
+        const uncategorizedID = rows[0].catID;
+        knex('envelope')
+          .where('categoryID', id)
+          .update('categoryID', uncategorizedID)
+          .catch((err) => {
+            console.log('Error: ' + err);
+          });
+      }
+    })
+    .catch((err) => console.log(err));
 
+  // TODO: Maybe if we hit an error above,
+  //  we shouldn't continue
   knex('category')
     .where({ id: id })
     .del()
