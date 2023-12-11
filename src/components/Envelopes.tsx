@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js'
-import {
-  Table,
-  Header as TableHeader,
-  HeaderRow,
-  Body,
-  Row,
-  HeaderCell,
-  Cell,
-} from '@table-library/react-table-library/table';
 import { useTheme } from '@table-library/react-table-library/theme';
 import { getTheme } from '@table-library/react-table-library/baseline';
 import { EditableBudget } from '../helpers/EditableBudget.tsx';
@@ -357,6 +348,7 @@ export const Envelopes: React.FC = () => {
       
       //console.log('data:', data);
       setLoaded(true);
+      console.log(data);
     }
   }, [data]);
 
@@ -378,44 +370,50 @@ export const Envelopes: React.FC = () => {
         </article>
         <br/>
         {loaded &&
-          <Table data={data} >
-            {(tableList) => (
+          <table className="BudgetTable" cellSpacing={0} cellPadding={0}>
+            
             <>
-              <TableHeader>
-                <HeaderRow className="BudgetTableHeaderRow">
-                  <HeaderCell><div className="BudgetTableHeaderCell">{' \n '}</div></HeaderCell>
-                  <HeaderCell><div className="BudgetTableHeaderCell">{' \nEnvelope'}</div></HeaderCell>
-                  <HeaderCell><div className="BudgetTableHeaderCellCurr">{'Prev\nBudget'}</div></HeaderCell>
-                  <HeaderCell><div className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</div></HeaderCell>
-                  <HeaderCell><div className="BudgetTableHeaderCellCurr">{'Curr\nBalance'}</div></HeaderCell>
-                  <HeaderCell><div className="BudgetTableHeaderCellCurr">{' \nBudget'}</div></HeaderCell>
-                  <HeaderCell><div className="BudgetTableHeaderCellCurr">{'Monthly\nAvg'}</div></HeaderCell>
-                  <HeaderCell><div className="BudgetTableHeaderCell">{' \n '}</div></HeaderCell>
-                </HeaderRow>
-              </TableHeader>
+              <thead className="BudgetTableHeader">
+                <tr className="BudgetTableHeaderRow">
+                  <th className="BudgetTableHeaderCell">{' \n '}</th>
+                  <th className="BudgetTableHeaderCell">{' \nEnvelope'}</th>
+                  <th className="BudgetTableHeaderCellCurr">{'Prev\nBudget'}</th>
+                  <th className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</th>
+                  <th className="BudgetTableHeaderCellCurr">{'Curr\nBalance'}</th>
+                  <th className="BudgetTableHeaderCellCurr">{' \nBudget'}</th>
+                  <th className="BudgetTableHeaderCellCurr">{'Monthly\nAvg'}</th>
+                  <th className="BudgetTableHeaderCell">{' \n '}</th>
+                </tr>
+              </thead>
     
-              <Body>
-                {tableList.map((item) => (
-                  <Row key={item.envID} item={item}>
-                    <Cell><div className="BudgetTableCellCurr">&nbsp;</div></Cell>
-                    <Cell><div className="BudgetTableCell">{item.envelope}</div></Cell>
-                    <Cell><div className="BudgetTableCellCurr">{formatCurrency(item.prevBudget)}</div></Cell>
-                    <Cell><div className="BudgetTableCellCurr">{formatCurrency(item.prevActual)}</div></Cell>
-                    <Cell><div className="BudgetTableCellCurr">{formatCurrency(item.currBalance)}</div></Cell>
-                    <Cell><div className="BudgetTableCellCurr">
+              <tbody className="BudgetTableBody">
+                {budgetData.map((item, index, myArray) => (
+                  <>
+                  { (index === 0 || (index > 0 && item.category !== myArray[index - 1].category)) && (
+                    <tr key={'header-'+item.envID} className="BudgetTableGroupHeaderRow">
+                      <td colSpan={8} className="BudgetTableGroupHeader">{item.category}</td>
+                    </tr>
+                  )}
+                  <tr key={item.envID} className="BudgetTableRow">
+                    <td className="BudgetTableCellCurr">&nbsp;</td>
+                    <td className="BudgetTableCell">{item.envelope}</td>
+                    <td className="BudgetTableCellCurr">{formatCurrency(item.prevBudget)}</td>
+                    <td className="BudgetTableCellCurr">{formatCurrency(item.prevActual)}</td>
+                    <td className="BudgetTableCellCurr">{formatCurrency(item.currBalance)}</td>
+                    <td className="BudgetTableCellCurr">
                       <EditableBudget 
                         initialID={item.envID}
                         initialDate={curMonth}
                         initialValue={item.currBudget}/>
-                    </div></Cell>
-                    <Cell><div className="BudgetTableCellCurr">{formatCurrency(item.monthlyAvg)}</div></Cell>
-                    <Cell><div className="BudgetTableCellCurr">&nbsp;</div></Cell>
-                  </Row>
+                    </td>
+                    <td className="BudgetTableCellCurr">{formatCurrency(item.monthlyAvg)}</td>
+                    <td className="BudgetTableCellCurr">&nbsp;</td>
+                  </tr>
+                  </>
                 ))}
-              </Body>
+              </tbody>
             </>
-          )}
-          </Table>
+          </table>
         }
       </div>
     </div>

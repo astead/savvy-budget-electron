@@ -244,9 +244,8 @@ input[type="text"] {
 
 input.inputCurrency {
   text-align:right;
-  width: 100%;
-  height: 100%;
   border-radius: 0px;
+  width: 100px;
   border: none;
   font-size:95%;
   font-weight: bolder;
@@ -273,8 +272,16 @@ input.inputCurrency {
   color: #F8FAFC;
 }
 
+.BudgetTable {
+  padding: 0;
+  margin: 0;
+  border-collapse:collapse,
+}
+
 .BudgetTableHeaderRow {
   background-color: #b4b4b4;
+  padding: 0;
+  margin: 0;
 }
 
 .BudgetTableHeaderCell {
@@ -282,6 +289,8 @@ input.inputCurrency {
   border: 1px solid black;
   white-space: pre-wrap;
   height:100%;
+  padding: 0;
+  margin: 0;
   padding-left:2px;
 }
 
@@ -291,15 +300,37 @@ input.inputCurrency {
   text-align:center;
   white-space: pre-wrap;
   height:100%;
+  width: 100px;
+  padding: 0;
+  margin: 0;
 }
 
 .BudgetTableCellCurr {
   border: 1px solid black;
   text-align:right;
+  padding: 0;
+  margin: 0;
   padding-right:2px;
 }
 
 .BudgetTableCell {
   border: 1px solid black; 
+  padding: 0;
+  margin: 0;
   padding-left:2px; 
+}
+
+.BudgetTableGroupHeaderRow {
+  background-color: #a6a6a6;
+  padding: 0;
+  margin: 0;
+  row-gap: 0;
+}
+
+.BudgetTableGroupHeader {
+  background-color: #a6a6a6;
+  border: 1px solid black; 
+  padding: 0;
+  margin: 0;
+  padding-left:2px;
 }

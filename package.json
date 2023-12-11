@@ -41,6 +41,7 @@
     "react-router": "^6.18.0",
     "react-router-dom": "^6.19.0",
     "react-scripts": "5.0.1",
+    "react-table": "^7.8.0",
     "sqlite3": "^5.1.6",
     "stream": "npm:stream-browserify",
     "tailwindcss": "^3.3.5",
