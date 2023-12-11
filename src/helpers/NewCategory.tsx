@@ -14,9 +14,6 @@ export const NewCategory = () => {
       // Request we add the new category
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.ADD_CATEGORY, newCategory);
-
-      // Reset the label in the new category
-      //setNewCategory('');
     }
   };  
 

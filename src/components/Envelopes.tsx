@@ -261,10 +261,10 @@ export const Envelopes: React.FC = () => {
   const load_initialEnvelopes = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CAT_ENV);
+    ipcRenderer.send(channels.GET_BUDGET_ENV);
 
     // Receive the data
-    ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
+    ipcRenderer.on(channels.LIST_BUDGET_ENV, (arg) => {
       
       const defaultValues = {
         prevBudget: 0,
@@ -280,12 +280,12 @@ export const Envelopes: React.FC = () => {
       const sortedData = Object.values(arg).sort(compare) as BudgetNodeData[];
       setBudgetData(sortedData as BudgetNodeData[]);
             
-      ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
+      ipcRenderer.removeAllListeners(channels.LIST_BUDGET_ENV);
     });
 
     // Clean the listener after the component is dismounted
     return () => {
-      ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
+      ipcRenderer.removeAllListeners(channels.LIST_BUDGET_ENV);
     };
   }
 

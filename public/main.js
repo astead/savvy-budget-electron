@@ -253,14 +253,36 @@ ipcMain.on(channels.GET_CAT_ENV, (event) => {
       'envelope.envelope',
       'envelope.balance as currBalance'
     )
+    .from('category')
+    .leftJoin('envelope', function () {
+      this.on('category.id', '=', 'envelope.categoryID');
+      this.on('envelope.isActive', 1);
+    })
+    .orderBy('category.id')
+    .then((data) => {
+      event.sender.send(channels.LIST_CAT_ENV, data);
+    })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.GET_BUDGET_ENV, (event) => {
+  console.log(channels.GET_BUDGET_ENV);
+  knex
+    .select(
+      'category.id as catID',
+      'category.category',
+      'envelope.id as envID',
+      'envelope.envelope',
+      'envelope.balance as currBalance'
+    )
     .from('envelope')
     .leftJoin('category', function () {
       this.on('category.id', '=', 'envelope.categoryID');
     })
-    .where('isActive', 1)
+    .where('envelope.isActive', 1)
     .orderBy('category.id')
     .then((data) => {
-      event.sender.send(channels.LIST_CAT_ENV, data);
+      event.sender.send(channels.LIST_BUDGET_ENV, data);
     })
     .catch((err) => console.log(err));
 });

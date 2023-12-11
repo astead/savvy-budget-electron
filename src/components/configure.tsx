@@ -10,7 +10,7 @@ import NewCategory from '../helpers/NewCategory.tsx';
 import EditableCategory from '../helpers/EditableCategory.tsx';
 import EditableEnvelope from '../helpers/EditableEnvelope.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
-import { channels } from '../shared/constants.js'
+import { channels } from '../shared/constants.js';
 
 export const Configure: React.FC = () => {
   
@@ -30,7 +30,15 @@ export const Configure: React.FC = () => {
   };
 
   const compare = (a,b) => {
-    if (a.cat === 'Income' || b.cat === 'Income') {
+    if (a.cat === 'Uncategorized' || b.cat === 'Uncategorized') {
+      if (a.cat === 'Uncategorized' && b.cat !== 'Uncategorized') {
+        return -1;
+      }
+      if (a.cat !== 'Uncategorized' && b.cat === 'Uncategorized') {
+        return 1;
+      }
+      return 0;
+    } else if (a.cat === 'Income' || b.cat === 'Income') {
       if (a.cat === 'Income' && b.cat !== 'Income') {
         return -1;
       }
@@ -49,15 +57,19 @@ export const Configure: React.FC = () => {
     }
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = (id, name) => {
     console.log('del category: ', id);
     
+    if (name === 'Income') {
+      return;
+    }
+    if (name === 'Uncategorized') {
+      return;
+    }
+
     // Request we delete the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.DEL_CATEGORY, id);
-
-    // TODO: Where do we move sub accounts in the deleted category?
-    // We should have an un-categorized section
   };
 
   const handleEnvDelete = (id) => {
@@ -85,6 +97,34 @@ export const Configure: React.FC = () => {
     }
   };
 
+  const load_cats_and_envs = () => {
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_CAT_ENV);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
+      const groupedData = groupBy(arg, 'catID', 'category');
+      const sortedData = Object.values(groupedData).sort(compare);
+
+      setData(sortedData);
+      setLoaded(true);
+
+      ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
+    };
+  }
+
+  useEffect(() => {
+    if (!loaded) {
+      load_cats_and_envs();
+    }
+  }, []);
+
   let content;
   if (data) {
     content = (
@@ -104,7 +144,7 @@ export const Configure: React.FC = () => {
                           initialName={cat_name} />
                       </div>
                       <NewEnvelope id={catID} />
-                      <button className="trash" onClick={() => handleDelete( catID )}>
+                      <button className={(cat_name === 'Income' || cat_name === 'Uncategorized')?'trash-block':'trash'} onClick={() => handleDelete( catID, cat_name )}>
                           <FontAwesomeIcon icon={faTrash} />
                       </button>
                     </article>
@@ -145,34 +185,6 @@ export const Configure: React.FC = () => {
       </DragDropContext>
     )
   }
-
-  const load_cats_and_envs = () => {
-    // Signal we want to get data
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CAT_ENV);
-
-    // Receive the data
-    ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
-      const groupedData = groupBy(arg, 'catID', 'category');
-      const sortedData = Object.values(groupedData).sort(compare);
-
-      setData(sortedData);
-      setLoaded(true);
-
-      ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
-    });
-
-    // Clean the listener after the component is dismounted
-    return () => {
-      ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
-    };
-  }
-
-  useEffect(() => {
-    if (!loaded) {
-      load_cats_and_envs();
-    }
-  }, []);
 
   return (
     <div className="App">

@@ -273,6 +273,11 @@ input.inputCurrency {
   font-weight: bolder;
 }
 
+.trash-block {
+  background-color: #F8FAFC;
+  color: #8f8f8f;
+}
+
 .trash {
   background-color: #F8FAFC;
   color: #EF4444;
