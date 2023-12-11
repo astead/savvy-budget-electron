@@ -77,7 +77,7 @@ div.new-envelope {
   padding-right: 15px;
 }
 
-article.months-container {
+.months-container {
   padding: 0;
   margin: 0;
   display: flex;
@@ -100,6 +100,20 @@ div.month-item {
   white-space: pre-wrap;
 }
 
+div.month-item:focus, div.month-item:hover {
+  font-size:.75rem;
+  margin-left:2px;
+  margin-right:2px;
+  padding: 4px;
+  padding-left: 7px;
+  padding-right: 7px;
+  text-align: center;
+  border: 1px solid black;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  filter:brightness(120%);
+}
+
 div.month-item-selected {
   font-size:.75rem;
   font-weight:bolder;
@@ -112,7 +126,7 @@ div.month-item-selected {
   border: 1px solid black;
   border-radius: 8px;
   white-space: pre-wrap;
-  background-color: #868686;
+  background-color: rgb(140, 140, 140);
 }
 
 

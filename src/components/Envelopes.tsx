@@ -4,24 +4,28 @@ import { channels } from '../shared/constants.js'
 import { useTheme } from '@table-library/react-table-library/theme';
 import { getTheme } from '@table-library/react-table-library/baseline';
 import { EditableBudget } from '../helpers/EditableBudget.tsx';
+import { MonthSelector } from '../helpers/MonthSelector.tsx'
 import Moment from 'moment';
 
 
 export const Envelopes: React.FC = () => {
     
-  const numMonths = 10;
-  const today = new Date();
-  const month = today.getMonth();
-  const year = today.getFullYear();
-  
+  const [year, setYear] = useState((new Date()).getFullYear());
+  const [month, setMonth] = useState((new Date()).getMonth());
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
-  const [curMonthIter, setCurMonthIter] = useState(0);
+  const [myStartMonth, setMyStartMonth] = useState(0);
+  const [myCurMonth, setMyCurMonth] = useState(0);
   
-  const arrayMonths = Array.from({length: numMonths}, (item, i) => {
-    const myDate = new Date(year, month+i);
-    const monthString = myDate.toLocaleString('en-US', {month: 'short'}) + "\n" + myDate.toLocaleString('en-US', {year: 'numeric'}) ;
-    return { 'label': monthString };
-  });
+  const monthSelectorCallback = ({ startMonth, curMonth }) => {
+    setMyStartMonth(startMonth);
+    setMyCurMonth(curMonth);
+
+    // Need to adjust our month/year to reflect the change
+    let tmpDate = new Date(year, month + startMonth + curMonth);
+    setYear(tmpDate.getFullYear());
+    setMonth(tmpDate.getMonth());
+    setCurMonth(Moment(new Date(year, month)).format('YYYY-MM-DD'));
+  }
 
   function formatCurrency(currencyNumber:number) {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
@@ -358,15 +362,7 @@ export const Envelopes: React.FC = () => {
       </header>
       <div>
         Envelopes<br/>
-        <article className="months-container">
-          {arrayMonths && arrayMonths.map((myMonth, index) => {
-            return (
-              <div key={"month-"+index} className={"month-item"+(curMonthIter=== index ? "-selected":"")}>
-                {myMonth.label.toString()}
-              </div>
-            )
-          })}
-        </article>
+        <MonthSelector numMonths="10" startMonth={myStartMonth} curMonth={myCurMonth} parentCallback={monthSelectorCallback} />
         <br/>
         {loaded &&
           <table className="BudgetTable" cellSpacing={0} cellPadding={0}>

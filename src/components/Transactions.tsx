@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js'
-import { useTheme } from '@table-library/react-table-library/theme';
-import { getTheme } from '@table-library/react-table-library/baseline';
-import { EditableBudget } from '../helpers/EditableBudget.tsx';
+import { MonthSelector } from '../helpers/MonthSelector.tsx'
 import Moment from 'moment';
 
 
@@ -20,35 +18,19 @@ export const Transactions: React.FC = () => {
     txAmount: number;
     description: string;
   }
-
-  const numMonths = 10;
-  const today = new Date();
-  const month = today.getMonth();
-  const year = today.getFullYear();
-  
-  const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
-  const [curMonthIter, setCurMonthIter] = useState(0);
-  
-  const arrayMonths = Array.from({length: numMonths}, (item, i) => {
-    const myDate = new Date(year, month+i);
-    const monthString = myDate.toLocaleString('en-US', {month: 'short'}) + "\n" + myDate.toLocaleString('en-US', {year: 'numeric'}) ;
-    return { 'label': monthString };
-  });
-
-  function monthDiff(d1, d2) {
-    var months;
-    months = (d2.getFullYear() - d1.getFullYear()) * 12;
-    months -= d1.getMonth();
-    months += d2.getMonth();
-    return months <= 0 ? 0 : months;
-  }
   
   function formatCurrency(currencyNumber:number) {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
   }
 
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
+  const [myStartMonth, setMyStartMonth] = useState(0);
+  const [myCurMonth, setMyCurMonth] = useState(0);
   
+  const monthSelectorCallback = ({ startMonth, curMonth }) => {
+    setMyStartMonth(startMonth);
+    setMyCurMonth(curMonth);
+  }
 
   useEffect(() => {
     const ipcRenderer = (window as any).ipcRenderer;
@@ -82,15 +64,7 @@ export const Transactions: React.FC = () => {
       </header>
       <div>
         Transactions<br/>
-        <article className="months-container">
-          {arrayMonths && arrayMonths.map((myMonth, index) => {
-            return (
-              <div key={"month-"+index} className={"month-item"+(curMonthIter=== index ? "-selected":"")}>
-                {myMonth.label.toString()}
-              </div>
-            )
-          })}
-        </article>
+        <MonthSelector numMonths="10" startMonth={myStartMonth} curMonth={myCurMonth} parentCallback={monthSelectorCallback} />
         <br/>
         <br/>
         
