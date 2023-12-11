@@ -282,6 +282,7 @@ input.inputCurrency {
   border: 1px solid black;
   white-space: pre-wrap;
   height:100%;
+  padding-left:2px;
 }
 
 .BudgetTableHeaderCellCurr {
@@ -295,8 +296,10 @@ input.inputCurrency {
 .BudgetTableCellCurr {
   border: 1px solid black;
   text-align:right;
+  padding-right:2px;
 }
 
 .BudgetTableCell {
-  border: 1px solid black;  
+  border: 1px solid black; 
+  padding-left:2px; 
 }
