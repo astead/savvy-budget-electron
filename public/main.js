@@ -81,7 +81,12 @@ ipcMain.on(channels.ADD_ENVELOPE, (event, { categoryID }) => {
   console.log(channels.ADD_ENVELOPE, categoryID);
 
   knex('envelope')
-    .insert({ categoryID: categoryID, envelope: 'New Envelope', balance: 0 })
+    .insert({
+      categoryID: categoryID,
+      envelope: 'New Envelope',
+      balance: 0,
+      isActive: 1,
+    })
     .then(() => {
       console.log('Added envelope ');
     })
@@ -106,6 +111,8 @@ ipcMain.on(channels.ADD_CATEGORY, (event, name) => {
 ipcMain.on(channels.DEL_CATEGORY, (event, id) => {
   console.log(channels.DEL_CATEGORY, id);
 
+  // TODO: if any sub envelopes, need to move them to Un-categorized
+
   knex('category')
     .where({ id: id })
     .del()
@@ -122,7 +129,7 @@ ipcMain.on(channels.DEL_ENVELOPE, (event, id) => {
 
   knex('envelope')
     .where({ id: id })
-    .del()
+    .update({ isActive: 0 })
     .then(() => {
       console.log('Deleted envelope: ' + id);
     })
@@ -250,6 +257,7 @@ ipcMain.on(channels.GET_CAT_ENV, (event) => {
     .leftJoin('category', function () {
       this.on('category.id', '=', 'envelope.categoryID');
     })
+    .where('isActive', 1)
     .orderBy('category.id')
     .then((data) => {
       event.sender.send(channels.LIST_CAT_ENV, data);
