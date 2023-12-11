@@ -5,6 +5,14 @@ import { EditableBudget } from '../helpers/EditableBudget.tsx';
 import { MonthSelector } from '../helpers/MonthSelector.tsx'
 import Moment from 'moment';
 
+/*
+  TODO:
+  - Add Current Actual
+  - Click on envelope to list those transactions
+  - Click on monthly average to go to trend chart
+  - Color based on how healthy the envelope is
+  - Click on curr balance to move envelope balance option
+*/
 
 export const Envelopes: React.FC = () => {
   

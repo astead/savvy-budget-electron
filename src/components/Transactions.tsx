@@ -4,6 +4,22 @@ import { channels } from '../shared/constants.js'
 import { MonthSelector } from '../helpers/MonthSelector.tsx'
 import Moment from 'moment';
 
+/*
+ TODO:
+  - Make account a drop down, with its own helper component
+  - import page.
+  - keyword assign page? or maybe within this? or add to configure?
+  - add filter options:
+    - account
+    - bank
+    - date?
+    - amount
+    - description
+  - add split transactions
+  - add hide transactions
+  - add marking as duplicate
+  - start at the end of the month list, looking back
+*/
 
 export const Transactions: React.FC = () => {
   

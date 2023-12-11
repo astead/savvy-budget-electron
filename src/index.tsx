@@ -9,6 +9,11 @@ import { Transactions } from './components/Transactions.tsx';
 import { Envelopes } from './components/Envelopes.tsx';
 import { Configure } from './components/Configure.tsx';
 
+/*
+  TODO:
+  - Add chart page
+*/
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
