@@ -339,3 +339,43 @@ ipcMain.on(channels.GET_MONTHLY_AVG, (event, find_date) => {
     })
     .catch((err) => console.log(err));
 });
+
+ipcMain.on(channels.GET_TX_DATA, (event, find_date) => {
+  console.log(channels.GET_TX_DATA);
+
+  const month = new Date(find_date).getMonth();
+  const year = new Date(find_date).getFullYear();
+
+  knex
+    .select(
+      'transaction.id as txID',
+      'envelope.categoryID as catID',
+      'transaction.envelopeID as envID',
+      'category.category as category',
+      'envelope.envelope as envelope',
+      'transaction.accountID as accountID',
+      'account.account as account',
+      'transaction.txDate as txDate',
+      'transaction.txAmt as txAmt',
+      'transaction.description as description'
+    )
+    .from('transaction')
+    .leftJoin('envelope', function () {
+      this.on('envelope.id', '=', 'transaction.envelopeID');
+    })
+    .leftJoin('category', function () {
+      this.on('category.id', '=', 'envelope.categoryID');
+    })
+    .leftJoin('account', function () {
+      this.on('account.id', '=', 'transaction.accountID');
+    })
+    .where({ isBudget: 0 })
+    .andWhereRaw(`strftime('%m', txDate) = ?`, [month])
+    .where({ isDuplicate: 0 })
+    .andWhereRaw(`strftime('%Y', txDate) = ?`, [year])
+    .orderBy('transaction.txDate')
+    .then((data) => {
+      event.sender.send(channels.LIST_TX_DATA, data);
+    })
+    .catch((err) => console.log(err));
+});
