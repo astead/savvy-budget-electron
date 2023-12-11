@@ -15,7 +15,8 @@ export const Transactions: React.FC = () => {
     envelope: string; 
     accountID: number;  
     account: string;
-    txAmount: number;
+    txAmt: number;
+    txDate: number;
     description: string;
   }
   
@@ -26,28 +27,29 @@ export const Transactions: React.FC = () => {
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
   const [myStartMonth, setMyStartMonth] = useState(0);
   const [myCurMonth, setMyCurMonth] = useState(0);
+  const [year, setYear] = useState((new Date()).getFullYear());
+  const [month, setMonth] = useState((new Date()).getMonth());
+  const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
   
-  const monthSelectorCallback = ({ startMonth, curMonth }) => {
-    setMyStartMonth(startMonth);
-    setMyCurMonth(curMonth);
+  const monthSelectorCallback = ({ childStartMonth, childCurMonth }) => {    
+    // Need to adjust our month/year to reflect the change
+    let tmpDate = new Date(year, month + childStartMonth + childCurMonth - myCurMonth);
+        
+    setMyStartMonth(childStartMonth);
+    setMyCurMonth(childCurMonth);
+    setYear(tmpDate.getFullYear());
+    setMonth(tmpDate.getMonth());
+    setCurMonth(Moment(tmpDate).format('YYYY-MM-DD'));
   }
 
-  useEffect(() => {
-    const ipcRenderer = (window as any).ipcRenderer;
-
+  const load_transactions = () => {
     // Signal we want to get data
-    //console.log('Calling main:get_data');
+    const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_TX_DATA);
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
-      
-      const sortedData = arg as TransactionNodeData[];
-      //console.log('initial load: sortedData:', sortedData);
-     
-      //console.log('initial load: setting budgetData from sortedData')
-      setTxData(sortedData as TransactionNodeData[]);
-            
+      setTxData(arg as TransactionNodeData[]);
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     });
 
@@ -55,7 +57,11 @@ export const Transactions: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     };
-  }, []);
+  }
+
+  useEffect(() => {
+    load_transactions();
+  }, [curMonth]);
 
   return (
     <div className="App">
@@ -67,7 +73,37 @@ export const Transactions: React.FC = () => {
         <MonthSelector numMonths="10" startMonth={myStartMonth} curMonth={myCurMonth} parentCallback={monthSelectorCallback} />
         <br/>
         <br/>
-        
+        {txData?.length > 0 &&
+          <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
+            <>
+              <thead className="TransactionTableHeader">
+                <tr className="TransactionTableHeaderRow">
+                  <th className="TransactionTableHeaderCell">{' \n '}</th>
+                  <th className="TransactionTableHeaderCell">{' \nDate'}</th>
+                  <th className="TransactionTableHeaderCellCurr">{'Description'}</th>
+                  <th className="TransactionTableHeaderCellCurr">{'Amount'}</th>
+                  <th className="TransactionTableHeaderCellCurr">{'Envelope'}</th>
+                  <th className="TransactionTableHeaderCell">{' \n '}</th>
+                </tr>
+              </thead>
+    
+              <tbody className="TransactionTableBody">
+                {txData.map((item, index, myArray) => (
+                  <>
+                  <tr key={item.envID} className="TransactionTableRow">
+                    <td className="TransactionTableCellCurr">&nbsp;</td>
+                    <td className="TransactionTableCell">{item.txDate}</td>
+                    <td className="TransactionTableCell">{item.description}</td>
+                    <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
+                    <td className="TransactionTableCell">{item.category + ":" + item.envelope}</td>
+                    <td className="TransactionTableCellCurr">&nbsp;</td>
+                  </tr>
+                  </>
+                ))}
+              </tbody>
+            </>
+          </table>
+        }
       </div>
     </div>
   );
