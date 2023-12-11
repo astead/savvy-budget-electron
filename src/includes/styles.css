@@ -98,6 +98,8 @@ div.month-item {
   border: 1px solid black;
   border-radius: 8px;
   white-space: pre-wrap;
+  width: 30px;
+  height: 30px;
 }
 
 div.month-item:focus, div.month-item:hover {
@@ -113,6 +115,8 @@ div.month-item:focus, div.month-item:hover {
   white-space: pre-wrap;
   filter:brightness(120%);
   background-color: rgb(162, 165, 162);
+  width: 30px;
+  height: 30px;
 }
 
 div.month-item-selected {
@@ -128,6 +132,8 @@ div.month-item-selected {
   border-radius: 8px;
   white-space: pre-wrap;
   background-color: rgb(140, 140, 140);
+  width: 30px;
+  height: 30px;
 }
 
 

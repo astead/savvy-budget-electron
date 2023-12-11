@@ -14,7 +14,9 @@ export const MonthSelector = ({ numMonths, startMonth, curMonth, parentCallback}
 
     const tmpMonths = Array.from({length: numMonths}, (item, i) => {
       const myDate = new Date(year, month+i);
-      const monthString = myDate.toLocaleString('en-US', {month: 'short'}) + "\n" + myDate.toLocaleString('en-US', {year: 'numeric'}) ;
+      const monthString = 
+        myDate.toLocaleString('en-US', {month: 'short'}) + "\n'" + 
+        myDate.toLocaleString('en-US', {year: 'numeric'}).slice(2) ;
       return monthString;
     });  
 

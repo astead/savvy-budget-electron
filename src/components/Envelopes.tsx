@@ -52,6 +52,14 @@ export const Envelopes: React.FC = () => {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
   };
 
+  const disp_date_label = (m, y) => {
+    const myDate = new Date(y, m);
+    const monthString = 
+      myDate.toLocaleString('en-US', {month: 'short'}) + " '" + 
+      myDate.toLocaleString('en-US', {year: 'numeric'}).slice(2) ;
+    return monthString; 
+  }
+
   const compare = (a,b) => {
     if (a.category === 'Income' || b.category === 'Income') {
       if (a.category === 'Income' && b.category !== 'Income') {
@@ -378,7 +386,7 @@ export const Envelopes: React.FC = () => {
                   <th className="BudgetTableHeaderCellCurr">{'Prev\nBudget'}</th>
                   <th className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</th>
                   <th className="BudgetTableHeaderCellCurr">{'Curr\nBalance'}</th>
-                  <th className="BudgetTableHeaderCellCurr">{curMonth.slice(0,7) + '\nBudget'}</th>
+                  <th className="BudgetTableHeaderCellCurr">{disp_date_label(month, year) + '\nBudget'}</th>
                   <th className="BudgetTableHeaderCellCurr">{'Monthly\nAvg'}</th>
                   <th className="BudgetTableHeaderCell">{' \n '}</th>
                 </tr>
