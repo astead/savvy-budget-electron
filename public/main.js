@@ -290,7 +290,7 @@ ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
 
   knex
     .select('envelopeID')
-    .sum({ totalAmount: 'txAmt' })
+    .sum({ totalAmt: 'txAmt' })
     .min({ firstDate: 'txDate' })
     .from('transaction')
     .orderBy('envelopeID')
@@ -326,7 +326,7 @@ ipcMain.on(channels.GET_MONTHLY_AVG, (event, find_date) => {
 
   knex
     .select('envelopeID')
-    .sum({ totalPrevActual: 'txAmt' })
+    .sum({ totalAmt: 'txAmt' })
     .from('transaction')
     .orderBy('envelopeID')
     .where({ isBudget: 0 })

@@ -116,7 +116,7 @@ export const Envelopes: React.FC = () => {
       for (let i=0; i < arg.length; i++) {
         for (let j=0; j < tmpData.length; j++) {
           if (arg[i].envelopeID === tmpData[j].envID) {
-            tmpData[j] = Object.assign(tmpData[j], { prevActual: arg[i].totalPrevActual });
+            tmpData[j] = Object.assign(tmpData[j], { prevActual: arg[i].totalAmt });
           }
         }
       };
