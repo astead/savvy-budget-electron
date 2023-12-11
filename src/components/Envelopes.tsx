@@ -348,9 +348,8 @@ export const Envelopes: React.FC = () => {
       
       //console.log('data:', data);
       setLoaded(true);
-      console.log(data);
     }
-  }, [data]);
+  }, [loadedMonthlyAvg]);
 
   return (
     <div className="App">
@@ -400,7 +399,7 @@ export const Envelopes: React.FC = () => {
                     <td className="BudgetTableCellCurr">{formatCurrency(item.prevBudget)}</td>
                     <td className="BudgetTableCellCurr">{formatCurrency(item.prevActual)}</td>
                     <td className="BudgetTableCellCurr">{formatCurrency(item.currBalance)}</td>
-                    <td className="BudgetTableCellCurr">
+                    <td className="BudgetTableCellInput">
                       <EditableBudget 
                         initialID={item.envID}
                         initialDate={curMonth}
