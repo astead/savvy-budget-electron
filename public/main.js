@@ -3,6 +3,7 @@ const isDev = require('electron-is-dev'); // To check if electron is in developm
 const path = require('path');
 const knex = require('./db/db.js');
 const { channels } = require('../src/shared/constants');
+const Moment = require('moment');
 
 function createWindow() {
   // Create the browser window.
@@ -336,8 +337,8 @@ ipcMain.on(channels.GET_CUR_BUDGET, (event, find_date) => {
 ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
   console.log(channels.GET_PREV_ACTUAL);
 
-  const month = new Date(find_date).getMonth();
-  const year = new Date(find_date).getFullYear();
+  const month = Moment(new Date(find_date)).format('MM');
+  const year = Moment(new Date(find_date)).format('YYYY');
 
   knex
     .select('envelopeID')
@@ -345,12 +346,34 @@ ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
     .from('transaction')
     .orderBy('envelopeID')
     .where({ isBudget: 0 })
-    .andWhereRaw(`strftime('%m', txDate) = ?`, [month])
+    .andWhereRaw(`strftime('%m', txDate) = ?`, month)
     .where({ isDuplicate: 0 })
-    .andWhereRaw(`strftime('%Y', txDate) = ?`, [year])
+    .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
     .groupBy('envelopeID')
     .then((data) => {
       event.sender.send(channels.LIST_PREV_ACTUAL, data);
+    })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.GET_CUR_ACTUAL, (event, find_date) => {
+  console.log(channels.GET_CUR_ACTUAL);
+
+  const month = Moment(new Date(find_date)).format('MM');
+  const year = Moment(new Date(find_date)).format('YYYY');
+
+  knex
+    .select('envelopeID')
+    .sum({ totalAmt: 'txAmt' })
+    .from('transaction')
+    .orderBy('envelopeID')
+    .where({ isBudget: 0 })
+    .andWhereRaw(`strftime('%m', txDate) = ?`, month)
+    .where({ isDuplicate: 0 })
+    .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
+    .groupBy('envelopeID')
+    .then((data) => {
+      event.sender.send(channels.LIST_CUR_ACTUAL, data);
     })
     .catch((err) => console.log(err));
 });
@@ -391,8 +414,8 @@ ipcMain.on(channels.GET_MONTHLY_AVG, (event, find_date) => {
 ipcMain.on(channels.GET_TX_DATA, (event, find_date) => {
   console.log(channels.GET_TX_DATA);
 
-  const month = new Date(find_date).getMonth();
-  const year = new Date(find_date).getFullYear();
+  const month = Moment(new Date(find_date)).format('MM');
+  const year = Moment(new Date(find_date)).format('YYYY');
 
   knex
     .select(
@@ -418,12 +441,38 @@ ipcMain.on(channels.GET_TX_DATA, (event, find_date) => {
       this.on('account.id', '=', 'transaction.accountID');
     })
     .where({ isBudget: 0 })
-    .andWhereRaw(`strftime('%m', txDate) = ?`, [month])
+    .andWhereRaw(`strftime('%m', txDate) = ?`, month)
     .where({ isDuplicate: 0 })
-    .andWhereRaw(`strftime('%Y', txDate) = ?`, [year])
+    .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
     .orderBy('transaction.txDate')
     .then((data) => {
       event.sender.send(channels.LIST_TX_DATA, data);
     })
     .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.ADD_TX, (event, data) => {
+  console.log(channels.ADD_TX);
+
+  data.map((d) => {
+    const node = {
+      envelopeID: d[0],
+      txAmt: d[1],
+      txDate: d[2],
+      description: d[3],
+      refNumber: 0,
+      isBudget: 0,
+      isTransfer: 0,
+      isDuplicate: 0,
+      isSplit: 0,
+      accountID: 0,
+    };
+
+    knex('transaction')
+      .insert(node)
+      .then()
+      .catch((err) => {
+        console.log('Error: ' + err);
+      });
+  });
 });

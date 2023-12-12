@@ -11,6 +11,8 @@ module.exports = {
     LIST_CUR_BUDGET: 'list_cur_budget',
     GET_PREV_ACTUAL: 'get_prev_actual',
     LIST_PREV_ACTUAL: 'list_prev_actual',
+    GET_CUR_ACTUAL: 'get_cur_actual',
+    LIST_CUR_ACTUAL: 'list_cur_actual',
     GET_CURR_BALANCE: 'get_curr_balance',
     LIST_CURR_BALANCE: 'list_curr_balance',
     GET_MONTHLY_AVG: 'get_monthly_avg',
@@ -28,5 +30,7 @@ module.exports = {
     MOV_ENVELOPE: 'move_envelope',
 
     UPDATE_BUDGET: 'update_budget',
+
+    ADD_TX: 'add_transaction',
   },
 };

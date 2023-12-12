@@ -44,7 +44,8 @@ export const Envelopes: React.FC = () => {
     envID: number; 
     envelope: string;
     monthlyAvg: number; 
-    prevActual: number; 
+    prevActual: number;
+    currActual: number; 
     prevBudget: number; 
   };
 
@@ -85,7 +86,7 @@ export const Envelopes: React.FC = () => {
     months = (d2.getFullYear() - d1.getFullYear()) * 12;
     months -= d1.getMonth();
     months += d2.getMonth();
-    return months <= 0 ? 0 : months;
+    return months-1;
   };
   
   const [budgetData, setBudgetData] = useState<BudgetNodeData[]>([]);
@@ -96,6 +97,7 @@ export const Envelopes: React.FC = () => {
   const [loadedCurrBudget, setLoadedCurrBudget] = useState(false);
   const [loadedPrevActual, setLoadedPrevActual] = useState(false);
   const [loadedCurrBalance, setLoadedCurrBalance] = useState(false);
+  const [loadedCurrActual, setLoadedCurrActual] = useState(false);
   const [loadedMonthlyAvg, setLoadedMonthlyAvg] = useState(false);
 
   const load_PrevBudget = () => {
@@ -218,6 +220,36 @@ export const Envelopes: React.FC = () => {
     };
   };
 
+  const load_CurrActual = () => {
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_CUR_ACTUAL, Moment(new Date(year, month)).format('YYYY-MM-DD'));
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_CUR_ACTUAL, (arg) => {
+      
+      const tmpData = [...budgetData] as BudgetNodeData[]; 
+    
+      for (let i=0; i < arg.length; i++) {
+        for (let j=0; j < tmpData.length; j++) {
+          if (arg[i].envelopeID === tmpData[j].envID) {
+            tmpData[j] = Object.assign(tmpData[j], { currActual: arg[i].totalAmt });
+          }
+        }
+      };
+    
+      setBudgetData(tmpData as BudgetNodeData[]); 
+      setLoadedCurrActual(true);     
+
+      ipcRenderer.removeAllListeners(channels.LIST_CUR_ACTUAL);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_CUR_ACTUAL);
+    };
+  };
+
   const load_MonthlyAvg = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
@@ -235,18 +267,21 @@ export const Envelopes: React.FC = () => {
           firstDate = tmpDate;
         }
       }
-      const numMonths = monthDiff(new Date(year, month), firstDate);
-
-      for (let i=0; i < arg.length; i++) {
-        for (let j=0; j < tmpData.length; j++) {
-          if (arg[i].envelopeID === tmpData[j].envID) {
-            const ttmAvg = arg[i].totalAmt / numMonths;
-            tmpData[j] = Object.assign(tmpData[j], { monthlyAvg: ttmAvg });
-          }
-        }
-      };
+      const curDate = new Date(year, month);
+      const numMonths = monthDiff(firstDate, curDate);
       
-      setBudgetData(tmpData as BudgetNodeData[]); 
+      if (numMonths > 0) {
+        for (let i=0; i < arg.length; i++) {
+          for (let j=0; j < tmpData.length; j++) {
+            if (arg[i].envelopeID === tmpData[j].envID) {
+              const ttmAvg = arg[i].totalAmt / numMonths;
+              tmpData[j] = Object.assign(tmpData[j], { monthlyAvg: ttmAvg });
+            }
+          }
+        };
+        
+        setBudgetData(tmpData as BudgetNodeData[]); 
+      }
       setLoadedMonthlyAvg(true);     
 
       ipcRenderer.removeAllListeners(channels.LIST_MONTHLY_AVG);
@@ -272,6 +307,7 @@ export const Envelopes: React.FC = () => {
         currBalance: 0,
         currBudget: 0,
         monthlyAvg: 0,
+        currActual: 0,
       };
 
       for (let i=0; i < arg.length; i++) {
@@ -320,6 +356,7 @@ export const Envelopes: React.FC = () => {
       setLoadedCurrBudget(false);
       setLoadedPrevActual(false);
       setLoadedCurrBalance(false);
+      setLoadedCurrActual(false);
       setLoadedMonthlyAvg(false);
       setBudgetData([]);
     }
@@ -345,9 +382,15 @@ export const Envelopes: React.FC = () => {
 
   useEffect(() => {
     if (loadedCurrBalance) {      
-      load_MonthlyAvg();
+      load_CurrActual();
     }
   }, [loadedCurrBalance]);
+
+  useEffect(() => {
+    if (loadedCurrActual) {      
+      load_MonthlyAvg();
+    }
+  }, [loadedCurrActual]);
 
   useEffect(() => {
     if (Object.keys(data).length > 0 &&
@@ -356,6 +399,7 @@ export const Envelopes: React.FC = () => {
       loadedPrevBudget &&
       loadedPrevActual &&
       loadedCurrBalance &&
+      loadedCurrActual &&
       loadedMonthlyAvg) {
       
       setLoaded(true);
@@ -387,6 +431,7 @@ export const Envelopes: React.FC = () => {
                   <th className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</th>
                   <th className="BudgetTableHeaderCellCurr">{'Curr\nBalance'}</th>
                   <th className="BudgetTableHeaderCellCurr">{disp_date_label(month, year) + '\nBudget'}</th>
+                  <th className="BudgetTableHeaderCellCurr">{'Curr\nActual'}</th>
                   <th className="BudgetTableHeaderCellCurr">{'Monthly\nAvg'}</th>
                   <th className="BudgetTableHeaderCell">{' \n '}</th>
                 </tr>
@@ -397,7 +442,7 @@ export const Envelopes: React.FC = () => {
                   <>
                   { (index === 0 || (index > 0 && item.category !== myArray[index - 1].category)) && (
                     <tr key={'header-'+item.envID} className="BudgetTableGroupHeaderRow">
-                      <td colSpan={8} className="BudgetTableGroupHeader">{item.category}</td>
+                      <td colSpan={9} className="BudgetTableGroupHeader">{item.category}</td>
                     </tr>
                   )}
                   <tr key={item.envID} className="BudgetTableRow">
@@ -412,6 +457,7 @@ export const Envelopes: React.FC = () => {
                         initialDate={curMonth}
                         initialValue={item.currBudget}/>
                     </td>
+                    <td className="BudgetTableCellCurr">{formatCurrency(item.currActual)}</td>
                     <td className="BudgetTableCellCurr">{formatCurrency(item.monthlyAvg)}</td>
                     <td className="BudgetTableCellCurr">&nbsp;</td>
                   </tr>
