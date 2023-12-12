@@ -390,3 +390,79 @@ input.inputCurrency {
   margin: 0;
   padding-left:2px;
 }
+
+
+
+.TransactionTable {
+  padding: 0;
+  margin: 0;
+  border-collapse:collapse,
+}
+
+.TransactionTableHeaderRow {
+  background-color: #b4b4b4;
+  padding: 0;
+  margin: 0;
+}
+
+.TransactionTableHeaderCell {
+  background-color: #b4b4b4;
+  border: 1px solid black;
+  white-space: pre-wrap;
+  height:100%;
+  padding: 0;
+  margin: 0;
+  padding-left:2px;
+}
+
+.TransactionTableHeaderCellDate {
+  background-color: #b4b4b4;
+  border: 1px solid black;
+  text-align:center;
+  white-space: pre-wrap;
+  height:100%;
+  width: 100px;
+  padding: 0;
+  margin: 0;
+}
+
+.TransactionTableHeaderCellCurr {
+  background-color: #b4b4b4;
+  border: 1px solid black;
+  text-align:center;
+  white-space: pre-wrap;
+  height:100%;
+  width: 100px;
+  padding: 0;
+  margin: 0;
+}
+
+.TransactionTableCellInput {
+  border: 1px solid black;
+  text-align:right;
+  padding: 0;
+  margin: 0;
+}
+
+.TransactionTableCellDate {
+  border: 1px solid black;
+  text-align:right;
+  padding: 0;
+  margin: 0;
+  padding-right:2px;
+}
+
+.TransactionTableCellCurr {
+  border: 1px solid black;
+  text-align:right;
+  padding: 0;
+  margin: 0;
+  padding-right:2px;
+}
+
+.TransactionTableCell {
+  border: 1px solid black; 
+  padding: 0;
+  margin: 0;
+  padding-left:2px; 
+}

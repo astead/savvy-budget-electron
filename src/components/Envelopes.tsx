@@ -18,7 +18,7 @@ export const Envelopes: React.FC = () => {
   
   /* Month Selector code -------------------------------------------*/
   const [year, setYear] = useState((new Date()).getFullYear());
-  const [month, setMonth] = useState((new Date()).getMonth());
+  const [month, setMonth] = useState((new Date()).getMonth()+1);
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
   const [myStartMonth, setMyStartMonth] = useState(0);
   const [myCurMonth, setMyCurMonth] = useState(0);

@@ -3,6 +3,7 @@ import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js'
 import { MonthSelector } from '../helpers/MonthSelector.tsx'
 import Moment from 'moment';
+import Papa from 'papaparse';
 
 /*
  TODO:
@@ -44,7 +45,7 @@ export const Transactions: React.FC = () => {
   const [myStartMonth, setMyStartMonth] = useState(0);
   const [myCurMonth, setMyCurMonth] = useState(0);
   const [year, setYear] = useState((new Date()).getFullYear());
-  const [month, setMonth] = useState((new Date()).getMonth());
+  const [month, setMonth] = useState((new Date()).getMonth()+1);
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
   
   const monthSelectorCallback = ({ childStartMonth, childCurMonth }) => {    
@@ -61,11 +62,12 @@ export const Transactions: React.FC = () => {
   const load_transactions = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_TX_DATA);
+    ipcRenderer.send(channels.GET_TX_DATA, Moment(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
       setTxData(arg as TransactionNodeData[]);
+      console.log("got data back:", arg);
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     });
 
@@ -73,6 +75,20 @@ export const Transactions: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     };
+  }
+
+  const import_mint = (event) => {
+    Papa.parse(event.target.files[0], {
+      header: false,
+      skipEmptyLines: true,
+      complete: function (results) {
+        
+        // Insert this transaction
+        const ipcRenderer = (window as any).ipcRenderer;
+        ipcRenderer.send(channels.ADD_TX, results.data);
+         
+      }
+    });
   }
 
   useEffect(() => {
@@ -88,18 +104,27 @@ export const Transactions: React.FC = () => {
         Transactions<br/>
         <MonthSelector numMonths="10" startMonth={myStartMonth} curMonth={myCurMonth} parentCallback={monthSelectorCallback} />
         <br/>
+        {false &&
+          <input
+            type="file"
+            name="file"
+            accept=".csv"
+            onChange={import_mint}
+            style={{ display: "block", margin: "10px auto" }}
+          />
+        }
         <br/>
         {txData?.length > 0 &&
           <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
             <>
               <thead className="TransactionTableHeader">
                 <tr className="TransactionTableHeaderRow">
-                  <th className="TransactionTableHeaderCell">{' \n '}</th>
-                  <th className="TransactionTableHeaderCell">{' \nDate'}</th>
-                  <th className="TransactionTableHeaderCellCurr">{'Description'}</th>
+                  <th className="TransactionTableHeaderCell">{' '}</th>
+                  <th className="TransactionTableHeaderCellDate">{'Date'}</th>
+                  <th className="TransactionTableHeaderCell">{'Description'}</th>
                   <th className="TransactionTableHeaderCellCurr">{'Amount'}</th>
-                  <th className="TransactionTableHeaderCellCurr">{'Envelope'}</th>
-                  <th className="TransactionTableHeaderCell">{' \n '}</th>
+                  <th className="TransactionTableHeaderCell">{'Envelope'}</th>
+                  <th className="TransactionTableHeaderCell">{' '}</th>
                 </tr>
               </thead>
     
@@ -108,10 +133,10 @@ export const Transactions: React.FC = () => {
                   <>
                   <tr key={item.envID} className="TransactionTableRow">
                     <td className="TransactionTableCellCurr">&nbsp;</td>
-                    <td className="TransactionTableCell">{item.txDate}</td>
+                    <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
                     <td className="TransactionTableCell">{item.description}</td>
                     <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
-                    <td className="TransactionTableCell">{item.category + ":" + item.envelope}</td>
+                    <td className="TransactionTableCell">{item.category + " : " + item.envelope}</td>
                     <td className="TransactionTableCellCurr">&nbsp;</td>
                   </tr>
                   </>

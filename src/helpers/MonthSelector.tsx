@@ -9,11 +9,11 @@ export const MonthSelector = ({ numMonths, startMonth, curMonth, parentCallback}
 
   useEffect(() => {
     const today = new Date();
-    const month = today.getMonth() + parseInt(myStartMonth);
+    const month = today.getMonth() + 1 + parseInt(myStartMonth);
     const year = today.getFullYear();
 
     const tmpMonths = Array.from({length: numMonths}, (item, i) => {
-      const myDate = new Date(year, month+i);
+      const myDate = new Date(year, month+i-1);
       const monthString = 
         myDate.toLocaleString('en-US', {month: 'short'}) + "\n'" + 
         myDate.toLocaleString('en-US', {year: 'numeric'}).slice(2) ;
