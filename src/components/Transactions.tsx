@@ -67,7 +67,6 @@ export const Transactions: React.FC = () => {
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
       setTxData(arg as TransactionNodeData[]);
-      console.log("got data back:", arg);
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     });
 
