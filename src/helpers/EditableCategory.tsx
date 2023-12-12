@@ -15,18 +15,18 @@ export const EditableCategory = ({ initialID, initialName}) => {
     
     let tmpName = name;
 
-    if (name === 'Income') {
+    if (tmpName === 'Income') {
       setName('Income 2');
       tmpName = 'Income 2'; 
     }
-    if (name === 'Uncategorized') {
+    if (tmpName === 'Uncategorized') {
       setName('Uncategorized 2');
       tmpName = 'Uncategorized 2';
     }
     
     // Request we rename the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.REN_CATEGORY, { id, tmpName });
+    ipcRenderer.send(channels.REN_CATEGORY, { id, name: tmpName });
   };
 
   return (
