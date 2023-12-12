@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import 'react-edit-text/dist/index.css';
 
+// TODO: 
+// - Store CurMonth in local storage, so it persists?
+
 export const MonthSelector = ({ numMonths, startMonth, curMonth, parentCallback}) => {
    
   const [myStartMonth, ] = useState(startMonth);
