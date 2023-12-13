@@ -12,6 +12,7 @@ import Moment from 'moment';
   - Click on monthly average to go to trend chart
   - Color based on how healthy the envelope is
   - Click on curr balance to move envelope balance option
+  - option to show anything that isn't in a category
 */
 
 export const Envelopes: React.FC = () => {
