@@ -164,6 +164,8 @@ article.category-item{
 article.category-item-income{
   padding: 0;
   margin: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
   display: flex;
   width: 100%;
   vertical-align: middle;
@@ -175,8 +177,11 @@ article.category-item-income{
 article.category-item-uncategorized{
   padding: 0;
   margin: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
   display: flex;
   width: 100%;
+  min-height: ;
   vertical-align: middle;
   align-items: center;
   background-color: #676767;
@@ -204,7 +209,7 @@ article.envelope-container {
   display: flex;
   flex-direction: column;
   width: 90%;
-  
+  min-height: 40px;
   align-items: center;
   background-color: none;
   border: none
