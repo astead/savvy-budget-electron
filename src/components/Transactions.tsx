@@ -9,9 +9,7 @@ import Papa from 'papaparse';
 
 /*
  TODO:
-  - default transaction month to be at the end
   - import page.
-  - keyword assign page? or maybe within this? or add to configure?
   - add filter options:
     - account
     - bank
@@ -25,7 +23,6 @@ import Papa from 'papaparse';
   - first column: split the transaction
   - modify description?
   - popup window to add notes, tags, etc and edit item
-  - save keyword button
   - ERROR: Warning: Each child in a list should have a unique "key" prop.
 */
 

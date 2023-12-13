@@ -12,10 +12,6 @@ import EditableEnvelope from '../helpers/EditableEnvelope.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
 import { channels } from '../shared/constants.js';
 
-/* TODO:
-    - Rename categories isn't working
- */
-
 export const Configure: React.FC = () => {
   
   const [data, setData] = useState<any[]>([]);
