@@ -466,3 +466,34 @@ input.inputCurrency {
   margin: 0;
   padding-left:2px; 
 }
+
+.SaveKeyword {
+  padding: 0;
+  margin: 0;
+  padding-left:2px;
+  padding-right:4px;
+}
+
+.SaveKeyword-saved {
+  padding: 0;
+  margin: 0;
+  padding-left:2px;
+  padding-right:4px;
+  color: lightgreen;
+}
+
+.SaveKeyword:hover {
+  padding: 0;
+  margin: 0;
+  padding-left:2px;
+  padding-right:4px;
+  color:limegreen;
+}
+
+input.envelopeDropDown {
+
+}
+
+input.envelopeDropDown-undefined {
+ background-color: salmon;
+}

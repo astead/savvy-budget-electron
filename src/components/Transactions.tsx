@@ -3,6 +3,7 @@ import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
 import { MonthSelector } from '../helpers/MonthSelector.tsx';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
+import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
 import Papa from 'papaparse';
 
@@ -41,6 +42,7 @@ export const Transactions: React.FC = () => {
     txAmt: number;
     txDate: number;
     description: string;
+    keywordEnvID: number;
   }
   interface EnvelopeList {
     envID: number; 
@@ -177,7 +179,13 @@ export const Transactions: React.FC = () => {
                         data={envList}
                       />
                     </td>
-                    <td className="TransactionTableCellCurr">&nbsp;</td>
+                    <td className="TransactionTableCell">
+                        <KeywordSave
+                          txID={item.txID}
+                          envID={item.envID}
+                          description={item.description}
+                          keywordEnvID={item.keywordEnvID} />
+                    </td>
                   </tr>
                   </>
                 ))}

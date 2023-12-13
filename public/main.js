@@ -428,7 +428,8 @@ ipcMain.on(channels.GET_TX_DATA, (event, find_date) => {
       'account.account as account',
       'transaction.txDate as txDate',
       'transaction.txAmt as txAmt',
-      'transaction.description as description'
+      'transaction.description as description',
+      'keyword.envelopeID as keywordEnvID'
     )
     .from('transaction')
     .leftJoin('envelope', function () {
@@ -439,6 +440,9 @@ ipcMain.on(channels.GET_TX_DATA, (event, find_date) => {
     })
     .leftJoin('account', function () {
       this.on('account.id', '=', 'transaction.accountID');
+    })
+    .leftJoin('keyword', function () {
+      this.on('keyword.description', '=', 'transaction.description');
     })
     .where({ isBudget: 0 })
     .andWhereRaw(`strftime('%m', txDate) = ?`, month)
@@ -500,11 +504,66 @@ ipcMain.on(channels.GET_ENV_LIST, (event) => {
 ipcMain.on(channels.UPDATE_TX_ENV, (event, [txID, envID]) => {
   console.log(channels.UPDATE_TX_ENV, txID, envID);
 
+  knex
+    .select('id', 'txAmt')
+    .from('transaction')
+    .where({ id: txID })
+    .then((rows) => {
+      if (rows?.length) {
+        knex
+          .raw(
+            `update 'envelope' set balance = balance - ` +
+              rows[0].txAmt +
+              ` where id = ` +
+              rows[0].envelopeID
+          )
+          .then(() => {
+            knex.raw(
+              `update 'envelope' set balance = balance + ` +
+                rows[0].txAmt +
+                ` where id = ` +
+                envID
+            );
+          })
+          .catch((err) => {
+            console.log('Error: ' + err);
+          });
+      }
+    })
+    .catch((err) => {
+      console.log('Error: ' + err);
+    });
+
   knex('transaction')
     .where({ id: txID })
     .update({ envelopeID: envID })
     .then(() => {
       console.log('Changed tx envelope to: ' + envID);
+    })
+    .catch((err) => {
+      console.log('Error: ' + err);
+    });
+});
+
+ipcMain.on(channels.SAVE_KEYWORD, (event, [envID, description]) => {
+  console.log(channels.SAVE_KEYWORD, envID, description);
+
+  knex
+    .from('keyword')
+    .delete()
+    .where({ description: description })
+    .then(() => {
+      const node = {
+        envelopeID: envID,
+        description: description,
+      };
+
+      knex('keyword')
+        .insert(node)
+        .then()
+        .catch((err) => {
+          console.log('Error: ' + err);
+        });
     })
     .catch((err) => {
       console.log('Error: ' + err);

@@ -35,5 +35,7 @@ module.exports = {
 
     ADD_TX: 'add_transaction',
     UPDATE_TX_ENV: 'update_tx_envelope',
+
+    SAVE_KEYWORD: 'save_keyword',
   },
 };
