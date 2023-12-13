@@ -27,7 +27,7 @@ export const Envelopes: React.FC = () => {
   const monthSelectorCallback = ({ childStartMonth, childCurMonth }) => {
     
     // Need to adjust our month/year to reflect the change
-    let tmpDate = new Date(year, month + childStartMonth + childCurMonth - myCurMonth);
+    let tmpDate = new Date(year, month + childCurMonth - myCurMonth);
         
     setMyStartMonth(childStartMonth);
     setMyCurMonth(childCurMonth);

@@ -20,12 +20,12 @@ import Papa from 'papaparse';
   - add split transactions
   - add hide transactions
   - add marking as duplicate
-  - start at the end of the month list, looking back
   - highlight row if it is a duplicate, maybe other stuff?
   - first column: split the transaction
   - modify description?
   - popup window to add notes, tags, etc and edit item
-  - save keywork button
+  - save keyword button
+  - ERROR: Warning: Each child in a list should have a unique "key" prop.
 */
 
 export const Transactions: React.FC = () => {
@@ -63,8 +63,8 @@ export const Transactions: React.FC = () => {
   
   const monthSelectorCallback = ({ childStartMonth, childCurMonth }) => {    
     // Need to adjust our month/year to reflect the change
-    let tmpDate = new Date(year, month + childStartMonth + childCurMonth - myCurMonth);
-        
+    let tmpDate = new Date(year, month + childCurMonth - myCurMonth);
+
     setMyStartMonth(childStartMonth);
     setMyCurMonth(childCurMonth);
     setYear(tmpDate.getFullYear());
@@ -116,7 +116,6 @@ export const Transactions: React.FC = () => {
         // Insert this transaction
         const ipcRenderer = (window as any).ipcRenderer;
         ipcRenderer.send(channels.ADD_TX, results.data);
-         
       }
     });
   }
