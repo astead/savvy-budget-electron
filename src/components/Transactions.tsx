@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
-import { channels } from '../shared/constants.js'
-import { MonthSelector } from '../helpers/MonthSelector.tsx'
+import { channels } from '../shared/constants.js';
+import { MonthSelector } from '../helpers/MonthSelector.tsx';
+import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 import Moment from 'moment';
 import Papa from 'papaparse';
 
 /*
  TODO:
-  - Make account a drop down, with its own helper component
+  - default transaction month to be at the end
   - import page.
   - keyword assign page? or maybe within this? or add to configure?
   - add filter options:
@@ -20,6 +21,11 @@ import Papa from 'papaparse';
   - add hide transactions
   - add marking as duplicate
   - start at the end of the month list, looking back
+  - highlight row if it is a duplicate, maybe other stuff?
+  - first column: split the transaction
+  - modify description?
+  - popup window to add notes, tags, etc and edit item
+  - save keywork button
 */
 
 export const Transactions: React.FC = () => {
@@ -36,17 +42,24 @@ export const Transactions: React.FC = () => {
     txDate: number;
     description: string;
   }
+  interface EnvelopeList {
+    envID: number; 
+    category: string;
+    envelope: string; 
+  }
   
   function formatCurrency(currencyNumber:number) {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
   }
 
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
-  const [myStartMonth, setMyStartMonth] = useState(0);
-  const [myCurMonth, setMyCurMonth] = useState(0);
+  const [myStartMonth, setMyStartMonth] = useState(-8);
+  const [myCurMonth, setMyCurMonth] = useState(8);
   const [year, setYear] = useState((new Date()).getFullYear());
   const [month, setMonth] = useState((new Date()).getMonth()+1);
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
+  const [envList, setEnvList] = useState<EnvelopeList[]>([]);
+  const [envListLoaded, setEnvListLoaded] = useState(false);
   
   const monthSelectorCallback = ({ childStartMonth, childCurMonth }) => {    
     // Need to adjust our month/year to reflect the change
@@ -76,6 +89,24 @@ export const Transactions: React.FC = () => {
     };
   }
 
+  const load_envelope_list = () => {
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_ENV_LIST);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
+      setEnvList(arg as TransactionNodeData[]);
+      setEnvListLoaded(true);
+      ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
+    };
+  }
+
   const import_mint = (event) => {
     Papa.parse(event.target.files[0], {
       header: false,
@@ -93,6 +124,10 @@ export const Transactions: React.FC = () => {
   useEffect(() => {
     load_transactions();
   }, [curMonth]);
+
+  useEffect(() => {
+    load_envelope_list();
+  }, []);
 
   return (
     <div className="App">
@@ -113,7 +148,7 @@ export const Transactions: React.FC = () => {
           />
         }
         <br/>
-        {txData?.length > 0 &&
+        {txData?.length > 0 && envListLoaded &&
           <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
             <>
               <thead className="TransactionTableHeader">
@@ -135,7 +170,14 @@ export const Transactions: React.FC = () => {
                     <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
                     <td className="TransactionTableCell">{item.description}</td>
                     <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
-                    <td className="TransactionTableCell">{item.category + " : " + item.envelope}</td>
+                    <td className="TransactionTableCell">
+                      <CategoryDropDown 
+                        txID={item.txID}
+                        envID={item.envID}
+                        name={item.category + " : " + item.envelope}
+                        data={envList}
+                      />
+                    </td>
                     <td className="TransactionTableCellCurr">&nbsp;</td>
                   </tr>
                   </>

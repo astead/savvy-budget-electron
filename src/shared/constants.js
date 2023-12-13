@@ -2,6 +2,8 @@ module.exports = {
   channels: {
     GET_CAT_ENV: 'get_categories_and_envelopes',
     LIST_CAT_ENV: 'list_categories_and_envelopes',
+    GET_ENV_LIST: 'get_envelope_list',
+    LIST_ENV_LIST: 'list_envelope_list',
 
     GET_BUDGET_ENV: 'get_budget_envelopes',
     LIST_BUDGET_ENV: 'list_budget_envelopes',
@@ -32,5 +34,6 @@ module.exports = {
     UPDATE_BUDGET: 'update_budget',
 
     ADD_TX: 'add_transaction',
+    UPDATE_TX_ENV: 'update_tx_envelope',
   },
 };

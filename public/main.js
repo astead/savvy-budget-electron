@@ -476,3 +476,37 @@ ipcMain.on(channels.ADD_TX, (event, data) => {
       });
   });
 });
+
+ipcMain.on(channels.GET_ENV_LIST, (event) => {
+  console.log(channels.GET_ENV_LIST);
+  knex
+    .select(
+      'envelope.id as envID',
+      'category.category as category',
+      'envelope.envelope as envelope'
+    )
+    .from('envelope')
+    .leftJoin('category', function () {
+      this.on('category.id', '=', 'envelope.categoryID');
+      this.on('envelope.isActive', 1);
+    })
+    .orderBy('category.category', 'envelope.envelope')
+    .then((data) => {
+      event.sender.send(channels.LIST_ENV_LIST, data);
+    })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.UPDATE_TX_ENV, (event, [txID, envID]) => {
+  console.log(channels.UPDATE_TX_ENV, txID, envID);
+
+  knex('transaction')
+    .where({ id: txID })
+    .update({ envelopeID: envID })
+    .then(() => {
+      console.log('Changed tx envelope to: ' + envID);
+    })
+    .catch((err) => {
+      console.log('Error: ' + err);
+    });
+});
