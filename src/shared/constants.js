@@ -37,5 +37,9 @@ module.exports = {
     UPDATE_TX_ENV: 'update_tx_envelope',
 
     SAVE_KEYWORD: 'save_keyword',
+
+    LOOKUP_ACCOUNT: 'lookup_account',
+    LOOKUP_ACCOUNT_RESULT: 'lookup_account_result',
+    IMPORT_OFX: 'import_ofx',
   },
 };

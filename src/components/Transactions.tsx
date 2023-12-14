@@ -5,7 +5,20 @@ import { MonthSelector } from '../helpers/MonthSelector.tsx';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
-import Papa from 'papaparse';
+//import Papa from 'papaparse';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFileImport } from "@fortawesome/free-solid-svg-icons";
+
+//import fs from 'fs';
+
+//import { Ofx } from 'ofx-data-extractor';
+
+
+//import {parse as parseOFX} from 'ofx-js';
+
+//const ofx = require('ofx');
+
+
 
 /*
  TODO:
@@ -40,6 +53,7 @@ export const Transactions: React.FC = () => {
     txDate: number;
     description: string;
     keywordEnvID: number;
+    isDuplicate: number;
   }
   interface EnvelopeList {
     envID: number; 
@@ -59,6 +73,7 @@ export const Transactions: React.FC = () => {
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
   const [envListLoaded, setEnvListLoaded] = useState(false);
+  const [filename, setFilename] = useState('');
   
   const monthSelectorCallback = ({ childStartMonth, childCurMonth }) => {    
     // Need to adjust our month/year to reflect the change
@@ -106,7 +121,34 @@ export const Transactions: React.FC = () => {
     };
   }
 
+  const handleImport = async () => {
+    console.log("about to try and read file:", filename);
+   
+    const ipcRenderer = (window as any).ipcRenderer;
+    const fs = ipcRenderer.require('fs')
+    
+    fs.readFile(filename, 'utf8', function(err, ofxString) {
+      
+      console.log("reading file");
+      if (err) {
+        console.log(err.message);
+      } else {
+        console.log("read file successfully");
+        
+        // Insert this transaction
+        ipcRenderer.send(channels.IMPORT_OFX, ofxString);
+        
+      }
+    });
+  }
+
+  const save_file_name = (event) => {
+    console.log("set filename: ", event.target.files[0].path);
+    setFilename(event.target.files[0].path);
+  }
+
   const import_mint = (event) => {
+    /*
     Papa.parse(event.target.files[0], {
       header: false,
       skipEmptyLines: true,
@@ -117,6 +159,7 @@ export const Transactions: React.FC = () => {
         ipcRenderer.send(channels.ADD_TX, results.data);
       }
     });
+    */
   }
 
   useEffect(() => {
@@ -145,6 +188,20 @@ export const Transactions: React.FC = () => {
             style={{ display: "block", margin: "10px auto" }}
           />
         }
+        <div className="import-container">
+          <input
+              type="file"
+              name="file"
+              accept=".qfx"
+              className="import-file"
+              onChange={save_file_name}
+          />
+          <button 
+            className='import'
+            onClick={handleImport}>
+              <FontAwesomeIcon icon={faFileImport} />
+          </button>
+        </div>
         <br/>
         {txData?.length > 0 && envListLoaded &&
           <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
@@ -163,7 +220,7 @@ export const Transactions: React.FC = () => {
               <tbody className="TransactionTableBody">
                 {txData.map((item, index, myArray) => (
                   <>
-                  <tr key={item.envID} className="TransactionTableRow">
+                  <tr key={item.envID} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
                     <td className="TransactionTableCellCurr">&nbsp;</td>
                     <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
                     <td className="TransactionTableCell">{item.description}</td>

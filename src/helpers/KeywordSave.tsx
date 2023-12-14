@@ -19,7 +19,7 @@ export const KeywordSave = ({txID, envID, description, keywordEnvID}) => {
   return (
     <div
       onClick={saveKeyword}
-      className={"SaveKeyword" + (my_keywordEnvID === my_envID?"-saved":"")}>
+      className={"SaveKeyword" + (my_keywordEnvID === my_envID && my_envID !== null ?"-saved":"")}>
       <FontAwesomeIcon icon={faBookmark} />
     </div>
   );

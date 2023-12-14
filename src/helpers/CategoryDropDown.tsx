@@ -3,6 +3,11 @@ import 'react-edit-text/dist/index.css';
 import { channels } from '../shared/constants.js'
 
 export const CategoryDropDown = ({txID, envID, name, data}) => {
+  
+  if (envID === null) {
+    envID = -1;
+  }
+  
   const [my_txID, ] = useState(txID);
   const [my_envID, ] = useState(envID);
   const [my_data, ] = useState(data);

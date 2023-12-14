@@ -21,5 +21,6 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   },
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);
-  }
+  },
+  require: (callback) => window.require(callback),
 });

@@ -4,6 +4,7 @@ const path = require('path');
 const knex = require('./db/db.js');
 const { channels } = require('../src/shared/constants');
 const Moment = require('moment');
+const { BankTransferList, Ofx } = require('ofx-convert');
 
 function createWindow() {
   // Create the browser window.
@@ -429,7 +430,8 @@ ipcMain.on(channels.GET_TX_DATA, (event, find_date) => {
       'transaction.txDate as txDate',
       'transaction.txAmt as txAmt',
       'transaction.description as description',
-      'keyword.envelopeID as keywordEnvID'
+      'keyword.envelopeID as keywordEnvID',
+      'transaction.isDuplicate as isDuplicate'
     )
     .from('transaction')
     .leftJoin('envelope', function () {
@@ -446,7 +448,6 @@ ipcMain.on(channels.GET_TX_DATA, (event, find_date) => {
     })
     .where({ isBudget: 0 })
     .andWhereRaw(`strftime('%m', txDate) = ?`, month)
-    .where({ isDuplicate: 0 })
     .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
     .orderBy('transaction.txDate')
     .then((data) => {
@@ -568,4 +569,113 @@ ipcMain.on(channels.SAVE_KEYWORD, (event, [envID, description]) => {
     .catch((err) => {
       console.log('Error: ' + err);
     });
+});
+
+ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
+  console.log(channels.IMPORT_OFX, ofxString);
+
+  let accountID = '';
+
+  const tmpStr = ofxString;
+  // Find the financial institution ID
+  if (tmpStr.includes('<ACCTID>')) {
+    const i = tmpStr.indexOf('<ACCTID>') + 8;
+    const j = tmpStr.indexOf('\n', i);
+    accountID = tmpStr.substr(i, j - i).trim();
+    console.log('Account ID: ', accountID);
+  }
+
+  // Lookup if we've already use this one
+  if (accountID.length) {
+    await knex
+      .select('id', 'account', 'refNumber')
+      .from('account')
+      .orderBy('account')
+      .where({ refNumber: accountID })
+      .then(async (data) => {
+        console.log('looking up account, found: ', data?.length);
+        if (data?.length) {
+          // If we have, use this ID
+          accountID = data[0].id;
+          console.log(data[0].id, ' -> accountID = ', accountID);
+        } else {
+          // If we haven't, lets store this one
+          await knex('account')
+            .insert({ account: 'New Account', refNumber: accountID })
+            .then((result) => {
+              if (result?.length) {
+                accountID = result[0];
+                console.log(result[0], ' -> accountID = ', accountID);
+              }
+            })
+            .catch((err) => {
+              console.log('Error: ' + err);
+            });
+        }
+      })
+      .catch((err) => console.log(err));
+  }
+
+  console.log('Final account ID: ', accountID);
+
+  const ofx = new Ofx(ofxString);
+  const trans = await ofx.getBankTransferList();
+
+  trans.map(async (tx, i) => {
+    let envID = -1;
+    let isDuplicate = 0;
+    let txDate = Moment(new Date(tx.DTPOSTED.date)).format('YYYY-MM-DD');
+
+    if (i < 1) {
+      // Check if this matches a keyword
+      if (tx.MEMO?.length) {
+        await knex('keyword')
+          .select('envelopeID')
+          .where({ description: tx.NAME })
+          .then((data) => {
+            if (data?.length) {
+              envID = data[0].envelopeID;
+            }
+          });
+      }
+
+      // TODO: Check if it is a duplicate?
+      if (tx.FITID?.length) {
+        await knex('transaction')
+          .select('id')
+          .where({ refNumber: tx.FITID })
+          .andWhereRaw(`julianday(?) - julianday(txDate) = 0`, txDate)
+          .then((data) => {
+            if (data?.length) {
+              isDuplicate = 1;
+            }
+          });
+      }
+
+      // Prepare the data node
+      const myNode = {
+        envelopeID: envID,
+        txAmt: tx.TRNAMT,
+        txDate: txDate,
+        description: tx.NAME,
+        refNumber: tx.FITID,
+        isBudget: 0,
+        isTransfer: 0,
+        isDuplicate: isDuplicate,
+        isSplit: 0,
+        accountID: accountID,
+      };
+
+      // Insert the node
+      knex('transaction')
+        .insert(myNode)
+        .then((result) => {
+          if (result?.length) {
+            process.stdout.write('.');
+          }
+        });
+
+      // TODO: Update the envelope balance
+    }
+  });
 });

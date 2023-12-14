@@ -315,6 +315,34 @@ input.inputCurrency {
   background-color: #EF4444;
 }
 
+div.import-container {
+  border-radius: 0px;
+  border: none;
+  padding:0;
+  margin:0;
+  vertical-align: middle;
+  width: 400px;
+}
+
+input.import-file {
+  border: 0.5px solid #18181B;
+  padding:0;
+  margin:0;
+  width: 350px;
+}
+
+.import {
+  border-radius: 6px;
+  background-color: #F8FAFC;
+  color: black;
+}
+
+.import:focus, .import:hover {
+  filter:brightness(120%);
+  color: black;
+  background-color: limegreen;
+}
+
 .submit {
   background-color: #F8FAFC;
   color: gray;
@@ -500,4 +528,12 @@ input.envelopeDropDown {
 
 input.envelopeDropDown-undefined {
  background-color: salmon;
+}
+
+tr.TransactionTableRow {
+
+}
+
+tr.TransactionTableRow-duplicate {
+  background-color: rgb(205, 146, 88);
 }
