@@ -9,20 +9,8 @@ import Moment from 'moment';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileImport } from "@fortawesome/free-solid-svg-icons";
 
-//import fs from 'fs';
-
-//import { Ofx } from 'ofx-data-extractor';
-
-
-//import {parse as parseOFX} from 'ofx-js';
-
-//const ofx = require('ofx');
-
-
-
 /*
  TODO:
-  - import page.
   - add filter options:
     - account
     - bank
@@ -31,8 +19,7 @@ import { faFileImport } from "@fortawesome/free-solid-svg-icons";
     - description
   - add split transactions
   - add hide transactions
-  - add marking as duplicate
-  - highlight row if it is a duplicate, maybe other stuff?
+  - add marking as duplicate, maybe with https://fontawesome.com/icons/arrows-rotate?f=classic&s=solid
   - first column: split the transaction
   - modify description?
   - popup window to add notes, tags, etc and edit item
