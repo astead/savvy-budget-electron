@@ -626,56 +626,54 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
     let isDuplicate = 0;
     let txDate = Moment(new Date(tx.DTPOSTED.date)).format('YYYY-MM-DD');
 
-    if (i < 1) {
-      // Check if this matches a keyword
-      if (tx.MEMO?.length) {
-        await knex('keyword')
-          .select('envelopeID')
-          .where({ description: tx.NAME })
-          .then((data) => {
-            if (data?.length) {
-              envID = data[0].envelopeID;
-            }
-          });
-      }
-
-      // TODO: Check if it is a duplicate?
-      if (tx.FITID?.length) {
-        await knex('transaction')
-          .select('id')
-          .where({ refNumber: tx.FITID })
-          .andWhereRaw(`julianday(?) - julianday(txDate) = 0`, txDate)
-          .then((data) => {
-            if (data?.length) {
-              isDuplicate = 1;
-            }
-          });
-      }
-
-      // Prepare the data node
-      const myNode = {
-        envelopeID: envID,
-        txAmt: tx.TRNAMT,
-        txDate: txDate,
-        description: tx.NAME,
-        refNumber: tx.FITID,
-        isBudget: 0,
-        isTransfer: 0,
-        isDuplicate: isDuplicate,
-        isSplit: 0,
-        accountID: accountID,
-      };
-
-      // Insert the node
-      knex('transaction')
-        .insert(myNode)
-        .then((result) => {
-          if (result?.length) {
-            process.stdout.write('.');
+    // Check if this matches a keyword
+    if (tx.MEMO?.length) {
+      await knex('keyword')
+        .select('envelopeID')
+        .where({ description: tx.NAME })
+        .then((data) => {
+          if (data?.length) {
+            envID = data[0].envelopeID;
           }
         });
-
-      // TODO: Update the envelope balance
     }
+
+    // TODO: Check if it is a duplicate?
+    if (tx.FITID?.length) {
+      await knex('transaction')
+        .select('id')
+        .where({ refNumber: tx.FITID })
+        .andWhereRaw(`julianday(?) - julianday(txDate) = 0`, txDate)
+        .then((data) => {
+          if (data?.length) {
+            isDuplicate = 1;
+          }
+        });
+    }
+
+    // Prepare the data node
+    const myNode = {
+      envelopeID: envID,
+      txAmt: tx.TRNAMT,
+      txDate: txDate,
+      description: tx.NAME,
+      refNumber: tx.FITID,
+      isBudget: 0,
+      isTransfer: 0,
+      isDuplicate: isDuplicate,
+      isSplit: 0,
+      accountID: accountID,
+    };
+
+    // Insert the node
+    knex('transaction')
+      .insert(myNode)
+      .then((result) => {
+        if (result?.length) {
+          process.stdout.write('.');
+        }
+      });
+
+    // TODO: Update the envelope balance
   });
 });
