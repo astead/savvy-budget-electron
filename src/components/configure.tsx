@@ -12,6 +12,7 @@ import EditableEnvelope from '../helpers/EditableEnvelope.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
 import { channels } from '../shared/constants.js';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
+import { EditableAccount } from '../helpers/EditableAccount.tsx';
 
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -62,6 +63,7 @@ export const Configure: React.FC = () => {
 
   const [catData, setCatData] = useState<any[]>([]);
   const [keywordData, setKeywordData] = useState<any[]>([]);
+  const [accountData, setAccountData] = useState<any[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [value, setValue] = useState(0);
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
@@ -113,6 +115,7 @@ export const Configure: React.FC = () => {
   }
 
   const handleCategoryDelete = (id, name) => {
+    // Don't allow deleting of Income or Uncategorized
     if (name === 'Income') {
       return;
     }
@@ -126,13 +129,12 @@ export const Configure: React.FC = () => {
   };
 
   const handleEnvelopeDelete = (id) => {
-    console.log('del envelope: ', id);
-    
     // Request we delete the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.DEL_ENVELOPE, id);
 
     // TODO: Anything we need to clean up here?
+    // This cleanup should probably be done in main.
   };
 
   const handleKeywordDelete = (id) => {
@@ -141,9 +143,13 @@ export const Configure: React.FC = () => {
     ipcRenderer.send(channels.DEL_KEYWORD, {id});
   };
 
+  const handleAccountDelete = (id) => {
+    // Request we delete the account in the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.DEL_ACCOUNT, {id});
+  };
+
   const handleEnvelopeChange = ({id, new_value}) => {
-    console.log("handleChange: updating keyword's envelope");
-    
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_KEYWORD_ENV, {id, new_value});
@@ -203,6 +209,23 @@ export const Configure: React.FC = () => {
     };
   }
 
+  const load_accounts = () => {
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_ACCOUNTS);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_ACCOUNTS, (arg) => {
+      setAccountData(arg);
+      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
+    };
+  }
+
   const load_envelope_list = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
@@ -226,6 +249,7 @@ export const Configure: React.FC = () => {
       load_cats_and_envs();
       load_envelope_list();
       load_keywords();
+      load_accounts();
     }
   }, []);
 
@@ -356,6 +380,56 @@ export const Configure: React.FC = () => {
     )
   }
 
+  let account_content;
+  if (accountData) {
+    account_content = (
+      
+      <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
+        <>
+        <thead className="TransactionTableHeader">
+          <tr className="TransactionTableHeaderRow">
+            <th className="TransactionTableHeaderCell">{'Account'}</th>
+            <th className="TransactionTableHeaderCell">{'Name'}</th>
+            <th className="TransactionTableHeaderCell">{' '}</th>
+          </tr>
+        </thead>
+
+        <tbody className="TransactionTableBody">
+          {
+            accountData.map((acc, index) => {
+              const { id, refNumber, account } = acc;
+            
+                return (
+              
+                  <>
+                  <tr key={id} className="TransactionTableRow">
+                    
+                    <td className="TransactionTableCell">{refNumber}</td>
+                    <td className="TransactionTableCell">
+                      <EditableAccount
+                        initialID={id}
+                        initialName={account} />
+                    </td>
+                    <td className="TransactionTableCell">
+                    <button 
+                      className='trash'
+                      onClick={() => handleAccountDelete(id)}>
+                        <FontAwesomeIcon icon={faTrash} />
+                    </button>
+                    </td>
+                  </tr>
+                  </>
+
+                );
+            }
+          )}
+      
+        </tbody>
+        </>
+      </table>
+    )
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -380,7 +454,7 @@ export const Configure: React.FC = () => {
             {keyword_content}
           </CustomTabPanel>
           <CustomTabPanel value={value} index={2}>
-            Item Three
+            {account_content}
           </CustomTabPanel>
         </Box>
         

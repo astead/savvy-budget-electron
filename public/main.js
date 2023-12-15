@@ -7,6 +7,11 @@ const Moment = require('moment');
 const { BankTransferList, Ofx } = require('ofx-convert');
 const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
 
+/*
+  TODO:
+  - when moving an envelope back to 'null', it doesn't show up as red
+*/
+
 function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
@@ -836,6 +841,18 @@ ipcMain.on(channels.GET_KEYWORDS, (event) => {
     .catch((err) => console.log(err));
 });
 
+ipcMain.on(channels.GET_ACCOUNTS, (event) => {
+  console.log(channels.GET_ACCOUNTS);
+  knex
+    .select('id', 'refNumber', 'account')
+    .from('account')
+    .orderBy('id')
+    .then((data) => {
+      event.sender.send(channels.LIST_ACCOUNTS, data);
+    })
+    .catch((err) => console.log(err));
+});
+
 ipcMain.on(channels.UPDATE_KEYWORD_ENV, (event, { id, new_value }) => {
   console.log(channels.GET_KEYWORDS, { id, new_value });
   knex('keyword')
@@ -847,6 +864,22 @@ ipcMain.on(channels.UPDATE_KEYWORD_ENV, (event, { id, new_value }) => {
 ipcMain.on(channels.DEL_KEYWORD, (event, { id }) => {
   console.log(channels.DEL_KEYWORD, { id });
   knex('keyword')
+    .delete()
+    .where({ id: id })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.UPDATE_ACCOUNT, (event, { id, new_value }) => {
+  console.log(channels.UPDATE_ACCOUNT, { id, new_value });
+  knex('account')
+    .update({ account: new_value })
+    .where({ id: id })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.DEL_ACCOUNT, (event, { id }) => {
+  console.log(channels.DEL_ACCOUNT, { id });
+  knex('account')
     .delete()
     .where({ id: id })
     .catch((err) => console.log(err));
