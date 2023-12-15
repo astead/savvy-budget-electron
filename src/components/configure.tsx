@@ -61,7 +61,7 @@ function a11yProps(index: number) {
     setValue(newValue);
   };
 
-  const groupBy = (data, key, label) => {
+  const categoryGroupBy = (data, key, label) => {
     return data.reduce(function(acc, item) {
       let groupKey = item[key];
       let groupLabel = item[label];
@@ -73,7 +73,7 @@ function a11yProps(index: number) {
     }, {});
   };
 
-  const compare = (a,b) => {
+  const compareCategory = (a,b) => {
     if (a.cat === 'Uncategorized' || b.cat === 'Uncategorized') {
       if (a.cat === 'Uncategorized' && b.cat !== 'Uncategorized') {
         return -1;
@@ -101,7 +101,7 @@ function a11yProps(index: number) {
     }
   }
 
-  const handleDelete = (id, name) => {
+  const handleCategoryDelete = (id, name) => {
     if (name === 'Income') {
       return;
     }
@@ -114,7 +114,7 @@ function a11yProps(index: number) {
     ipcRenderer.send(channels.DEL_CATEGORY, id);
   };
 
-  const handleEnvDelete = (id) => {
+  const handleEnvelopeDelete = (id) => {
     console.log('del envelope: ', id);
     
     // Request we delete the category in the DB
@@ -146,8 +146,8 @@ function a11yProps(index: number) {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
-      const groupedData = groupBy(arg, 'catID', 'category');
-      const sortedData = Object.values(groupedData).sort(compare);
+      const groupedData = categoryGroupBy(arg, 'catID', 'category');
+      const sortedData = Object.values(groupedData).sort(compareCategory);
 
       setData(sortedData);
       setLoaded(true);
@@ -167,9 +167,9 @@ function a11yProps(index: number) {
     }
   }, []);
 
-  let content;
+  let category_content;
   if (data) {
-    content = (
+    category_content = (
       <DragDropContext onDragEnd={handleOnDragEnd}>
         {data.map((category, index) => {
           const { catID, cat:cat_name, items } = category;
@@ -197,7 +197,7 @@ function a11yProps(index: number) {
                       {(cat_name !== 'Income' && cat_name !== 'Uncategorized')?
                         <button 
                           className={(cat_name === 'Income' || cat_name === 'Uncategorized')?'trash-block':'trash'}
-                          onClick={() => handleDelete( catID, cat_name )}>
+                          onClick={() => handleCategoryDelete( catID, cat_name )}>
                             <FontAwesomeIcon icon={faTrash} />
                         </button>
                         :''
@@ -219,7 +219,7 @@ function a11yProps(index: number) {
                                       initialID={env.envID.toString()}
                                       initialName={env.envelope} />
                                   </div>
-                                  <button className="trash" onClick={() => handleEnvDelete( env.envID )}>
+                                  <button className="trash" onClick={() => handleEnvelopeDelete( env.envID )}>
                                       <FontAwesomeIcon icon={faTrash} />
                                   </button>
                                 </article>
@@ -259,7 +259,7 @@ function a11yProps(index: number) {
           </Box>
           <CustomTabPanel value={value} index={0}>
             <NewCategory/>      
-            {content}
+            {category_content}
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
             Item Two
