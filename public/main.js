@@ -210,7 +210,7 @@ ipcMain.on(
       .where('envelopeID', newEnvelopeID)
       .andWhere('txDate', newtxDate)
       .andWhere('isBudget', 1)
-      .then(function (rows) {
+      .then(async function (rows) {
         if (rows.length === 0) {
           console.log('no budget entries');
 
@@ -222,21 +222,24 @@ ipcMain.on(
               isBudget: 1,
               txAmt: newtxAmt,
             })
-            .then(() => {
-              knex('envelope')
-                .update(knex.raw(`balance = balance + ` + newtxAmt))
-                .where('id', newEnvelopeID);
+            .then(async () => {
+              await knex.raw(
+                `UPDATE 'envelope' SET balance = balance + ` +
+                  newtxAmt +
+                  ` WHERE id = ` +
+                  newEnvelopeID
+              );
             })
             .catch((err) => {
               console.log('Error inserting budget: ' + err);
             });
         } else {
           // Already exist
-          knex
+          await knex
             .raw(
-              `update 'envelope' set balance = balance + ` +
+              `UPDATE 'envelope' SET balance = balance + ` +
                 (newtxAmt - rows[0].txAmt) +
-                ` where id = ` +
+                ` WHERE id = ` +
                 newEnvelopeID
             )
             .then(() => {
@@ -663,10 +666,13 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
     await knex('transaction').insert(myNode);
 
     // Update the envelope balance
-    if (envID != -1) {
-      knex('envelope')
-        .update(knex.raw(`balance = balance + ` + tx.TRNAMT))
-        .where('id', envID);
+    if (envID !== -1 && isDuplicate !== 1) {
+      await knex.raw(
+        `UPDATE 'envelope' SET balance = balance + ` +
+          tx.TRNAMT +
+          ` WHERE id = ` +
+          envID
+      );
     }
 
     process.stdout.write('.');
