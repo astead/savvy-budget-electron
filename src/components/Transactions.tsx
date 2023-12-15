@@ -24,6 +24,9 @@ import { faFileImport } from "@fortawesome/free-solid-svg-icons";
   - modify description?
   - popup window to add notes, tags, etc and edit item
   - ERROR: Warning: Each child in a list should have a unique "key" prop.
+  - Import Paypal
+  - import Venmo
+  - import PLAID
 */
 
 export const Transactions: React.FC = () => {
@@ -231,9 +234,9 @@ export const Transactions: React.FC = () => {
               </thead>
     
               <tbody className="TransactionTableBody">
-                {txData.map((item, index, myArray) => (
+                {txData.map((item, index) => (
                   <>
-                  <tr key={item.envID} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
+                  <tr key={index} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
                     <td className="TransactionTableCellCurr">&nbsp;</td>
                     <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
                     <td className="TransactionTableCell">{item.description}</td>
