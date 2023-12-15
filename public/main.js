@@ -162,6 +162,8 @@ ipcMain.on(channels.DEL_ENVELOPE, (event, id) => {
     .catch((err) => {
       console.log('Error: ' + err);
     });
+
+  // TODO: What to do with orphaned transactions
 });
 
 ipcMain.on(channels.REN_CATEGORY, (event, { id, name }) => {

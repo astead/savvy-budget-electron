@@ -132,9 +132,6 @@ export const Configure: React.FC = () => {
     // Request we delete the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.DEL_ENVELOPE, id);
-
-    // TODO: Anything we need to clean up here?
-    // This cleanup should probably be done in main.
   };
 
   const handleKeywordDelete = (id) => {

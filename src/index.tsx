@@ -12,7 +12,6 @@ import { Configure } from './components/Configure.tsx';
 /*
   TODO:
   - Add chart page
-  - Add keyword updates page
 */
 
 const root = ReactDOM.createRoot(
