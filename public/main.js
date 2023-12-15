@@ -7,11 +7,6 @@ const Moment = require('moment');
 const { BankTransferList, Ofx } = require('ofx-convert');
 const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
 
-/*
-  TODO:
-  - when moving an envelope back to 'null', it doesn't show up as red
-*/
-
 function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
@@ -164,6 +159,10 @@ ipcMain.on(channels.DEL_ENVELOPE, (event, id) => {
     });
 
   // TODO: What to do with orphaned transactions
+  // Maybe set them to -1?
+  // Or don't know inactive envelopes in budget AND
+  //    have a way to show those at the end of the budget
+  //    and allow setting to those envelopes in other stuff.
 });
 
 ipcMain.on(channels.REN_CATEGORY, (event, { id, name }) => {
@@ -504,8 +503,8 @@ ipcMain.on(channels.GET_ENV_LIST, (event) => {
     .from('envelope')
     .leftJoin('category', function () {
       this.on('category.id', '=', 'envelope.categoryID');
-      this.on('envelope.isActive', 1);
     })
+    .where('envelope.isActive', 1)
     .orderBy('category.category', 'envelope.envelope')
     .then((data) => {
       event.sender.send(channels.LIST_ENV_LIST, data);
