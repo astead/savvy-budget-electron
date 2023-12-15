@@ -258,7 +258,7 @@ export const Configure: React.FC = () => {
           const { catID, cat:cat_name, items } = category;
           
           return (
-            <Droppable droppableId={catID.toString()} key={"cat"+catID.toString()}>
+            <Droppable droppableId={catID.toString()} key={index}>
               {(provided) => (
                 <section  {...provided.droppableProps} ref={provided.innerRef}>
                   <article className="category-container">
@@ -293,7 +293,7 @@ export const Configure: React.FC = () => {
                         //console.log("env:", env);  
                         return (
                           (env.envID) &&
-                          <Draggable key={env.envID.toString()} draggableId={env.envID.toString()} index={index2}>
+                          <Draggable key={index2} draggableId={env.envID.toString()} index={index2}>
                             {(provided) => (
                               <article className="envelope-item-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
                                 <article className="envelope-item">
@@ -342,35 +342,29 @@ export const Configure: React.FC = () => {
           {
             keywordData.map((kw, index) => {
               const { id, envelopeID, description } = kw;
-            
-                return (
-              
-                  <>
-                  <tr key={id} className="TransactionTableRow">
-                    
-                    <td className="TransactionTableCell">{description}</td>
-                    <td className="TransactionTableCell">
-                      <CategoryDropDown 
-                        id={id}
-                        envID={envelopeID}
-                        data={envList}
-                        changeCallback={handleEnvelopeChange}
-                      />
-                    </td>
-                    <td className="TransactionTableCell">
-                    <button 
-                      className='trash'
-                      onClick={() => handleKeywordDelete(id)}>
-                        <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                    </td>
-                  </tr>
-                  </>
-
-                );
+              return (
+                <tr key={index} className="TransactionTableRow">
+                  
+                  <td className="TransactionTableCell">{description}</td>
+                  <td className="TransactionTableCell">
+                    <CategoryDropDown 
+                      id={id}
+                      envID={envelopeID}
+                      data={envList}
+                      changeCallback={handleEnvelopeChange}
+                    />
+                  </td>
+                  <td className="TransactionTableCell">
+                  <button 
+                    className='trash'
+                    onClick={() => handleKeywordDelete(id)}>
+                      <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                  </td>
+                </tr>
+              );
             }
           )}
-      
         </tbody>
         </>
       </table>
@@ -398,13 +392,12 @@ export const Configure: React.FC = () => {
             
                 return (
               
-                  <>
-                  <tr key={id} className="TransactionTableRow">
+                  <tr key={index} className="TransactionTableRow">
                     
                     <td className="TransactionTableCell">{refNumber}</td>
                     <td className="TransactionTableCell">
                       <EditableAccount
-                        initialID={id}
+                        initialID={id.toString()}
                         initialName={account} />
                     </td>
                     <td className="TransactionTableCell">
@@ -415,7 +408,6 @@ export const Configure: React.FC = () => {
                     </button>
                     </td>
                   </tr>
-                  </>
 
                 );
             }
