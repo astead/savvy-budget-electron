@@ -5,6 +5,7 @@ const knex = require('./db/db.js');
 const { channels } = require('../src/shared/constants');
 const Moment = require('moment');
 const { BankTransferList, Ofx } = require('ofx-convert');
+const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
 
 function createWindow() {
   // Create the browser window.
@@ -574,26 +575,16 @@ ipcMain.on(channels.SAVE_KEYWORD, (event, [envID, description]) => {
     });
 });
 
-ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
-  console.log(channels.IMPORT_OFX, ofxString);
-
-  let accountID = '';
-
-  const tmpStr = ofxString;
-  // Find the financial institution ID
-  if (tmpStr.includes('<ACCTID>')) {
-    const i = tmpStr.indexOf('<ACCTID>') + 8;
-    const j = tmpStr.indexOf('\n', i);
-    accountID = tmpStr.substr(i, j - i).trim();
-  }
+async function lookup_account(account) {
+  let accountID = -1;
 
   // Lookup if we've already use this one
-  if (accountID.length) {
+  if (account?.length) {
     await knex
       .select('id', 'account', 'refNumber')
       .from('account')
       .orderBy('account')
-      .where({ refNumber: accountID })
+      .where({ refNumber: account })
       .then(async (data) => {
         if (data?.length) {
           // If we have, use this ID
@@ -601,7 +592,7 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
         } else {
           // If we haven't, lets store this one
           await knex('account')
-            .insert({ account: 'New Account', refNumber: accountID })
+            .insert({ account: 'New Account', refNumber: account })
             .then((result) => {
               if (result?.length) {
                 accountID = result[0];
@@ -615,67 +606,160 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
       .catch((err) => console.log(err));
   }
 
-  const ofx = new Ofx(ofxString);
-  const trans = await ofx.getBankTransferList();
+  return accountID;
+}
 
-  trans.map(async (tx, i) => {
-    let envID = -1;
-    let isDuplicate = 0;
-    let txDate = Moment(new Date(tx.DTPOSTED.date)).format('YYYY-MM-DD');
+async function lookup_keyword(description) {
+  let envID = -1;
 
-    // Check if this matches a keyword
-    if (tx.NAME?.length) {
-      await knex('keyword')
-        .select('envelopeID')
-        .where({ description: tx.NAME })
-        .then((data) => {
-          if (data?.length) {
-            envID = data[0].envelopeID;
-          }
-        });
-    }
+  if (description?.length) {
+    await knex('keyword')
+      .select('envelopeID')
+      .where({ description: description })
+      .then((data) => {
+        if (data?.length) {
+          envID = data[0].envelopeID;
+        }
+      });
+  }
 
-    // Check if it is a duplicate?
-    if (tx.FITID?.length) {
-      await knex('transaction')
-        .select('id')
-        .where({ refNumber: tx.FITID })
-        .andWhereRaw(`julianday(?) - julianday(txDate) = 0`, txDate)
-        .then((data) => {
-          if (data?.length) {
-            isDuplicate = 1;
-          }
-        });
-    }
+  return envID;
+}
 
-    // Prepare the data node
-    const myNode = {
-      envelopeID: envID,
-      txAmt: tx.TRNAMT,
-      txDate: txDate,
-      description: tx.NAME,
-      refNumber: tx.FITID,
-      isBudget: 0,
-      isTransfer: 0,
-      isDuplicate: isDuplicate,
-      isSplit: 0,
-      accountID: accountID,
-    };
+async function lookup_duplicate_by_FITID(fitID, txDate) {
+  let isDuplicate = 0;
 
-    // Insert the node
-    await knex('transaction').insert(myNode);
+  // Check if it is a duplicate?
+  if (fitID?.length) {
+    await knex('transaction')
+      .select('id')
+      .where({ refNumber: fitID })
+      .andWhereRaw(`julianday(?) - julianday(txDate) = 0`, txDate)
+      .then((data) => {
+        if (data?.length) {
+          isDuplicate = 1;
+        }
+      });
+  }
 
-    // Update the envelope balance
-    if (envID !== -1 && isDuplicate !== 1) {
-      await knex.raw(
-        `UPDATE 'envelope' SET balance = balance + ` +
-          tx.TRNAMT +
-          ` WHERE id = ` +
-          envID
+  return isDuplicate;
+}
+
+async function update_env_balance(envID, amt) {
+  await knex.raw(
+    `UPDATE 'envelope' SET balance = balance + ` + amt + ` WHERE id = ` + envID
+  );
+}
+
+ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
+  //console.log(channels.IMPORT_OFX, ofxString);
+
+  let accountID = '';
+  let accountID_str = '';
+  let ver = '';
+
+  // Find the financial institution ID
+  const tmpStr = ofxString;
+  if (tmpStr.includes('<ACCTID>')) {
+    const i = tmpStr.indexOf('<ACCTID>') + 8;
+    const j = tmpStr.indexOf('\n', i);
+    const k = tmpStr.indexOf('</ACCTID>', i);
+
+    accountID_str = tmpStr
+      .substr(i, ((j < k && j !== -1) || k === -1 ? j : k) - i)
+      .trim();
+  }
+  accountID = await lookup_account(accountID_str);
+
+  // What version of OFX is this?
+  // Seems like the OFX library only supports 102,
+  //  maybe all the 100's.
+  const tmpStr2 = ofxString;
+  if (tmpStr2.includes('VERSION')) {
+    const i = tmpStr.indexOf('VERSION') + 7;
+    const j = tmpStr.indexOf('SECURITY', i);
+    ver = tmpStr
+      .substr(i, j - i)
+      .replace(/"/g, '')
+      .replace(/:/g, '')
+      .replace(/=/g, '')
+      .trim();
+  }
+
+  if (ver[0] === '1') {
+    const ofx = new Ofx(ofxString);
+    const trans = await ofx.getBankTransferList();
+
+    trans.map(async (tx, i) => {
+      insert_transaction_node(
+        accountID,
+        tx.TRNAMT,
+        tx.DTPOSTED.date,
+        tx.NAME,
+        tx.FITID
       );
-    }
+    });
+  }
+  if (ver[0] === '2') {
+    const xml = new XMLParser().parse(ofxString);
+    const trans = await xml.OFX.CREDITCARDMSGSRSV1.CCSTMTTRNRS.CCSTMTRS
+      .BANKTRANLIST.STMTTRN;
 
-    process.stdout.write('.');
-  });
+    trans.map(async (tx, i) => {
+      insert_transaction_node(
+        accountID,
+        tx.TRNAMT,
+        tx.DTPOSTED.substr(0, 4) +
+          '-' +
+          tx.DTPOSTED.substr(4, 2) +
+          '-' +
+          tx.DTPOSTED.substr(6, 2),
+        tx.NAME,
+        tx.FITID
+      );
+    });
+  }
   process.stdout.write('\n');
 });
+
+async function insert_transaction_node(
+  accountID,
+  txAmt,
+  txDate,
+  description,
+  refNumber
+) {
+  let envID = -1;
+  let isDuplicate = 0;
+  let my_txDate = Moment(new Date(txDate)).format('YYYY-MM-DD');
+
+  // Check if this matches a keyword
+  envID = await lookup_keyword(description);
+
+  // Check if this is a duplicate
+  isDuplicate = await lookup_duplicate_by_FITID(refNumber, txDate);
+
+  // Prepare the data node
+  const myNode = {
+    envelopeID: envID,
+    txAmt: txAmt,
+    txDate: my_txDate,
+    description: description,
+    refNumber: refNumber,
+    isBudget: 0,
+    isTransfer: 0,
+    isDuplicate: isDuplicate,
+    isSplit: 0,
+    accountID: accountID,
+  };
+
+  // Insert the node
+  await knex('transaction').insert(myNode);
+
+  // Update the envelope balance
+  if (envID !== -1 && isDuplicate !== 1) {
+    await update_env_balance(envID, txAmt);
+  }
+
+  process.stdout.write('.');
+}
