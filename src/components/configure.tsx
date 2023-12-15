@@ -272,7 +272,7 @@ export const Configure: React.FC = () => {
                           <div className="category">{cat_name}</div>
                           :
                           <EditableCategory
-                            initialID={catID}
+                            initialID={catID.toString()}
                             initialName={cat_name} />
                         }
                       </div>
