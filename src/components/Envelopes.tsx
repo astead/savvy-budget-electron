@@ -439,7 +439,7 @@ export const Envelopes: React.FC = () => {
     
               <tbody className="BudgetTableBody">
                 {budgetData.map((item, index, myArray) => (
-                  <>
+                  <React.Fragment key={index}>
                   { (index === 0 || (index > 0 && item.category !== myArray[index - 1].category)) && (
                     <tr key={'header-'+item.envID} className="BudgetTableGroupHeaderRow">
                       <td colSpan={9} className="BudgetTableGroupHeader">{item.category}</td>
@@ -461,7 +461,7 @@ export const Envelopes: React.FC = () => {
                     <td className="BudgetTableCellCurr">{formatCurrency(item.monthlyAvg)}</td>
                     <td className="BudgetTableCellCurr">&nbsp;</td>
                   </tr>
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
             </>
