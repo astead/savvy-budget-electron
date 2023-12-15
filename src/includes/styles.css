@@ -522,11 +522,11 @@ input.import-file {
   color:limegreen;
 }
 
-input.envelopeDropDown {
+select.envelopeDropDown {
 
 }
 
-input.envelopeDropDown-undefined {
+select.envelopeDropDown-undefined {
  background-color: salmon;
 }
 
