@@ -12,9 +12,6 @@ export const CategoryDropDown = ({txID, envID, name, data}) => {
   const [my_envID, ] = useState(envID);
   const [my_data, ] = useState(data);
 
-  console.log(data);
-  console.log(envID);
-
   const handleChange = (e) => {
     console.log('handleChange: updating category ');
     
