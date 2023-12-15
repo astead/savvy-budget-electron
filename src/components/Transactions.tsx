@@ -108,6 +108,15 @@ export const Transactions: React.FC = () => {
     };
   }
 
+  function nthIndex(str, pat, n){
+    var L= str.length, i= -1;
+    while(n-- && i++<L){
+        i= str.indexOf(pat, i);
+        if (i < 0) break;
+    }
+    return i;
+  }
+
   const handleImport = async () => {
     const ipcRenderer = (window as any).ipcRenderer;
     const fs = ipcRenderer.require('fs')
@@ -117,7 +126,24 @@ export const Transactions: React.FC = () => {
         console.log(err.message);
       } else {
         // Insert this transaction
-        ipcRenderer.send(channels.IMPORT_OFX, ofxString);
+        if (filename.toLowerCase().endsWith("qfx")) {
+          ipcRenderer.send(channels.IMPORT_OFX, ofxString);
+        }
+        if (filename.toLowerCase().endsWith("csv")) {
+          let account_string = '';
+          let i = filename.lastIndexOf("/");
+          let j = filename.lastIndexOf("\\");
+          let short_filename = filename.substring((i===-1?j:i)+1);
+
+          if (short_filename.toLowerCase().startsWith("sofi-")) {
+            let separator = nthIndex(short_filename, "-", 3);
+            if (separator > 0) {
+              account_string = short_filename.substring(0,separator);
+            }
+          }
+
+          ipcRenderer.send(channels.IMPORT_CSV, [account_string, ofxString]);
+        }
       }
     });
   }
@@ -171,7 +197,7 @@ export const Transactions: React.FC = () => {
           <input
               type="file"
               name="file"
-              accept=".qfx"
+              accept=".qfx,.csv"
               className="import-file"
               onChange={save_file_name}
           />

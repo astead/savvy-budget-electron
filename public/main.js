@@ -621,19 +621,49 @@ async function lookup_keyword(description) {
           envID = data[0].envelopeID;
         }
       });
+
+    console.log(
+      await knex('keyword')
+        .select('envelopeID')
+        .where({ description: description })
+        .toSQL()
+        .toNative()
+    );
   }
 
   return envID;
 }
 
-async function lookup_duplicate_by_FITID(fitID, txDate) {
+async function lookup_if_duplicate(
+  accountID,
+  refNumber,
+  txDate,
+  txAmt,
+  description
+) {
   let isDuplicate = 0;
 
   // Check if it is a duplicate?
-  if (fitID?.length) {
+  if (refNumber?.length) {
+    console.log('Checking by refNumber');
+
     await knex('transaction')
       .select('id')
-      .where({ refNumber: fitID })
+      .andWhereRaw(`accountID = ?`, accountID)
+      .andWhereRaw(`refNumber = ?`, refNumber)
+      .andWhereRaw(`julianday(?) - julianday(txDate) = 0`, txDate)
+      .then((data) => {
+        if (data?.length) {
+          isDuplicate = 1;
+        }
+      });
+  } else {
+    console.log('Checking by other stuff');
+    await knex('transaction')
+      .select('id')
+      .where({ txAmt: txAmt })
+      .andWhereRaw(`accountID = ?`, accountID)
+      .andWhere({ description: description })
       .andWhereRaw(`julianday(?) - julianday(txDate) = 0`, txDate)
       .then((data) => {
         if (data?.length) {
@@ -722,6 +752,30 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
   process.stdout.write('\n');
 });
 
+ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
+  let accountID = '';
+
+  // Find the financial institution ID
+  console.log('Account string: ', account_string);
+  accountID = await lookup_account(account_string);
+
+  const nodes = ofxString.split('\n');
+  nodes.map(async (tx, i) => {
+    if (i > 0) {
+      const tx_values = tx.split(',');
+
+      insert_transaction_node(
+        accountID,
+        tx_values[3],
+        tx_values[0],
+        tx_values[1],
+        ''
+      );
+    }
+  });
+});
+
+//console.log(channels.IMPORT_OFX, ofxString);
 async function insert_transaction_node(
   accountID,
   txAmt,
@@ -737,7 +791,13 @@ async function insert_transaction_node(
   envID = await lookup_keyword(description);
 
   // Check if this is a duplicate
-  isDuplicate = await lookup_duplicate_by_FITID(refNumber, txDate);
+  isDuplicate = await lookup_if_duplicate(
+    accountID,
+    refNumber,
+    my_txDate,
+    txAmt,
+    description
+  );
 
   // Prepare the data node
   const myNode = {

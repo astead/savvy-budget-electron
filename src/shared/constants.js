@@ -38,8 +38,7 @@ module.exports = {
 
     SAVE_KEYWORD: 'save_keyword',
 
-    LOOKUP_ACCOUNT: 'lookup_account',
-    LOOKUP_ACCOUNT_RESULT: 'lookup_account_result',
     IMPORT_OFX: 'import_ofx',
+    IMPORT_CSV: 'import_csv',
   },
 };
