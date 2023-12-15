@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import 'react-edit-text/dist/index.css';
 
-// TODO: 
-// - Store CurMonth in local storage, so it persists?
+/*
+TODO: 
+ - Store CurMonth in local storage, so it persists?
+ - Move left/right to other months.
+*/
 
 export const MonthSelector = ({ numMonths, startMonth, curMonth, parentCallback}) => {
    
