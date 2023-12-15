@@ -19,6 +19,11 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
+/*
+  TODO:
+  - use local storage to save which tab we were on?
+  - rename tab's value field to tabValue for clarity?
+*/
 
 export const Configure: React.FC = () => {
 
