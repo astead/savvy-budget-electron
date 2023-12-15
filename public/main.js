@@ -582,7 +582,6 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
     const i = tmpStr.indexOf('<ACCTID>') + 8;
     const j = tmpStr.indexOf('\n', i);
     accountID = tmpStr.substr(i, j - i).trim();
-    console.log('Account ID: ', accountID);
   }
 
   // Lookup if we've already use this one
@@ -593,11 +592,9 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
       .orderBy('account')
       .where({ refNumber: accountID })
       .then(async (data) => {
-        console.log('looking up account, found: ', data?.length);
         if (data?.length) {
           // If we have, use this ID
           accountID = data[0].id;
-          console.log(data[0].id, ' -> accountID = ', accountID);
         } else {
           // If we haven't, lets store this one
           await knex('account')
@@ -605,7 +602,6 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
             .then((result) => {
               if (result?.length) {
                 accountID = result[0];
-                console.log(result[0], ' -> accountID = ', accountID);
               }
             })
             .catch((err) => {
@@ -616,8 +612,6 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
       .catch((err) => console.log(err));
   }
 
-  console.log('Final account ID: ', accountID);
-
   const ofx = new Ofx(ofxString);
   const trans = await ofx.getBankTransferList();
 
@@ -627,7 +621,7 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
     let txDate = Moment(new Date(tx.DTPOSTED.date)).format('YYYY-MM-DD');
 
     // Check if this matches a keyword
-    if (tx.MEMO?.length) {
+    if (tx.NAME?.length) {
       await knex('keyword')
         .select('envelopeID')
         .where({ description: tx.NAME })
@@ -638,7 +632,7 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
         });
     }
 
-    // TODO: Check if it is a duplicate?
+    // Check if it is a duplicate?
     if (tx.FITID?.length) {
       await knex('transaction')
         .select('id')
@@ -666,14 +660,16 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
     };
 
     // Insert the node
-    knex('transaction')
-      .insert(myNode)
-      .then((result) => {
-        if (result?.length) {
-          process.stdout.write('.');
-        }
-      });
+    await knex('transaction').insert(myNode);
 
-    // TODO: Update the envelope balance
+    // Update the envelope balance
+    if (envID != -1) {
+      knex('envelope')
+        .update(knex.raw(`balance = balance + ` + tx.TRNAMT))
+        .where('id', envID);
+    }
+
+    process.stdout.write('.');
   });
+  process.stdout.write('\n');
 });

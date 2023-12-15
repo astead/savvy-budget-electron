@@ -109,28 +109,20 @@ export const Transactions: React.FC = () => {
   }
 
   const handleImport = async () => {
-    console.log("about to try and read file:", filename);
-   
     const ipcRenderer = (window as any).ipcRenderer;
     const fs = ipcRenderer.require('fs')
     
     fs.readFile(filename, 'utf8', function(err, ofxString) {
-      
-      console.log("reading file");
       if (err) {
         console.log(err.message);
       } else {
-        console.log("read file successfully");
-        
         // Insert this transaction
         ipcRenderer.send(channels.IMPORT_OFX, ofxString);
-        
       }
     });
   }
 
   const save_file_name = (event) => {
-    console.log("set filename: ", event.target.files[0].path);
     setFilename(event.target.files[0].path);
   }
 
