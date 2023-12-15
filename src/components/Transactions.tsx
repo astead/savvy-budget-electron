@@ -234,7 +234,6 @@ export const Transactions: React.FC = () => {
     
               <tbody className="TransactionTableBody">
                 {txData.map((item, index) => (
-                  <>
                   <tr key={index} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
                     <td className="TransactionTableCellCurr">&nbsp;</td>
                     <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
@@ -256,7 +255,6 @@ export const Transactions: React.FC = () => {
                           keywordEnvID={item.keywordEnvID} />
                     </td>
                   </tr>
-                  </>
                 ))}
               </tbody>
             </>
