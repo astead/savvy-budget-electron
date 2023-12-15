@@ -97,7 +97,7 @@ export const Transactions: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
-      setEnvList(arg as TransactionNodeData[]);
+      setEnvList(arg as EnvelopeList[]);
       setEnvListLoaded(true);
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
@@ -116,6 +116,14 @@ export const Transactions: React.FC = () => {
     }
     return i;
   }
+
+  const handleChange = ({id, new_value}) => {
+    console.log('handleChange: updating category ');
+    
+    // Request we update the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.UPDATE_TX_ENV, [id, new_value]);
+  };
 
   const handleImport = async () => {
     const ipcRenderer = (window as any).ipcRenderer;
@@ -232,10 +240,10 @@ export const Transactions: React.FC = () => {
                     <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
                     <td className="TransactionTableCell">
                       <CategoryDropDown 
-                        txID={item.txID}
+                        id={item.txID}
                         envID={item.envID}
-                        name={item.category + " : " + item.envelope}
                         data={envList}
+                        changeCallback={handleChange}
                       />
                     </td>
                     <td className="TransactionTableCell">

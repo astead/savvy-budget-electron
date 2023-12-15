@@ -40,5 +40,10 @@ module.exports = {
 
     IMPORT_OFX: 'import_ofx',
     IMPORT_CSV: 'import_csv',
+
+    GET_KEYWORDS: 'get_keywords',
+    LIST_KEYWORDS: 'list_keywords',
+    UPDATE_KEYWORD_ENV: 'update_keyword_envelope',
+    DEL_KEYWORD: 'del_keyword',
   },
 };

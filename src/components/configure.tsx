@@ -11,6 +11,7 @@ import EditableCategory from '../helpers/EditableCategory.tsx';
 import EditableEnvelope from '../helpers/EditableEnvelope.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
 import { channels } from '../shared/constants.js';
+import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -19,45 +20,55 @@ import Box from '@mui/material/Box';
 
 
 export const Configure: React.FC = () => {
-  
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
 
-function CustomTabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+  interface EnvelopeList {
+    envID: number; 
+    category: string;
+    envelope: string; 
+  }
 
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
-    </div>
-  );
-}
+  interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+  }
 
-function a11yProps(index: number) {
-  return {
-    id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
-  };
-}
+  function CustomTabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
 
-  const [data, setData] = useState<any[]>([]);
+    return (
+      <div
+        role="tabpanel"
+        hidden={value !== index}
+        id={`simple-tabpanel-${index}`}
+        aria-labelledby={`simple-tab-${index}`}
+        {...other}
+      >
+        {value === index && (
+          <Box sx={{ p: 3 }}>
+            <Typography>{children}</Typography>
+          </Box>
+        )}
+      </div>
+    );
+  }
+
+  function a11yProps(index: number) {
+    return {
+      id: `simple-tab-${index}`,
+      'aria-controls': `simple-tabpanel-${index}`,
+    };
+  }
+
+  const [catData, setCatData] = useState<any[]>([]);
+  const [keywordData, setKeywordData] = useState<any[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [value, setValue] = useState(0);
+  const [envList, setEnvList] = useState<EnvelopeList[]>([]);
+  const [envListLoaded, setEnvListLoaded] = useState(false);
+  
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
@@ -124,6 +135,20 @@ function a11yProps(index: number) {
     // TODO: Anything we need to clean up here?
   };
 
+  const handleKeywordDelete = (id) => {
+    // Request we delete the keyword in the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.DEL_KEYWORD, {id});
+  };
+
+  const handleEnvelopeChange = ({id, new_value}) => {
+    console.log("handleChange: updating keyword's envelope");
+    
+    // Request we update the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.UPDATE_KEYWORD_ENV, {id, new_value});
+  };
+
   const handleOnDragEnd = (result) => {
     if (!result?.destination) return;
     
@@ -149,7 +174,7 @@ function a11yProps(index: number) {
       const groupedData = categoryGroupBy(arg, 'catID', 'category');
       const sortedData = Object.values(groupedData).sort(compareCategory);
 
-      setData(sortedData);
+      setCatData(sortedData);
       setLoaded(true);
 
       ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
@@ -161,17 +186,54 @@ function a11yProps(index: number) {
     };
   }
 
+  const load_keywords = () => {
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_KEYWORDS);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_KEYWORDS, (arg) => {
+      setKeywordData(arg);
+      ipcRenderer.removeAllListeners(channels.LIST_KEYWORDS);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_KEYWORDS);
+    };
+  }
+
+  const load_envelope_list = () => {
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_ENV_LIST);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
+      setEnvList(arg as EnvelopeList[]);
+      setEnvListLoaded(true);
+      ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
+    };
+  }
+
   useEffect(() => {
     if (!loaded) {
       load_cats_and_envs();
+      load_envelope_list();
+      load_keywords();
     }
   }, []);
 
   let category_content;
-  if (data) {
+  if (catData) {
     category_content = (
       <DragDropContext onDragEnd={handleOnDragEnd}>
-        {data.map((category, index) => {
+        {catData.map((category, index) => {
           const { catID, cat:cat_name, items } = category;
           
           return (
@@ -241,6 +303,59 @@ function a11yProps(index: number) {
     )
   }
 
+  let keyword_content;
+  if (keywordData && envListLoaded) {
+    keyword_content = (
+      
+      <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
+        <>
+        <thead className="TransactionTableHeader">
+          <tr className="TransactionTableHeaderRow">
+            <th className="TransactionTableHeaderCell">{'Keyword'}</th>
+            <th className="TransactionTableHeaderCell">{'Envelope'}</th>
+            <th className="TransactionTableHeaderCell">{' '}</th>
+          </tr>
+        </thead>
+
+        <tbody className="TransactionTableBody">
+          {
+            keywordData.map((kw, index) => {
+              const { id, envelopeID, description } = kw;
+            
+                return (
+              
+                  <>
+                  <tr key={id} className="TransactionTableRow">
+                    
+                    <td className="TransactionTableCell">{description}</td>
+                    <td className="TransactionTableCell">
+                      <CategoryDropDown 
+                        id={id}
+                        envID={envelopeID}
+                        data={envList}
+                        changeCallback={handleEnvelopeChange}
+                      />
+                    </td>
+                    <td className="TransactionTableCell">
+                    <button 
+                      className='trash'
+                      onClick={() => handleKeywordDelete(id)}>
+                        <FontAwesomeIcon icon={faTrash} />
+                    </button>
+                    </td>
+                  </tr>
+                  </>
+
+                );
+            }
+          )}
+      
+        </tbody>
+        </>
+      </table>
+    )
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -251,7 +366,7 @@ function a11yProps(index: number) {
         
         <Box sx={{ width: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs  value={value} onChange={handleChange}  aria-label="basic tabs example">
+            <Tabs  value={value} onChange={handleTabChange}  aria-label="basic tabs example">
               <Tab label="Categories" {...a11yProps(0)} />
               <Tab label="Key Words" {...a11yProps(1)} />
               <Tab label="Accounts" {...a11yProps(2)} />
@@ -262,7 +377,7 @@ function a11yProps(index: number) {
             {category_content}
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
-            Item Two
+            {keyword_content}
           </CustomTabPanel>
           <CustomTabPanel value={value} index={2}>
             Item Three

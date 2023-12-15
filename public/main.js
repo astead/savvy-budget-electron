@@ -823,3 +823,31 @@ async function insert_transaction_node(
 
   process.stdout.write('.');
 }
+
+ipcMain.on(channels.GET_KEYWORDS, (event) => {
+  console.log(channels.GET_KEYWORDS);
+  knex
+    .select('id', 'envelopeID', 'description')
+    .from('keyword')
+    .orderBy('envelopeID')
+    .then((data) => {
+      event.sender.send(channels.LIST_KEYWORDS, data);
+    })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.UPDATE_KEYWORD_ENV, (event, { id, new_value }) => {
+  console.log(channels.GET_KEYWORDS, { id, new_value });
+  knex('keyword')
+    .update({ envelopeID: new_value })
+    .where({ id: id })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.DEL_KEYWORD, (event, { id }) => {
+  console.log(channels.DEL_KEYWORD, { id });
+  knex('keyword')
+    .delete()
+    .where({ id: id })
+    .catch((err) => console.log(err));
+});
