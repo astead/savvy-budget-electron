@@ -23,8 +23,6 @@ import { faFileImport } from "@fortawesome/free-solid-svg-icons";
   - first column: split the transaction
   - modify description?
   - popup window to add notes, tags, etc and edit item
-  - Import Paypal
-  - import Venmo
   - import PLAID
 */
 
