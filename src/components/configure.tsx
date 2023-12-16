@@ -22,7 +22,6 @@ import Box from '@mui/material/Box';
 /*
   TODO:
   - use local storage to save which tab we were on?
-  - rename tab's value field to tabValue for clarity?
 */
 
 export const Configure: React.FC = () => {
@@ -36,21 +35,21 @@ export const Configure: React.FC = () => {
   interface TabPanelProps {
     children?: React.ReactNode;
     index: number;
-    value: number;
+    tabValue: number;
   }
 
   function CustomTabPanel(props: TabPanelProps) {
-    const { children, value, index, ...other } = props;
+    const { children, tabValue, index, ...other } = props;
 
     return (
       <div
         role="tabpanel"
-        hidden={value !== index}
+        hidden={tabValue !== index}
         id={`simple-tabpanel-${index}`}
         aria-labelledby={`simple-tab-${index}`}
         {...other}
       >
-        {value === index && (
+        {tabValue === index && (
           <Box sx={{ p: 3 }}>
             <Typography component={"span"}>{children}</Typography>
           </Box>
@@ -70,13 +69,13 @@ export const Configure: React.FC = () => {
   const [keywordData, setKeywordData] = useState<any[]>([]);
   const [accountData, setAccountData] = useState<any[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [value, setValue] = useState(0);
+  const [tabValue, setTabValue] = useState(0);
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
   const [envListLoaded, setEnvListLoaded] = useState(false);
   
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
+    setTabValue(newValue);
   };
 
   const categoryGroupBy = (data, key, label) => {
@@ -437,19 +436,19 @@ export const Configure: React.FC = () => {
         
         <Box sx={{ width: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs  value={value} onChange={handleTabChange}  aria-label="basic tabs example">
+            <Tabs  value={tabValue} onChange={handleTabChange}  aria-label="basic tabs example">
               <Tab label="Categories" {...a11yProps(0)} />
               <Tab label="Key Words" {...a11yProps(1)} />
               <Tab label="Accounts" {...a11yProps(2)} />
             </Tabs>
           </Box>
-          <CustomTabPanel value={value} index={0}>
+          <CustomTabPanel tabValue={tabValue} index={0}>
             {category_content}
           </CustomTabPanel>
-          <CustomTabPanel value={value} index={1}>
+          <CustomTabPanel tabValue={tabValue} index={1}>
             {keyword_content}
           </CustomTabPanel>
-          <CustomTabPanel value={value} index={2}>
+          <CustomTabPanel tabValue={tabValue} index={2}>
             {account_content}
           </CustomTabPanel>
         </Box>
