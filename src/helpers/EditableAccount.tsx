@@ -12,8 +12,6 @@ export const EditableAccount = ({ initialID, initialName}) => {
   };
 
   const handleEnvBlur = () => {
-    //console.log('handleEnvBlur: calling ', channels.REN_ENVELOPE, id, name);
-    
     // Request we rename the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_ACCOUNT, { id, new_value: name });
@@ -26,6 +24,7 @@ export const EditableAccount = ({ initialID, initialName}) => {
       value={name}
       onChange={(e) => handleChange(e, setName)}
       onBlur={handleEnvBlur}
+
       className="envelope"
       inputClassName="" />
   );

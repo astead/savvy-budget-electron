@@ -18,8 +18,7 @@ export const NewCategory = () => {
   };  
 
   return (
-    <form onSubmit={handleSubmit} className="new-category">
-        <label htmlFor="new-category">Enter a new category</label>
+    <div className="new-category-container">
         <div className="new-category">
             <input
                 type="text"
@@ -29,10 +28,10 @@ export const NewCategory = () => {
                 placeholder="Enter new category"
             />
         </div>
-        <button className="submit">
+        <button className="submit" onClick={handleSubmit}>
             <FontAwesomeIcon icon={faPlus} />
         </button>
-    </form>
+    </div>
   );
 };
 

@@ -33,17 +33,9 @@ div.NavBar {
   padding-right:10px;
 }
 
-form {
-  padding: 0;
-  margin: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #F8FAFC;
-  border: 1px solid #18181B;
-}
 
-form.new-category {
+
+div.new-category-container{
   padding: 0;
   margin: .5rem;  
   display: flex;
@@ -52,16 +44,6 @@ form.new-category {
   background-color: #909090;
   border: 1px solid black;
   width: 90%;
-}
-
-form.new-envelope {
-  padding: 0;
-  margin: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color:transparent;
-  border: none;
 }
 
 div.new-category {
@@ -522,11 +504,11 @@ input.import-file {
   color:limegreen;
 }
 
-select.envelopeDropDown {
+input.envelopeDropDown {
 
 }
 
-select.envelopeDropDown-undefined {
+input.envelopeDropDown-undefined {
  background-color: salmon;
 }
 
