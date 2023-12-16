@@ -258,6 +258,8 @@ export const Configure: React.FC = () => {
   let category_content;
   if (catData) {
     category_content = (
+      <>
+      <NewCategory/>
       <DragDropContext onDragEnd={handleOnDragEnd}>
         {catData.map((category, index) => {
           const { catID, cat:cat_name, items } = category;
@@ -326,6 +328,7 @@ export const Configure: React.FC = () => {
           );
         })}   
       </DragDropContext>
+      </>
     )
   }
 
@@ -441,7 +444,6 @@ export const Configure: React.FC = () => {
             </Tabs>
           </Box>
           <CustomTabPanel value={value} index={0}>
-            <NewCategory/>      
             {category_content}
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
