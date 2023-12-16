@@ -17,10 +17,12 @@ import { faFileImport } from "@fortawesome/free-solid-svg-icons";
     - date?
     - amount
     - description
-  - add split transactions
-  - add hide transactions
-  - add marking as duplicate, maybe with https://fontawesome.com/icons/arrows-rotate?f=classic&s=solid
-  - first column: split the transaction
+  - add split transactions?
+      https://fontawesome.com/icons/arrows-split-up-and-left?f=classic&s=solid&rt=flip-horizontal
+  - add hide transactions:
+      https://fontawesome.com/icons/eye-slash?f=classic&s=solid
+  - add marking as duplicate
+      maybe: https://fontawesome.com/icons/arrows-rotate?f=classic&s=solid
   - modify description?
   - popup window to add notes, tags, etc and edit item
   - import PLAID
