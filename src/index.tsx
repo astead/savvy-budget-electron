@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './includes/styles.css';
-//import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { HomePage } from './components/homePage.tsx';
@@ -22,7 +21,6 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    {/*<App />*/}    
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
