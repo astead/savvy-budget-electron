@@ -16,7 +16,7 @@ export const NewEnvelope = ({ id }) => {
   };  
 
   return (
-    <button className="submit" onClick={handleSubmit}>
+    <button className="plusButton" onClick={handleSubmit}>
         <FontAwesomeIcon icon={faPlus} />
     </button>
   );

@@ -325,14 +325,12 @@ input.import-file {
   background-color: limegreen;
 }
 
-.submit {
+.plusButton {
   background-color: #F8FAFC;
-  color: gray;
 }
 
-.submit:focus, .submit:hover {
+.plusButton:focus, .plusButton:hover {
   background-color: limegreen;
-  color: #F8FAFC;
 }
 
 .BudgetTable {

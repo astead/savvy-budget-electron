@@ -28,7 +28,7 @@ export const NewCategory = () => {
                 placeholder="Enter new category"
             />
         </div>
-        <button className="submit" onClick={handleSubmit}>
+        <button className="plusButton" onClick={handleSubmit}>
             <FontAwesomeIcon icon={faPlus} />
         </button>
     </div>
