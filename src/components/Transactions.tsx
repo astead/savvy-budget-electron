@@ -26,6 +26,7 @@ import { faFileImport } from "@fortawesome/free-solid-svg-icons";
   - modify description?
   - popup window to add notes, tags, etc and edit item
   - import PLAID
+  - Add option to check if description starts with a keyword
 */
 
 export const Transactions: React.FC = () => {
@@ -55,30 +56,38 @@ export const Transactions: React.FC = () => {
   }
 
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
-  const [myStartMonth, setMyStartMonth] = useState(-8);
-  const [myCurMonth, setMyCurMonth] = useState(8);
-  const [year, setYear] = useState((new Date()).getFullYear());
-  const [month, setMonth] = useState((new Date()).getMonth()+1);
-  const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
   const [envListLoaded, setEnvListLoaded] = useState(false);
   const [filename, setFilename] = useState('');
   
-  const monthSelectorCallback = ({ childStartMonth, childCurMonth }) => {    
+
+  /* Month Selector code -------------------------------------------*/
+  const [year, setYear] = useState((new Date()).getFullYear());
+  const [month, setMonth] = useState((new Date()).getMonth());
+  const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
+  const [myStartMonth, setMyStartMonth] = useState(new Date(year, month));
+  const [myCurIndex, setMyCurIndex] = useState(0);
+  
+  const monthSelectorCallback = ({ childStartMonth, childCurIndex }) => {    
+    
     // Need to adjust our month/year to reflect the change
-    let tmpDate = new Date(year, month + childCurMonth - myCurMonth);
+    const child_start = new Date(childStartMonth);
+    const child_month = child_start.getMonth();
+    const child_year = child_start.getFullYear();
+    let tmpDate = new Date(child_year, child_month + childCurIndex);
 
     setMyStartMonth(childStartMonth);
-    setMyCurMonth(childCurMonth);
+    setMyCurIndex(childCurIndex);
     setYear(tmpDate.getFullYear());
     setMonth(tmpDate.getMonth());
     setCurMonth(Moment(tmpDate).format('YYYY-MM-DD'));
   }
+  /* End Month Selector code ---------------------------------------*/
 
   const load_transactions = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_TX_DATA, Moment(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_TX_DATA, Moment(new Date(year, month+1)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
@@ -199,7 +208,7 @@ export const Transactions: React.FC = () => {
       </header>
       <div>
         Transactions<br/>
-        <MonthSelector numMonths="10" startMonth={myStartMonth} curMonth={myCurMonth} parentCallback={monthSelectorCallback} />
+        <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
         <br/>
         {false &&
           <input

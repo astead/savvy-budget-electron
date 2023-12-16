@@ -1,22 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import 'react-edit-text/dist/index.css';
+import 'react-edit-text/dist/index.css';import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 
 /*
 TODO: 
  - Store CurMonth in local storage, so it persists?
- - Move left/right to other months.
 */
 
-export const MonthSelector = ({ numMonths, startMonth, curMonth, parentCallback}) => {
+export const MonthSelector = ({ numMonths, startMonth, curIndex, parentCallback}) => {
    
-  const [myStartMonth, ] = useState(startMonth);
-  const [myCurMonth, setMyCurMonth] = useState(parseInt(curMonth));
+  const [myStartMonth, setMyStartMonth] = useState(new Date(startMonth));
+  const [myCurIndex, setMyCurIndex] = useState(parseInt(curIndex));
   const [arrayMonths, setArrayMonths] = useState<string[]>([]);
 
+  const handleMonthAdjust = (i) => {
+    const start = new Date(myStartMonth);
+    const month = start.getMonth();
+    const year = start.getFullYear();
+    
+    const tmpStart = new Date(year, month+i);
+    let tmpCur = myCurIndex;
+    if (i<0) {
+      tmpCur = myCurIndex<numMonths-1 ? myCurIndex+1 : myCurIndex;
+    } else {
+      tmpCur = myCurIndex>0 ? myCurIndex-1 : myCurIndex;
+    }
+    setMyStartMonth(tmpStart)
+    setMyCurIndex(tmpCur);
+    parentCallback({ childStartMonth: tmpStart, childCurIndex: tmpCur });
+  }
+
   useEffect(() => {
-    const today = new Date();
-    const month = today.getMonth() + 1 + parseInt(myStartMonth);
-    const year = today.getFullYear();
+    const start = myStartMonth;
+    const month = start.getMonth() + 1;
+    const year = start.getFullYear();
 
     const tmpMonths = Array.from({length: numMonths}, (item, i) => {
       const myDate = new Date(year, month+i-1);
@@ -27,23 +44,29 @@ export const MonthSelector = ({ numMonths, startMonth, curMonth, parentCallback}
     });  
 
     setArrayMonths(tmpMonths);
-  }, []);
+  }, [myStartMonth]);
 
   return (
     <div className="months-container">
+      <div className="month-arrow" onClick={() => {handleMonthAdjust(-1);}}>
+        <FontAwesomeIcon icon={faChevronLeft} size="lg"/>
+      </div>
       {arrayMonths?.length > 0 && arrayMonths.map((myMonth, index) => {
         return (
           <div 
             key={"month-"+index} 
-            className={"month-item"+(myCurMonth === index ? "-selected":"")}
+            className={"month-item"+(myCurIndex === index ? "-selected":"")}
             onClick={() => {
-              setMyCurMonth(index);
-              parentCallback({ childStartMonth: myStartMonth, childCurMonth: index });
+              setMyCurIndex(index);
+              parentCallback({ childStartMonth: myStartMonth, childCurIndex: index });
           }}>
             {myMonth}
           </div>
         )
       })}
+      <div className="month-arrow" onClick={() => {handleMonthAdjust(1);}}>
+        <FontAwesomeIcon icon={faChevronLeft} flip="horizontal" size="lg"/>
+      </div>
     </div>
   );
 };
