@@ -19,11 +19,6 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-/*
-  TODO:
-  - use local storage to save which tab we were on?
-*/
-
 export const Configure: React.FC = () => {
 
   interface EnvelopeList {
@@ -72,9 +67,9 @@ export const Configure: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
   const [envListLoaded, setEnvListLoaded] = useState(false);
-  
-
+ 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    localStorage.setItem('tabValue', JSON.stringify(newValue));
     setTabValue(newValue);
   };
 
@@ -247,6 +242,15 @@ export const Configure: React.FC = () => {
 
   useEffect(() => {
     if (!loaded) {
+      // which tab were we on?
+      const my_tabValue_str = localStorage.getItem('tabValue');
+      if (my_tabValue_str?.length) {
+        const my_tabValue = JSON.parse(my_tabValue_str);
+        if (my_tabValue) {
+          setTabValue(my_tabValue);
+        }
+      }
+
       load_cats_and_envs();
       load_envelope_list();
       load_keywords();
