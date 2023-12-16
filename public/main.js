@@ -627,14 +627,6 @@ async function lookup_keyword(description) {
           envID = data[0].envelopeID;
         }
       });
-
-    console.log(
-      await knex('keyword')
-        .select('envelopeID')
-        .where({ description: description })
-        .toSQL()
-        .toNative()
-    );
   }
 
   return envID;
@@ -651,7 +643,7 @@ async function lookup_if_duplicate(
 
   // Check if it is a duplicate?
   if (refNumber?.length) {
-    console.log('Checking by refNumber');
+    //console.log('Checking by refNumber');
 
     await knex('transaction')
       .select('id')
@@ -664,7 +656,7 @@ async function lookup_if_duplicate(
         }
       });
   } else {
-    console.log('Checking by other stuff');
+    //console.log('Checking by other stuff');
     await knex('transaction')
       .select('id')
       .where({ txAmt: txAmt })
@@ -766,19 +758,94 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
   accountID = await lookup_account(account_string);
 
   const nodes = ofxString.split('\n');
-  nodes.map(async (tx, i) => {
-    if (i > 0) {
-      const tx_values = tx.split(',');
 
-      insert_transaction_node(
-        accountID,
-        tx_values[3],
-        tx_values[0],
-        tx_values[1],
-        ''
-      );
-    }
-  });
+  if (account_string.startsWith('sofi-')) {
+    nodes.map(async (tx, i) => {
+      if (i > 0) {
+        const tx_values = tx.split(',');
+
+        insert_transaction_node(
+          accountID,
+          tx_values[3],
+          tx_values[0],
+          tx_values[1],
+          ''
+        );
+      }
+    });
+  }
+  if (account_string === 'Venmo') {
+    nodes.map(async (tx, i) => {
+      if (i > 3 && tx[0] === ',') {
+        const tx_values = tx.split(',');
+
+        if (tx_values?.length) {
+          let refNumber = tx_values[1];
+          let txDate = tx_values[2].substr(0, 10);
+          let description = tx_values[5];
+          let i = 5;
+          if (description[0] === '"') {
+            while (!tx_values[i].endsWith('"')) {
+              i++;
+              description += ',' + tx_values[i];
+            }
+            description = description.replace(/\"/g, '');
+          }
+          let txFrom = tx_values[i + 1];
+          let txTo = tx_values[i + 2];
+          description =
+            (txFrom !== 'Alan Stead' ? txFrom : txTo) + ' : ' + description;
+
+          let txAmt = tx_values[i + 3]
+            .replace(/\"/g, '')
+            .replace(/\+/g, '')
+            .replace(/\$/g, '')
+            .replace(/\ /g, '')
+            .trim();
+
+          insert_transaction_node(
+            accountID,
+            txAmt,
+            txDate,
+            description,
+            refNumber
+          );
+        }
+      }
+    });
+  }
+  if (account_string === 'PayPal') {
+    nodes.map(async (tx, i) => {
+      if (i > 0) {
+        const tx_values = tx.split(',');
+
+        if (tx_values?.length) {
+          let txAmt = tx_values[7].replace(/\"/g, '').trim();
+          let txDate = Moment(
+            new Date(tx_values[0].replace(/\"/g, '').trim())
+          ).format('YYYY-MM-DD');
+          let description = tx_values[3].replace(/\"/g, '').trim();
+          let description2 = tx_values[4].replace(/\"/g, '').trim();
+          if (!description?.length && description2?.length) {
+            description = description2;
+          }
+          //let description3 = tx_values[38].replace(/\"/g, '').trim();
+          //if (description3?.length) {
+          //  description += ' : ' + description3;
+          //}
+          let refNumber = tx_values[12].replace(/\"/g, '').trim();
+
+          insert_transaction_node(
+            accountID,
+            txAmt,
+            txDate,
+            description,
+            refNumber
+          );
+        }
+      }
+    });
+  }
 });
 
 //console.log(channels.IMPORT_OFX, ofxString);
