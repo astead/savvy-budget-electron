@@ -134,6 +134,7 @@ ipcMain.on(channels.DEL_CATEGORY, (event, id) => {
 
   // TODO: Maybe if we hit an error above,
   //  we shouldn't continue
+  // However what if there are no sub-envelopes.
   knex('category')
     .where({ id: id })
     .del()
