@@ -67,6 +67,7 @@ export const Transactions: React.FC = () => {
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
   const [myStartMonth, setMyStartMonth] = useState(new Date(year, month-8));
   const [myCurIndex, setMyCurIndex] = useState(8);
+  const [gotMonthData, setGotMonthData] = useState(false);
   
   const monthSelectorCallback = ({ childStartMonth, childCurIndex }) => {    
     
@@ -76,6 +77,7 @@ export const Transactions: React.FC = () => {
     const child_year = child_start.getFullYear();
     let tmpDate = new Date(child_year, child_month + childCurIndex);
 
+    localStorage.setItem('transaction-month-data', JSON.stringify({ childStartMonth, childCurIndex }));
     setMyStartMonth(childStartMonth);
     setMyCurIndex(childCurIndex);
     setYear(tmpDate.getFullYear());
@@ -194,10 +196,21 @@ export const Transactions: React.FC = () => {
   }
 
   useEffect(() => {
+    console.log("getting tx for current month: ", Moment(curMonth).format('YYYY-MM-DD'))
     load_transactions();
   }, [curMonth]);
 
   useEffect(() => {
+    // which tab were we on?
+    const my_monthData_str = localStorage.getItem('transaction-month-data');
+    if (my_monthData_str?.length) {
+      const my_monthData = JSON.parse(my_monthData_str);
+      if (my_monthData) {
+        monthSelectorCallback(my_monthData);
+      }
+    }
+    setGotMonthData(true);
+
     load_envelope_list();
   }, []);
 
@@ -208,7 +221,9 @@ export const Transactions: React.FC = () => {
       </header>
       <div>
         Transactions<br/>
+        {gotMonthData &&
         <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
+        }
         <br/>
         {false &&
           <input
