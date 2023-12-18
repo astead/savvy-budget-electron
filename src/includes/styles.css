@@ -449,6 +449,16 @@ input.import-file {
   margin: 0;
 }
 
+.TransactionTableHeaderCellCenter {
+  background-color: #b4b4b4;
+  border: 1px solid black;
+  text-align:center;
+  white-space: pre-wrap;
+  height:100%;
+  padding: 0;
+  margin: 0;
+}
+
 .TransactionTableCellInput {
   border: 1px solid black;
   text-align:right;
@@ -479,26 +489,30 @@ input.import-file {
   padding-left:2px; 
 }
 
+.TransactionTableCellCenter {
+  border: 1px solid black; 
+  padding: 0;
+  margin: 0;
+  text-align:center;
+}
+
 .SaveKeyword {
   padding: 0;
   margin: 0;
-  padding-left:2px;
-  padding-right:4px;
+  text-align: center;
 }
 
 .SaveKeyword-saved {
   padding: 0;
   margin: 0;
-  padding-left:2px;
-  padding-right:4px;
+  text-align: center;
   color: lightgreen;
 }
 
 .SaveKeyword:hover {
   padding: 0;
   margin: 0;
-  padding-left:2px;
-  padding-right:4px;
+  text-align: center;
   color:limegreen;
 }
 

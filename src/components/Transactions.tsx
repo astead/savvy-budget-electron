@@ -244,7 +244,7 @@ export const Transactions: React.FC = () => {
                   <th className="TransactionTableHeaderCell">{'Description'}</th>
                   <th className="TransactionTableHeaderCellCurr">{'Amount'}</th>
                   <th className="TransactionTableHeaderCell">{'Envelope'}</th>
-                  <th className="TransactionTableHeaderCell">{' '}</th>
+                  <th className="TransactionTableHeaderCellCenter">{' KW '}</th>
                 </tr>
               </thead>
     
@@ -255,7 +255,7 @@ export const Transactions: React.FC = () => {
                     <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
                     <td className="TransactionTableCell">{item.description}</td>
                     <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
-                    <td className="TransactionTableCell">
+                    <td className="TransactionTableCellCenter">
                       <CategoryDropDown 
                         id={item.txID}
                         envID={item.envID}
