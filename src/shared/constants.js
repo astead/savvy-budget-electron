@@ -50,5 +50,8 @@ module.exports = {
     LIST_ACCOUNTS: 'list_accounts',
     UPDATE_ACCOUNT: 'update_account',
     DEL_ACCOUNT: 'del_account',
+
+    GET_ENV_CHART_DATA: 'get_env_chart_data',
+    LIST_ENV_CHART_DATA: 'list_env_chart_data',
   },
 };

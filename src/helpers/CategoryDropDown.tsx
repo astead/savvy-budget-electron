@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-edit-text/dist/index.css';
 import { channels } from '../shared/constants.js'
 
@@ -9,12 +9,18 @@ export const CategoryDropDown = ({id, envID, data, changeCallback}) => {
   }
   
   const [my_id, ] = useState(id);
-  const [my_envID, ] = useState(envID);
+  const [my_envID, setMy_envID] = useState(envID);
   const [my_data, ] = useState(data);
 
   const handleChange = (e) => {
     changeCallback({id: my_id, new_value: e.target.value});
+    setMy_envID(e.target.value);
   };
+
+  useEffect(() => {
+    setMy_envID(envID);
+  }, []);
+
 
   return (
     <select

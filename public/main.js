@@ -161,7 +161,7 @@ ipcMain.on(channels.DEL_ENVELOPE, (event, id) => {
 
   // TODO: What to do with orphaned transactions
   // Maybe set them to -1?
-  // Or don't know inactive envelopes in budget AND
+  // Or don't show inactive envelopes in budget AND
   //    have a way to show those at the end of the budget
   //    and allow setting to those envelopes in other stuff.
 });
@@ -951,5 +951,26 @@ ipcMain.on(channels.DEL_ACCOUNT, (event, { id }) => {
   knex('account')
     .delete()
     .where({ id: id })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.GET_ENV_CHART_DATA, (event, { envID }) => {
+  console.log(channels.GET_ENV_CHART_DATA);
+
+  const find_date = Moment(new Date()).format('YYYY-MM-DD');
+
+  knex('transaction')
+    .select({ month: knex.raw(`strftime("%m", txDate)`) })
+    .sum({ totalAmt: 'txAmt' })
+    .orderBy('envelopeID')
+    .where({ isBudget: 0 })
+    .andWhereRaw(`julianday(?) - julianday(txDate) < 365`, [find_date])
+    .where({ isDuplicate: 0 })
+    .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
+    .andWhere({ envelopeID: envID })
+    .groupBy('month')
+    .then((data) => {
+      event.sender.send(channels.LIST_ENV_CHART_DATA, data);
+    })
     .catch((err) => console.log(err));
 });
