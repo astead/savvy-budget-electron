@@ -23,6 +23,7 @@ export const Envelopes: React.FC = () => {
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
   const [myStartMonth, setMyStartMonth] = useState(new Date(year, month));
   const [myCurIndex, setMyCurIndex] = useState(0);
+  const [gotMonthData, setGotMonthData] = useState(false);
   
   const monthSelectorCallback = ({ childStartMonth, childCurIndex }) => {    
     
@@ -32,6 +33,7 @@ export const Envelopes: React.FC = () => {
     const child_year = child_start.getFullYear();
     let tmpDate = new Date(child_year, child_month + childCurIndex);
 
+    localStorage.setItem('envelopes-month-data', JSON.stringify({ childStartMonth, childCurIndex }));
     setMyStartMonth(childStartMonth);
     setMyCurIndex(childCurIndex);
     setYear(tmpDate.getFullYear());
@@ -330,7 +332,9 @@ export const Envelopes: React.FC = () => {
   }
 
   useEffect(() => {
-    setLoadedEnvelopes(false);
+    if (gotMonthData) {
+      setLoadedEnvelopes(false);
+    }
   }, [curMonth]);  
 
   useEffect(() => {
@@ -411,6 +415,16 @@ export const Envelopes: React.FC = () => {
   }, [loadedMonthlyAvg]);
 
   useEffect(() => {
+    // which month were we
+    const my_monthData_str = localStorage.getItem('envelopes-month-data');
+    if (my_monthData_str?.length) {
+      const my_monthData = JSON.parse(my_monthData_str);
+      if (my_monthData) {
+        monthSelectorCallback(my_monthData);
+      }
+    }
+    setGotMonthData(true);
+
     load_initialEnvelopes();
   }, []);
 
@@ -421,7 +435,9 @@ export const Envelopes: React.FC = () => {
       </header>
       <div>
         Envelopes<br/>
-        <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
+        {gotMonthData &&
+          <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
+        }
         <br/>
         {loaded &&
           <table className="BudgetTable" cellSpacing={0} cellPadding={0}>
