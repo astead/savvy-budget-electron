@@ -784,20 +784,20 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
           let refNumber = tx_values[1];
           let txDate = tx_values[2].substr(0, 10);
           let description = tx_values[5];
-          let i = 5;
+          let j = 5;
           if (description[0] === '"') {
-            while (!tx_values[i].endsWith('"')) {
-              i++;
-              description += ',' + tx_values[i];
+            while (!tx_values[j].endsWith('"')) {
+              j++;
+              description += ',' + tx_values[j];
             }
             description = description.replace(/\"/g, '');
           }
-          let txFrom = tx_values[i + 1];
-          let txTo = tx_values[i + 2];
+          let txFrom = tx_values[j + 1];
+          let txTo = tx_values[j + 2];
           description =
             (txFrom !== 'Alan Stead' ? txFrom : txTo) + ' : ' + description;
 
-          let txAmt = tx_values[i + 3]
+          let txAmt = tx_values[j + 3]
             .replace(/\"/g, '')
             .replace(/\+/g, '')
             .replace(/\$/g, '')
@@ -821,20 +821,31 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
         const tx_values = tx.split(',');
 
         if (tx_values?.length) {
-          let txAmt = tx_values[7].replace(/\"/g, '').trim();
           let txDate = Moment(
             new Date(tx_values[0].replace(/\"/g, '').trim())
           ).format('YYYY-MM-DD');
+
           let description = tx_values[3].replace(/\"/g, '').trim();
           let description2 = tx_values[4].replace(/\"/g, '').trim();
           if (!description?.length && description2?.length) {
             description = description2;
           }
+
+          let j = 7;
+          let txAmt = tx_values[7];
+          if (txAmt.startsWith('"')) {
+            while (!tx_values[j].endsWith('"')) {
+              j++;
+              txAmt += tx_values[j];
+            }
+            txAmt = txAmt.replace(/\"/g, '');
+          }
+
           //let description3 = tx_values[38].replace(/\"/g, '').trim();
           //if (description3?.length) {
           //  description += ' : ' + description3;
           //}
-          let refNumber = tx_values[12].replace(/\"/g, '').trim();
+          let refNumber = tx_values[j + 5].replace(/\"/g, '').trim();
 
           insert_transaction_node(
             accountID,
