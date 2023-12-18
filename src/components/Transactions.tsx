@@ -11,6 +11,7 @@ import { faFileImport } from "@fortawesome/free-solid-svg-icons";
 
 /*
  TODO:
+  - BUG: When switching months, drop down values all stay the same.
   - add filter options:
     - account
     - bank
@@ -65,8 +66,8 @@ export const Transactions: React.FC = () => {
   const [year, setYear] = useState((new Date()).getFullYear());
   const [month, setMonth] = useState((new Date()).getMonth());
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
-  const [myStartMonth, setMyStartMonth] = useState(new Date(year, month));
-  const [myCurIndex, setMyCurIndex] = useState(0);
+  const [myStartMonth, setMyStartMonth] = useState(new Date(year, month-8));
+  const [myCurIndex, setMyCurIndex] = useState(8);
   
   const monthSelectorCallback = ({ childStartMonth, childCurIndex }) => {    
     
