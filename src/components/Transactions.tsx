@@ -11,7 +11,6 @@ import { faFileImport } from "@fortawesome/free-solid-svg-icons";
 
 /*
  TODO:
-  - BUG: When switching months, drop down values all stay the same.
   - add filter options:
     - account
     - bank

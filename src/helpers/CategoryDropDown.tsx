@@ -8,7 +8,7 @@ export const CategoryDropDown = ({id, envID, data, changeCallback}) => {
     envID = -1;
   }
   
-  const [my_id, ] = useState(id);
+  const [my_id, setMy_ID] = useState(id);
   const [my_envID, setMy_envID] = useState(envID);
   const [my_data, ] = useState(data);
 
@@ -18,8 +18,12 @@ export const CategoryDropDown = ({id, envID, data, changeCallback}) => {
   };
 
   useEffect(() => {
+    setMy_ID(id);
+  }, [id]);
+
+  useEffect(() => {
     setMy_envID(envID);
-  }, []);
+  }, [envID]);
 
 
   return (
