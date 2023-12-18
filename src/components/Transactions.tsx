@@ -96,7 +96,7 @@ export const Transactions: React.FC = () => {
       setTxData(arg as TransactionNodeData[]);
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     });
-
+    
     // Clean the listener after the component is dismounted
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
@@ -114,7 +114,7 @@ export const Transactions: React.FC = () => {
       setEnvListLoaded(true);
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
-
+    
     // Clean the listener after the component is dismounted
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
@@ -131,8 +131,6 @@ export const Transactions: React.FC = () => {
   }
 
   const handleChange = ({id, new_value}) => {
-    console.log('handleChange: updating category ');
-    
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_TX_ENV, [id, new_value]);
@@ -196,8 +194,9 @@ export const Transactions: React.FC = () => {
   }
 
   useEffect(() => {
-    console.log("getting tx for current month: ", Moment(curMonth).format('YYYY-MM-DD'))
-    load_transactions();
+    if (gotMonthData) {
+      load_transactions();
+    }
   }, [curMonth]);
 
   useEffect(() => {
@@ -210,7 +209,7 @@ export const Transactions: React.FC = () => {
       }
     }
     setGotMonthData(true);
-
+    
     load_envelope_list();
   }, []);
 
