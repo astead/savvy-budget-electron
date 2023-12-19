@@ -11,7 +11,6 @@ import { Configure } from './components/Configure.tsx';
 
 /*
   TODO:
-  - Add chart page
   - Improve CRUD reposting
   - top menu bread crumbs
 */
