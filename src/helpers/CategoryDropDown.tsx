@@ -13,7 +13,10 @@ export const CategoryDropDown = ({id, envID, data, changeCallback}) => {
   const [my_data, ] = useState(data);
 
   const handleChange = (e) => {
-    changeCallback({id: my_id, new_value: e.target.value});
+    var index = e.nativeEvent.target.selectedIndex;
+    
+    changeCallback({id: my_id, new_value: e.target.value, new_text: e.nativeEvent.target[index].text});
+    
     setMy_envID(e.target.value);
   };
 
