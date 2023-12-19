@@ -234,6 +234,7 @@ export const Transactions: React.FC = () => {
           />
         }
         <div className="import-container">
+          <span>Import: </span>
           <input
               type="file"
               name="file"

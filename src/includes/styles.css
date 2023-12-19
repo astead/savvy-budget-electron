@@ -299,11 +299,14 @@ input.inputCurrency {
 
 div.import-container {
   border-radius: 0px;
-  border: none;
+  border: 1px solid black;
   padding:0;
   margin:0;
   vertical-align: middle;
-  width: 400px;
+  width:500px;
+  text-align:center;
+  padding:5px;
+  width: fit-content;
 }
 
 input.import-file {
