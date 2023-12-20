@@ -23,7 +23,7 @@ root.render(
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/Charts" element={<Charts />} />
+        <Route path="/Charts/:envID" element={<Charts />} />
         <Route path="/Transactions" element={<Transactions />} />
         <Route path="/Envelopes" element={<Envelopes />} />
         <Route path="/Configure" element={<Configure />} />

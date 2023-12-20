@@ -4,9 +4,12 @@ import { channels } from '../shared/constants.js';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 import Moment from 'moment';
 import { LineChart } from '@mui/x-charts/LineChart';
+import { useParams } from 'react-router';
 
 export const Charts: React.FC = () => {
   
+  const { envID } = useParams();
+
   interface EnvelopeList {
     envID: number; 
     category: string;
@@ -17,10 +20,10 @@ export const Charts: React.FC = () => {
   interface ChartData {
     [key: string]: string | number | Date;
   }
-  
+
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
-  const [filterEnvID, setFilterEnvID] = useState(null as any);
+  const [filterEnvID, setFilterEnvID] = useState(envID);
   const [filterEnvelopeName, setFilterEnvelopeName] = useState(null as any);
 
   const [haveChartData, setHaveChartData] = useState(false);
@@ -51,7 +54,7 @@ export const Charts: React.FC = () => {
       }, ...(arg as EnvelopeList[])]);
       setFilterEnvListLoaded(true);
       setFilterEnvelopeName("All");
-      setFilterEnvID(-2);
+      setFilterEnvID(envID);
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
   };

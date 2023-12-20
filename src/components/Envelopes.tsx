@@ -4,14 +4,14 @@ import { channels } from '../shared/constants.js'
 import { EditableBudget } from '../helpers/EditableBudget.tsx';
 import { MonthSelector } from '../helpers/MonthSelector.tsx'
 import Moment from 'moment';
+import { Link } from 'react-router-dom';
 
 /*
   TODO:
   - Click on envelope to list those transactions
-  - Click on monthly average to go to trend chart
   - Color based on how healthy the envelope is
   - Click on curr balance to move envelope balance option
-  - Click to show anything that isn't in a category
+  - Click to show anything that isn't in a category (tx list with undefined? filter)
 */
 
 export const Envelopes: React.FC = () => {
@@ -511,7 +511,11 @@ export const Envelopes: React.FC = () => {
                           initialValue={item.currBudget}/>
                       </td>
                       <td className="BudgetTableCellCurr">{formatCurrency(item.currActual)}</td>
-                      <td className="BudgetTableCellCurr">{formatCurrency(item.monthlyAvg)}</td>
+                      <td className="BudgetTableCellCurr">
+                        <Link to={"/Charts/" + item.envID}>
+                          {formatCurrency(item.monthlyAvg)}
+                        </Link>
+                      </td>
                     </tr>
                     </React.Fragment>
                   ))}
