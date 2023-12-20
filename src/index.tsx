@@ -12,6 +12,7 @@ import { Configure } from './components/Configure.tsx';
 /*
   TODO:
   - Improve CRUD reposting
+  - DRY stylesheets
 */
 
 const root = ReactDOM.createRoot(

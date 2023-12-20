@@ -7,6 +7,11 @@ const Moment = require('moment');
 const { BankTransferList, Ofx } = require('ofx-convert');
 const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
 
+/*
+  TODO:
+  - consolidate redundant work?
+*/
+
 function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({

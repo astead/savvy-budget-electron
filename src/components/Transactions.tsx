@@ -22,7 +22,6 @@ import { useParams } from 'react-router';
   - modify description?
   - popup window to add notes, tags, etc and edit item
   - import PLAID
-  - Add option to check if description starts with a keyword
   - somehow highlight if we could set a keyword
 */
 

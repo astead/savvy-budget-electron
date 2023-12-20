@@ -6,6 +6,12 @@ import Moment from 'moment';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { useParams } from 'react-router';
 
+/*
+  TODO:
+  - better month x-axis labels
+  - add "vs Budget" line series for comparison
+*/
+
 export const Charts: React.FC = () => {
   
   const { envID } = useParams();
@@ -15,7 +21,6 @@ export const Charts: React.FC = () => {
     category: string;
     envelope: string; 
   }
-
 
   interface ChartData {
     [key: string]: string | number | Date;
