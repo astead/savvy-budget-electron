@@ -510,7 +510,11 @@ export const Envelopes: React.FC = () => {
                           initialDate={curMonth}
                           initialValue={item.currBudget}/>
                       </td>
-                      <td className="BudgetTableCellCurr">{formatCurrency(item.currActual)}</td>
+                      <td className="BudgetTableCellCurr">
+                        <Link to={"/Transactions/" + item.envID}>
+                          {formatCurrency(item.currActual)}
+                        </Link>
+                      </td>
                       <td className="BudgetTableCellCurr">
                         <Link to={"/Charts/" + item.envID}>
                           {formatCurrency(item.monthlyAvg)}

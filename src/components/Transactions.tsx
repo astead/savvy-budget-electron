@@ -8,6 +8,7 @@ import Moment from 'moment';
 //import Papa from 'papaparse';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileImport } from "@fortawesome/free-solid-svg-icons";
+import { useParams } from 'react-router';
 
 /*
  TODO:
@@ -29,6 +30,8 @@ import { faFileImport } from "@fortawesome/free-solid-svg-icons";
 */
 
 export const Transactions: React.FC = () => {
+  
+  const { envID } = useParams();
   
   interface TransactionNodeData {
     txID: number;
@@ -57,7 +60,7 @@ export const Transactions: React.FC = () => {
   
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
-  const [filterEnvID, setFilterEnvID] = useState(-2);
+  const [filterEnvID, setFilterEnvID] = useState(envID);
   const [filterEnvelopeName, setFilterEnvelopeName] = useState(null);
 
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
