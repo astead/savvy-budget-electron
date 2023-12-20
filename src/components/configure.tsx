@@ -19,6 +19,11 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
+/*
+  TODO:
+  - Set all matching keywords
+    https://fontawesome.com/icons/reply-all?f=classic&s=solid&rt=flip-horizontal
+*/
 export const Configure: React.FC = () => {
 
   interface EnvelopeList {
