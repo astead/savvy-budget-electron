@@ -7,7 +7,7 @@ import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
 //import Papa from 'papaparse';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFileImport } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faFileImport } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from 'react-router';
 
 /*
@@ -27,6 +27,7 @@ import { useParams } from 'react-router';
   - popup window to add notes, tags, etc and edit item
   - import PLAID
   - Add option to check if description starts with a keyword
+  - somehow highlight if we could set a keyword
 */
 
 export const Transactions: React.FC = () => {
@@ -169,6 +170,12 @@ export const Transactions: React.FC = () => {
     ipcRenderer.send(channels.UPDATE_TX_ENV, [id, new_value]);
   };
 
+  const toggleDuplicate = ({txID, isDuplicate}) => {
+    // Request we update the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.SET_DUPLICATE, [txID, isDuplicate]);
+  };
+
   const handleImport = async () => {
     const ipcRenderer = (window as any).ipcRenderer;
     const fs = ipcRenderer.require('fs')
@@ -291,19 +298,18 @@ export const Transactions: React.FC = () => {
             <>
               <thead className="TransactionTableHeader">
                 <tr className="TransactionTableHeaderRow">
-                  <th className="TransactionTableHeaderCell">{' '}</th>
                   <th className="TransactionTableHeaderCellDate">{'Date'}</th>
                   <th className="TransactionTableHeaderCell">{'Description'}</th>
                   <th className="TransactionTableHeaderCellCurr">{'Amount'}</th>
                   <th className="TransactionTableHeaderCell">{'Envelope'}</th>
                   <th className="TransactionTableHeaderCellCenter">{' KW '}</th>
+                  <th className="TransactionTableHeaderCellCenter">{' Dup '}</th>
                 </tr>
               </thead>
     
               <tbody className="TransactionTableBody">
                 {txData.map((item, index) => (
                   <tr key={index} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
-                    <td className="TransactionTableCellCurr">&nbsp;</td>
                     <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
                     <td className="TransactionTableCell">{item.description}</td>
                     <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
@@ -321,6 +327,15 @@ export const Transactions: React.FC = () => {
                           envID={item.envID}
                           description={item.description}
                           keywordEnvID={item.keywordEnvID} />
+                    </td>
+                    <td className="TransactionTableCell">
+                      <div
+                        onClick={() => {
+                          toggleDuplicate({txID: item.txID, isDuplicate: (item.isDuplicate?0:1)});
+                        }}
+                        className={"ToggleDuplicate" + (item.isDuplicate?"-yes":"-no")}>
+                        <FontAwesomeIcon icon={faCopy} />
+                      </div>
                     </td>
                   </tr>
                 ))}

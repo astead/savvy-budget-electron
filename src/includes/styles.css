@@ -610,6 +610,7 @@ div.envelopeDataContainer {
   padding: 0;
   margin: 0;
   text-align: center;
+  cursor: pointer;
 }
 
 .SaveKeyword-saved {
@@ -617,9 +618,32 @@ div.envelopeDataContainer {
   margin: 0;
   text-align: center;
   color: lightgreen;
+  cursor: pointer;
 }
 
 .SaveKeyword:hover {
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  color:limegreen;
+}
+
+.ToggleDuplicate-no {
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ToggleDuplicate-yes {
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  color: lightgreen;
+  cursor: pointer;
+}
+
+.ToggleDuplicate-no:hover {
   padding: 0;
   margin: 0;
   text-align: center;

@@ -38,6 +38,8 @@ module.exports = {
 
     SAVE_KEYWORD: 'save_keyword',
 
+    SET_DUPLICATE: 'set_duplicate',
+
     IMPORT_OFX: 'import_ofx',
     IMPORT_CSV: 'import_csv',
 

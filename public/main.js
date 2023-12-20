@@ -603,6 +603,17 @@ ipcMain.on(channels.SAVE_KEYWORD, (event, [envID, description]) => {
     });
 });
 
+ipcMain.on(channels.SET_DUPLICATE, (event, [txID, isDuplicate]) => {
+  console.log(channels.SET_DUPLICATE, txID, isDuplicate);
+
+  knex('transaction')
+    .update({ isDuplicate: isDuplicate })
+    .where({ id: txID })
+    .catch((err) => {
+      console.log('Error: ' + err);
+    });
+});
+
 async function lookup_account(account) {
   let accountID = -1;
 
