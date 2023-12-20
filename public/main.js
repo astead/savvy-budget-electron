@@ -423,13 +423,13 @@ ipcMain.on(channels.GET_MONTHLY_AVG, (event, find_date) => {
     .catch((err) => console.log(err));
 });
 
-ipcMain.on(channels.GET_TX_DATA, (event, find_date) => {
-  console.log(channels.GET_TX_DATA);
+ipcMain.on(channels.GET_TX_DATA, (event, [find_date, filterEnvID]) => {
+  console.log(channels.GET_TX_DATA, find_date, filterEnvID);
 
   const month = Moment(new Date(find_date)).format('MM');
   const year = Moment(new Date(find_date)).format('YYYY');
 
-  knex
+  let query = knex
     .select(
       'transaction.id as txID',
       'envelope.categoryID as catID',
@@ -460,7 +460,13 @@ ipcMain.on(channels.GET_TX_DATA, (event, find_date) => {
     .where({ isBudget: 0 })
     .andWhereRaw(`strftime('%m', txDate) = ?`, month)
     .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
-    .orderBy('transaction.txDate')
+    .orderBy('transaction.txDate');
+
+  if (filterEnvID > -2) {
+    query.where('transaction.envelopeID', filterEnvID);
+  }
+
+  query
     .then((data) => {
       event.sender.send(channels.LIST_TX_DATA, data);
     })
@@ -965,12 +971,12 @@ ipcMain.on(channels.DEL_ACCOUNT, (event, { id }) => {
     .catch((err) => console.log(err));
 });
 
-ipcMain.on(channels.GET_ENV_CHART_DATA, (event, { envID }) => {
-  console.log(channels.GET_ENV_CHART_DATA);
+ipcMain.on(channels.GET_ENV_CHART_DATA, (event, filterEnvID) => {
+  console.log(channels.GET_ENV_CHART_DATA, filterEnvID);
 
   const find_date = Moment(new Date()).format('YYYY-MM-DD');
 
-  knex('transaction')
+  let query = knex('transaction')
     .select({ month: knex.raw(`strftime("%m", txDate)`) })
     .sum({ totalAmt: 'txAmt' })
     .orderBy('envelopeID')
@@ -978,8 +984,13 @@ ipcMain.on(channels.GET_ENV_CHART_DATA, (event, { envID }) => {
     .andWhereRaw(`julianday(?) - julianday(txDate) < 365`, [find_date])
     .where({ isDuplicate: 0 })
     .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
-    .andWhere({ envelopeID: envID })
-    .groupBy('month')
+    .groupBy('month');
+
+  if (filterEnvID > -2) {
+    query.where('envelopeID', filterEnvID);
+  }
+
+  query
     .then((data) => {
       event.sender.send(channels.LIST_ENV_CHART_DATA, data);
     })

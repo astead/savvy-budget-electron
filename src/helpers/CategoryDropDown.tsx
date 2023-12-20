@@ -35,9 +35,12 @@ export const CategoryDropDown = ({id, envID, data, changeCallback}) => {
       value={my_envID}
       onChange={handleChange}
       className={"envelopeDropDown"+(envID === -1 ? "-undefined":"")}>
-        <option value='-1'>Undefined</option>
         {my_data.map(o => (
-          <option key={o.envID} value={o.envID}>{o.category + " : " + o.envelope}</option>
+          <option 
+            key={o.envID} 
+            value={o.envID}>
+              {o.category + (o.category?.length && o.envelope?.length?" : ":"") + o.envelope}
+          </option>
         ))}
     </select>
   );

@@ -17,28 +17,41 @@ export const Charts: React.FC = () => {
   interface ChartData {
     [key: string]: string | number | Date;
   }
+  
+  const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
+  const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
+  const [filterEnvID, setFilterEnvID] = useState(null as any);
+  const [filterEnvelopeName, setFilterEnvelopeName] = useState(null as any);
 
-  const [envList, setEnvList] = useState<EnvelopeList[]>([]);
-  const [envListLoaded, setEnvListLoaded] = useState(false);
-  const [envID, setEnvID] = useState(null);
-  const [envelopeName, setEnvelopeName] = useState(null);
   const [haveChartData, setHaveChartData] = useState(false);
   const [chartData, setChartData] = useState<ChartData[]>([]);
 
-  const handleChange = ({id, new_value, new_text}) => {
-    setEnvID(new_value);
-    setEnvelopeName(new_text);
+  const handleFilterEnvChange = ({id, new_value, new_text}) => {
+    setHaveChartData(false);
+    setFilterEnvID(new_value);
+    setFilterEnvelopeName(new_text);
   };
 
   const load_envelope_list = () => {
+    
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_ENV_LIST);
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
-      setEnvList(arg as EnvelopeList[]);
-      setEnvListLoaded(true);
+      setFilterEnvList([{
+        envID: -2,
+        category: "All",
+        envelope: "", 
+      },{
+        envID: -1,
+        category: "Undefined",
+        envelope: "", 
+      }, ...(arg as EnvelopeList[])]);
+      setFilterEnvListLoaded(true);
+      setFilterEnvelopeName("All");
+      setFilterEnvID(-2);
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
   };
@@ -46,7 +59,7 @@ export const Charts: React.FC = () => {
   const load_chart = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_ENV_CHART_DATA, {envID});
+    ipcRenderer.send(channels.GET_ENV_CHART_DATA, filterEnvID );
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_CHART_DATA, (data) => {
@@ -66,8 +79,10 @@ export const Charts: React.FC = () => {
   }, [chartData]);
 
   useEffect(() => {
-    load_chart();
-  }, [envID]);
+    if (filterEnvID && filterEnvelopeName?.length) {
+      load_chart();
+    }
+  }, [filterEnvID, filterEnvelopeName]);
 
   useEffect(() => {
     load_envelope_list();
@@ -80,20 +95,23 @@ export const Charts: React.FC = () => {
       </header>
       <div>
         Charts<br/>
-        {envListLoaded &&
-          <CategoryDropDown 
-            id={-1}
-            envID={envID}
-            data={envList}
-            changeCallback={handleChange}
-          />
+        {filterEnvListLoaded &&
+          <div className="import-container">
+            <span>Filter: </span>
+            <CategoryDropDown 
+              id={-1}
+              envID={filterEnvID}
+              data={filterEnvList}
+              changeCallback={handleFilterEnvChange}
+            />
+          </div>
         }
-        {haveChartData && envelopeName &&
+        {haveChartData && filterEnvelopeName &&
           <LineChart
             dataset={chartData}
             xAxis={[{ dataKey: 'month', label: 'Month', tickSize: 1, tickMinStep: 1}]}
             yAxis={[{position:'left'}]}
-            series={[{ dataKey: 'totalAmt', label: envelopeName}]}
+            series={[{ dataKey: 'totalAmt', label: filterEnvelopeName}]}
             width={500}
             height={300}
 

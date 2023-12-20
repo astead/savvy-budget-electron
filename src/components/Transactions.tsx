@@ -55,6 +55,12 @@ export const Transactions: React.FC = () => {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
   }
 
+  
+  const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
+  const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
+  const [filterEnvID, setFilterEnvID] = useState(-2);
+  const [filterEnvelopeName, setFilterEnvelopeName] = useState(null);
+
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
   const [envListLoaded, setEnvListLoaded] = useState(false);
@@ -89,7 +95,9 @@ export const Transactions: React.FC = () => {
   const load_transactions = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_TX_DATA, Moment(new Date(year, month+1)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_TX_DATA, 
+      [ Moment(new Date(year, month+1)).format('YYYY-MM-DD'),
+      filterEnvID ]);
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
@@ -110,8 +118,23 @@ export const Transactions: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
-      setEnvList(arg as EnvelopeList[]);
+      setEnvList([{
+        envID: -1,
+        category: "Undefined",
+        envelope: "", 
+      }, ...(arg as EnvelopeList[])]);
       setEnvListLoaded(true);
+
+      setFilterEnvList([{
+        envID: -2,
+        category: "All",
+        envelope: "", 
+      },{
+        envID: -1,
+        category: "Undefined",
+        envelope: "", 
+      }, ...(arg as EnvelopeList[])]);
+      setFilterEnvListLoaded(true);
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
     
@@ -129,6 +152,11 @@ export const Transactions: React.FC = () => {
     }
     return i;
   }
+
+  const handleFilterEnvChange = ({id, new_value, new_text}) => {
+    setFilterEnvID(new_value);
+    setFilterEnvelopeName(new_text);
+  };
 
   const handleChange = ({id, new_value}) => {
     // Request we update the DB
@@ -197,7 +225,7 @@ export const Transactions: React.FC = () => {
     if (gotMonthData) {
       load_transactions();
     }
-  }, [curMonth]);
+  }, [curMonth, filterEnvID]);
 
   useEffect(() => {
     // which tab were we on?
@@ -218,7 +246,7 @@ export const Transactions: React.FC = () => {
       <header className="App-header">
         {<Header />}
       </header>
-      <div>
+      <div className="mainContent">
         Transactions<br/>
         {gotMonthData &&
         <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
@@ -248,6 +276,18 @@ export const Transactions: React.FC = () => {
               <FontAwesomeIcon icon={faFileImport} />
           </button>
         </div>
+        {filterEnvListLoaded &&
+          <div className="import-container">
+            <span>Filter: </span>
+            <CategoryDropDown 
+              id={-1}
+              envID={filterEnvID}
+              data={filterEnvList}
+              changeCallback={handleFilterEnvChange}
+
+            />
+          </div>
+        }
         <br/>
         {txData?.length > 0 && envListLoaded &&
           <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
