@@ -438,9 +438,22 @@ export const Configure: React.FC = () => {
       <div className="mainContent">
         Configure<br/>
         
-        <Box sx={{ width: '100%' }}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs  value={tabValue} onChange={handleTabChange}  aria-label="basic tabs example">
+        
+          <Box 
+            sx={{ 
+              width: '750px', 
+              bgcolor: 'lightgray', 
+              borderBottom: 1, 
+              borderColor: 'divider',
+            }}
+          >
+            <Tabs 
+              value={tabValue}
+              onChange={handleTabChange}
+              aria-label="basic tabs example"
+              variant="fullWidth"
+              textColor="primary"
+              indicatorColor="primary">
               <Tab label="Categories" {...a11yProps(0)} />
               <Tab label="Key Words" {...a11yProps(1)} />
               <Tab label="Accounts" {...a11yProps(2)} />
@@ -455,7 +468,6 @@ export const Configure: React.FC = () => {
           <CustomTabPanel tabValue={tabValue} index={2}>
             {account_content}
           </CustomTabPanel>
-        </Box>
         
       </div>
     </div>
