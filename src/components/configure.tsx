@@ -450,10 +450,10 @@ export const Configure: React.FC = () => {
               aria-label="basic tabs example"
               variant="fullWidth"
               textColor="primary"
-              indicatorColor="primary">
-              <Tab label="Categories" {...a11yProps(0)} />
-              <Tab label="Key Words" {...a11yProps(1)} />
-              <Tab label="Accounts" {...a11yProps(2)} />
+              indicatorColor="primary"  sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }}>
+              <Tab label="Categories" {...a11yProps(0)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
+              <Tab label="Key Words" {...a11yProps(1)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
+              <Tab label="Accounts" {...a11yProps(2)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
             </Tabs>
           </Box>
           <CustomTabPanel tabValue={tabValue} index={0}>
