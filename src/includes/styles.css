@@ -346,10 +346,49 @@ input.import-file {
   background-color: limegreen;
 }
 
+div.envelopeDataContainer {
+  display:flex;
+  flex-direction: row;
+  margin: 0px;
+  padding: 0px;
+  width:1000px;
+}
+
+.envelopeDataDiff {
+  display:flex;
+  flex-direction:column;
+  border: 1px solid black;
+  margin: 0px;
+  padding: 10px;
+  margin-left: 10px;
+  width:fit-content;
+  height: fit-content;
+  align-items: left;
+  text-align:left;
+}
+
+.envelopeDataDiffHeader {
+  font-weight:bolder;
+}
+
+.envelopeDataDiffItem {
+  width:100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.envelopeDataDiffItemCurr {
+  padding-left:10px;
+  text-align:right;
+  width:100%;
+}
+
+
 .BudgetTable {
   padding: 0;
   margin: 0;
-  border-collapse:collapse,
+  border-collapse:collapse;
+  border:1px solid black;
 }
 
 .BudgetTableHeaderRow {

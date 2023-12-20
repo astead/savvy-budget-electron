@@ -11,7 +11,7 @@ import Moment from 'moment';
   - Click on monthly average to go to trend chart
   - Color based on how healthy the envelope is
   - Click on curr balance to move envelope balance option
-  - option to show anything that isn't in a category
+  - Click to show anything that isn't in a category
   - Show current diff in budget on the right.
 */
 
@@ -57,6 +57,10 @@ export const Envelopes: React.FC = () => {
 
   function formatCurrency(currencyNumber:number) {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
+  };
+
+  function formatWholeCurrency(currencyNumber:number) {
+    return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
   };
 
   const disp_date_label = (m, y) => {
@@ -105,6 +109,11 @@ export const Envelopes: React.FC = () => {
   const [loadedCurrBalance, setLoadedCurrBalance] = useState(false);
   const [loadedCurrActual, setLoadedCurrActual] = useState(false);
   const [loadedMonthlyAvg, setLoadedMonthlyAvg] = useState(false);
+
+  const [curTotalBudgetIncome, setCurTotalBudgetIncome] = useState(0);
+  const [curTotalBudgetSpending, setCurTotalBudgetSpending] = useState(0);
+  const [curTotalActualIncome, setCurTotalActualIncome] = useState(0);
+  const [curTotalActualSpending, setCurTotalActualSpending] = useState(0);
 
   const load_PrevBudget = () => {
     // Signal we want to get data
@@ -206,6 +215,7 @@ export const Envelopes: React.FC = () => {
       
       const tmpData = [...budgetData] as BudgetNodeData[]; 
     
+      // Go through the data and store it into our table array
       for (let i=0; i < arg.length; i++) {
         for (let j=0; j < tmpData.length; j++) {
           if (arg[i].envelopeID === tmpData[j].envID) {
@@ -215,7 +225,10 @@ export const Envelopes: React.FC = () => {
       };
     
       setBudgetData(tmpData as BudgetNodeData[]); 
-      setLoadedCurrBudget(true);     
+      setLoadedCurrBudget(true);
+
+      
+      
 
       ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
     });
@@ -225,6 +238,29 @@ export const Envelopes: React.FC = () => {
       ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
     };
   };
+
+  const get_totals = () => {
+    let myTotalBudgetIncome = 0;
+    let myTotalBudgetSpending = 0;
+    let myTotalActualIncome = 0;
+    let myTotalActualSpending = 0;
+
+    budgetData.map((n, i) => {
+    if (n.category === "Income") {
+      myTotalBudgetIncome += n.currBudget;
+      myTotalActualIncome += n.currActual;
+
+    } else {
+      myTotalBudgetSpending += n.currBudget;
+      myTotalActualSpending += n.currActual;
+    }
+    });
+    
+    setCurTotalBudgetIncome(myTotalBudgetIncome);
+    setCurTotalBudgetSpending(myTotalBudgetSpending);
+    setCurTotalActualIncome(myTotalActualIncome);
+    setCurTotalActualSpending(myTotalActualSpending);
+  }
 
   const load_CurrActual = () => {
     // Signal we want to get data
@@ -338,6 +374,7 @@ export const Envelopes: React.FC = () => {
   }, [curMonth]);  
 
   useEffect(() => {
+    get_totals();
     if (budgetData?.length > 0) {
        if (!loadedEnvelopes) {
         setLoadedEnvelopes(true);
@@ -440,52 +477,80 @@ export const Envelopes: React.FC = () => {
         }
         <br/>
         {loaded &&
-          <table className="BudgetTable" cellSpacing={0} cellPadding={0}>
-            
-            <>
-              <thead className="BudgetTableHeader">
-                <tr className="BudgetTableHeaderRow">
-                  <th className="BudgetTableHeaderCell">{' \n '}</th>
-                  <th className="BudgetTableHeaderCell">{' \nEnvelope'}</th>
-                  <th className="BudgetTableHeaderCellCurr">{'Prev\nBudget'}</th>
-                  <th className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</th>
-                  <th className="BudgetTableHeaderCellCurr">{'Curr\nBalance'}</th>
-                  <th className="BudgetTableHeaderCellCurr">{disp_date_label(month, year) + '\nBudget'}</th>
-                  <th className="BudgetTableHeaderCellCurr">{'Curr\nActual'}</th>
-                  <th className="BudgetTableHeaderCellCurr">{'Monthly\nAvg'}</th>
-                  <th className="BudgetTableHeaderCell">{' \n '}</th>
-                </tr>
-              </thead>
-    
-              <tbody className="BudgetTableBody">
-                {budgetData.map((item, index, myArray) => (
-                  <React.Fragment key={index}>
-                  { (index === 0 || (index > 0 && item.category !== myArray[index - 1].category)) && (
-                    <tr key={'header-'+item.envID} className="BudgetTableGroupHeaderRow">
-                      <td colSpan={9} className="BudgetTableGroupHeader">{item.category}</td>
-                    </tr>
-                  )}
-                  <tr key={item.envID} className="BudgetTableRow">
-                    <td className="BudgetTableCellCurr">&nbsp;</td>
-                    <td className="BudgetTableCell">{item.envelope}</td>
-                    <td className="BudgetTableCellCurr">{formatCurrency(item.prevBudget)}</td>
-                    <td className="BudgetTableCellCurr">{formatCurrency(item.prevActual)}</td>
-                    <td className="BudgetTableCellCurr">{formatCurrency(item.currBalance)}</td>
-                    <td className="BudgetTableCellInput">
-                      <EditableBudget 
-                        initialID={item.envID}
-                        initialDate={curMonth}
-                        initialValue={item.currBudget}/>
-                    </td>
-                    <td className="BudgetTableCellCurr">{formatCurrency(item.currActual)}</td>
-                    <td className="BudgetTableCellCurr">{formatCurrency(item.monthlyAvg)}</td>
-                    <td className="BudgetTableCellCurr">&nbsp;</td>
+          <div className="envelopeDataContainer">
+            <div>
+              <table className="BudgetTable" cellSpacing={0} cellPadding={0}>
+              
+                <thead className="BudgetTableHeader">
+                  <tr className="BudgetTableHeaderRow">
+                    <th className="BudgetTableHeaderCell">{' \n '}</th>
+                    <th className="BudgetTableHeaderCell">{' \nEnvelope'}</th>
+                    <th className="BudgetTableHeaderCellCurr">{'Prev\nBudget'}</th>
+                    <th className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</th>
+                    <th className="BudgetTableHeaderCellCurr">{'Curr\nBalance'}</th>
+                    <th className="BudgetTableHeaderCellCurr">{disp_date_label(month, year) + '\nBudget'}</th>
+                    <th className="BudgetTableHeaderCellCurr">{'Curr\nActual'}</th>
+                    <th className="BudgetTableHeaderCellCurr">{'Monthly\nAvg'}</th>
+                    <th className="BudgetTableHeaderCell">{' \n '}</th>
                   </tr>
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </>
-          </table>
+                </thead>
+      
+                <tbody className="BudgetTableBody">
+                  {budgetData.map((item, index, myArray) => (
+                    <React.Fragment key={index}>
+                    { (index === 0 || (index > 0 && item.category !== myArray[index - 1].category)) && (
+                      <tr key={'header-'+item.envID} className="BudgetTableGroupHeaderRow">
+                        <td colSpan={9} className="BudgetTableGroupHeader">{item.category}</td>
+                      </tr>
+                    )}
+                    <tr key={item.envID} className="BudgetTableRow">
+                      <td className="BudgetTableCellCurr">&nbsp;</td>
+                      <td className="BudgetTableCell">{item.envelope}</td>
+                      <td className="BudgetTableCellCurr">{formatCurrency(item.prevBudget)}</td>
+                      <td className="BudgetTableCellCurr">{formatCurrency(item.prevActual)}</td>
+                      <td className="BudgetTableCellCurr">{formatCurrency(item.currBalance)}</td>
+                      <td className="BudgetTableCellInput">
+                        <EditableBudget 
+                          initialID={item.envID}
+                          initialDate={curMonth}
+                          initialValue={item.currBudget}/>
+                      </td>
+                      <td className="BudgetTableCellCurr">{formatCurrency(item.currActual)}</td>
+                      <td className="BudgetTableCellCurr">{formatCurrency(item.monthlyAvg)}</td>
+                      <td className="BudgetTableCellCurr">&nbsp;</td>
+                    </tr>
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="envelopeDataDiff">
+              <div className="envelopeDataDiffHeader">
+                <div>Budget Diff:</div>
+              </div>
+              
+              <div className="envelopeDataDiffItem">
+                <div>Income:</div>
+                <div className="envelopeDataDiffItemCurr">
+                  {formatWholeCurrency(curTotalBudgetIncome)}
+                </div>
+              </div>
+              
+              <div className="envelopeDataDiffItem">
+                <div>Spending:</div>
+                <div className="envelopeDataDiffItemCurr">
+                  {formatWholeCurrency(curTotalBudgetSpending)}
+                </div>
+              </div>
+              
+              <div className="envelopeDataDiffItem">
+                <div>Diff:</div>
+                <div className="envelopeDataDiffItemCurr">
+                  {formatWholeCurrency(curTotalBudgetIncome + curTotalBudgetSpending)}
+                </div>
+              </div>
+            </div>
+          </div>
         }
       </div>
     </div>
