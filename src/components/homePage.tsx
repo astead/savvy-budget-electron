@@ -7,10 +7,10 @@ export const HomePage: React.FC = () => {
     return (
         <div className="App">
             <header className="App-header">
-                <Header />
+              <Header currTab="Home"/>
             </header>
             <div>
-                Home Page
+                
             </div>
         </div>
     );

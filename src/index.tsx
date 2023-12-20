@@ -12,7 +12,6 @@ import { Configure } from './components/Configure.tsx';
 /*
   TODO:
   - Improve CRUD reposting
-  - top menu bread crumbs
 */
 
 const root = ReactDOM.createRoot(

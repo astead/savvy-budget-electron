@@ -12,7 +12,6 @@ import { faFileImport } from "@fortawesome/free-solid-svg-icons";
 /*
  TODO:
   - add filter options:
-    - account
     - bank
     - date?
     - amount
@@ -244,10 +243,9 @@ export const Transactions: React.FC = () => {
   return (
     <div className="App">
       <header className="App-header">
-        {<Header />}
+        {<Header currTab="Transactions"/>}
       </header>
       <div className="mainContent">
-        Transactions<br/>
         {gotMonthData &&
         <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
         }

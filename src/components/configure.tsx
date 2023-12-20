@@ -433,12 +433,9 @@ export const Configure: React.FC = () => {
   return (
     <div className="App">
       <header className="App-header">
-        {<Header />}
+        {<Header currTab="Configure"/>}
       </header>
       <div className="mainContent">
-        Configure<br/>
-        
-        
           <Box 
             sx={{ 
               width: '750px', 
@@ -468,7 +465,6 @@ export const Configure: React.FC = () => {
           <CustomTabPanel tabValue={tabValue} index={2}>
             {account_content}
           </CustomTabPanel>
-        
       </div>
     </div>
   );
