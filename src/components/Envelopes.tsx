@@ -111,13 +111,12 @@ export const Envelopes: React.FC = () => {
 
   const [curTotalBudgetIncome, setCurTotalBudgetIncome] = useState(0);
   const [curTotalBudgetSpending, setCurTotalBudgetSpending] = useState(0);
-  const [curTotalActualIncome, setCurTotalActualIncome] = useState(0);
-  const [curTotalActualSpending, setCurTotalActualSpending] = useState(0);
+  const [curTotalActualUndefined, setCurTotalActualUndefined] = useState(0);
 
   const load_PrevBudget = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_PREV_BUDGET, Moment(new Date(year, month-1)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_PREV_BUDGET, Moment(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_BUDGET, (arg) => {
@@ -147,7 +146,7 @@ export const Envelopes: React.FC = () => {
   const load_PrevActual = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_PREV_ACTUAL, Moment(new Date(year, month-1)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_PREV_ACTUAL, Moment(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_ACTUAL, (arg) => {
@@ -207,7 +206,7 @@ export const Envelopes: React.FC = () => {
   const load_CurrBudget = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CUR_BUDGET, Moment(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_CUR_BUDGET, Moment(new Date(year, month+1)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CUR_BUDGET, (arg) => {
@@ -241,44 +240,45 @@ export const Envelopes: React.FC = () => {
   const get_totals = () => {
     let myTotalBudgetIncome = 0;
     let myTotalBudgetSpending = 0;
-    let myTotalActualIncome = 0;
-    let myTotalActualSpending = 0;
 
     budgetData.map((n, i) => {
-    if (n.category === "Income") {
-      myTotalBudgetIncome += n.currBudget;
-      myTotalActualIncome += n.currActual;
+      if (n.category === "Income") {
+        myTotalBudgetIncome += n.currBudget;
 
-    } else {
-      myTotalBudgetSpending += n.currBudget;
-      myTotalActualSpending += n.currActual;
-    }
+      } else {
+        myTotalBudgetSpending += n.currBudget;
+      }
     });
     
     setCurTotalBudgetIncome(myTotalBudgetIncome);
     setCurTotalBudgetSpending(myTotalBudgetSpending);
-    setCurTotalActualIncome(myTotalActualIncome);
-    setCurTotalActualSpending(myTotalActualSpending);
   }
 
   const load_CurrActual = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CUR_ACTUAL, Moment(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_CUR_ACTUAL, Moment(new Date(year, month+1)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CUR_ACTUAL, (arg) => {
       
+      let myTotalCurr = 0;
       const tmpData = [...budgetData] as BudgetNodeData[]; 
     
       for (let i=0; i < arg.length; i++) {
+        let found = false;
         for (let j=0; j < tmpData.length; j++) {
           if (arg[i].envelopeID === tmpData[j].envID) {
+            found = true;
             tmpData[j] = Object.assign(tmpData[j], { currActual: arg[i].totalAmt });
           }
         }
+        if (!found) {
+          myTotalCurr += arg[i].totalAmt;
+        }
       };
     
+      setCurTotalActualUndefined(myTotalCurr);
       setBudgetData(tmpData as BudgetNodeData[]); 
       setLoadedCurrActual(true);     
 
@@ -502,7 +502,11 @@ export const Envelopes: React.FC = () => {
                     <tr key={item.envID} className="BudgetTableRow">
                       <td className="BudgetTableCell">{item.envelope}</td>
                       <td className="BudgetTableCellCurr">{formatCurrency(item.prevBudget)}</td>
-                      <td className="BudgetTableCellCurr">{formatCurrency(item.prevActual)}</td>
+                      <td className="BudgetTableCellCurr">
+                        <Link to={"/Transactions/" + item.envID}>
+                          {formatCurrency(item.prevActual)}
+                        </Link>
+                      </td>
                       <td className="BudgetTableCellCurr">{formatCurrency(item.currBalance)}</td>
                       <td className="BudgetTableCellInput">
                         <EditableBudget 
@@ -552,6 +556,19 @@ export const Envelopes: React.FC = () => {
                     {formatWholeCurrency(curTotalBudgetIncome + curTotalBudgetSpending)}
                   </div>
                 </div>
+
+                <div>&nbsp;</div>
+                
+                <div className="envelopeDataDiffHeader">
+                  <div>Actual:</div>
+                </div>
+                <div className="envelopeDataDiffItem">
+                  <div>Missing:</div>
+                  <div className="envelopeDataDiffItemCurr">
+                    {formatWholeCurrency(curTotalActualUndefined)}
+                  </div>
+                </div>
+                
               </div>
             </div>
           </div>
