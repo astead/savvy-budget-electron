@@ -547,6 +547,17 @@ div.envelopeDataContainer {
   margin: 0;
 }
 
+.TransactionTableHeaderCellAccount {
+  background-color: #b4b4b4;
+  border: 1px solid black;
+  text-align:center;
+  white-space: pre-wrap;
+  height:100%;
+  width: 100px;
+  padding: 0;
+  margin: 0;
+}
+
 .TransactionTableHeaderCellCurr {
   background-color: #b4b4b4;
   border: 1px solid black;
@@ -581,6 +592,14 @@ div.envelopeDataContainer {
   padding: 0;
   margin: 0;
   padding-right:2px;
+}
+
+.TransactionTableCellAccount {
+  border: 1px solid black;
+  text-align:left;
+  padding: 0;
+  margin: 0;
+  padding-left:2px;
 }
 
 .TransactionTableCellCurr {

@@ -208,7 +208,7 @@ export const Transactions: React.FC = () => {
             let MintHeader = '"Date","Description","Original Description","Amount","Transaction Type","Category","Account Name","Labels","Notes"';
             if (ofxString.includes(PayPalHeader)) {
               account_string = "PayPal";
-            } else if (ofxString.startsWith(MintHeader)) {
+            } else if ((ofxString as string).startsWith(MintHeader)) {
               account_string = "Mint";
             }
           }
@@ -304,6 +304,7 @@ export const Transactions: React.FC = () => {
               <thead className="TransactionTableHeader">
                 <tr className="TransactionTableHeaderRow">
                   <th className="TransactionTableHeaderCellDate">{'Date'}</th>
+                  <th className="TransactionTableHeaderCellAccount">{'Account'}</th>
                   <th className="TransactionTableHeaderCell">{'Description'}</th>
                   <th className="TransactionTableHeaderCellCurr">{'Amount'}</th>
                   <th className="TransactionTableHeaderCell">{'Envelope'}</th>
@@ -317,6 +318,7 @@ export const Transactions: React.FC = () => {
                 {txData.map((item, index) => (
                   <tr key={index} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
                     <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
+                    <td className="TransactionTableCellAccount">{item.account}</td>
                     <td className="TransactionTableCell">{item.description}</td>
                     <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
                     <td className="TransactionTableCellCenter">
