@@ -359,7 +359,8 @@ ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
     .orderBy('envelopeID')
     .where({ isBudget: 0 })
     .andWhereRaw(`strftime('%m', txDate) = ?`, month)
-    .where({ isDuplicate: 0 })
+    .andWhere({ isDuplicate: 0 })
+    .andWhere({ isVisible: 1 })
     .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
     .groupBy('envelopeID')
     .then((data) => {
@@ -381,7 +382,8 @@ ipcMain.on(channels.GET_CUR_ACTUAL, (event, find_date) => {
     .orderBy('envelopeID')
     .where({ isBudget: 0 })
     .andWhereRaw(`strftime('%m', txDate) = ?`, month)
-    .where({ isDuplicate: 0 })
+    .andWhere({ isDuplicate: 0 })
+    .andWhere({ isVisible: 1 })
     .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
     .groupBy('envelopeID')
     .then((data) => {
@@ -414,8 +416,9 @@ ipcMain.on(channels.GET_MONTHLY_AVG, (event, find_date) => {
     .orderBy('envelopeID')
     .where({ isBudget: 0 })
     .andWhereRaw(`julianday(?) - julianday(txDate) < 365`, [find_date])
-    .where({ isDuplicate: 0 })
     .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
+    .andWhere({ isDuplicate: 0 })
+    .andWhere({ isVisible: 1 })
     .groupBy('envelopeID')
     .then((data) => {
       event.sender.send(channels.LIST_MONTHLY_AVG, data);
@@ -442,7 +445,8 @@ ipcMain.on(channels.GET_TX_DATA, (event, [find_date, filterEnvID]) => {
       'transaction.txAmt as txAmt',
       'transaction.description as description',
       'keyword.envelopeID as keywordEnvID',
-      'transaction.isDuplicate as isDuplicate'
+      'transaction.isDuplicate as isDuplicate',
+      'transaction.isVisible as isVisible'
     )
     .from('transaction')
     .leftJoin('envelope', function () {
@@ -497,6 +501,7 @@ ipcMain.on(channels.ADD_TX, (event, data) => {
       isDuplicate: 0,
       isSplit: 0,
       accountID: 0,
+      isVisible: 1,
     };
 
     knex('transaction')
@@ -603,6 +608,21 @@ ipcMain.on(channels.SAVE_KEYWORD, (event, [envID, description]) => {
     });
 });
 
+function adjust_balance(txID, add_or_remove) {
+  knex
+    .select('envelopeID', 'txAmt')
+    .from('transaction')
+    .where({ id: txID })
+    .then((data) => {
+      if (data?.length) {
+        update_env_balance(
+          data[0].id,
+          add_or_remove === 'add' ? data[0].txAmt : -1 * data[0].txAmt
+        );
+      }
+    });
+}
+
 ipcMain.on(channels.SET_DUPLICATE, (event, [txID, isDuplicate]) => {
   console.log(channels.SET_DUPLICATE, txID, isDuplicate);
 
@@ -612,6 +632,23 @@ ipcMain.on(channels.SET_DUPLICATE, (event, [txID, isDuplicate]) => {
     .catch((err) => {
       console.log('Error: ' + err);
     });
+
+  // Need to adjust envelope balance
+  adjust_balance(txID, isDuplicate ? 'rem' : 'add');
+});
+
+ipcMain.on(channels.SET_VISIBILITY, (event, [txID, isVisible]) => {
+  console.log(channels.SET_VISIBILITY, txID, isVisible);
+
+  knex('transaction')
+    .update({ isVisible: isVisible })
+    .where({ id: txID })
+    .catch((err) => {
+      console.log('Error: ' + err);
+    });
+
+  // Need to adjust envelope balance
+  adjust_balance(txID, isVisible ? 'add' : 'rem');
 });
 
 async function lookup_account(account) {
@@ -928,6 +965,7 @@ async function insert_transaction_node(
     isDuplicate: isDuplicate,
     isSplit: 0,
     accountID: accountID,
+    isVisible: 1,
   };
 
   // Insert the node
@@ -1008,8 +1046,9 @@ ipcMain.on(channels.GET_ENV_CHART_DATA, (event, filterEnvID) => {
     .orderBy('envelopeID')
     .where({ isBudget: 0 })
     .andWhereRaw(`julianday(?) - julianday(txDate) < 365`, [find_date])
-    .where({ isDuplicate: 0 })
     .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
+    .andWhere({ isDuplicate: 0 })
+    .andWhere({ isVisible: 1 })
     .groupBy('month');
 
   if (filterEnvID > -2) {

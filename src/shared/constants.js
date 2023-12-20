@@ -40,6 +40,8 @@ module.exports = {
 
     SET_DUPLICATE: 'set_duplicate',
 
+    SET_VISIBILITY: 'set_visibility',
+
     IMPORT_OFX: 'import_ofx',
     IMPORT_CSV: 'import_csv',
 

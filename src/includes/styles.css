@@ -650,6 +650,28 @@ div.envelopeDataContainer {
   color:limegreen;
 }
 
+.ToggleVisibility-no {
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ToggleVisibility-yes {
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  color: lightgreen;
+  cursor: pointer;
+}
+
+.ToggleVisibility-no:hover {
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  color:limegreen;
+}
+
 select.envelopeDropDown {
 
 }

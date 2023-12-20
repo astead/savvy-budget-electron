@@ -7,7 +7,7 @@ import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
 //import Papa from 'papaparse';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopy, faFileImport } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faEyeSlash, faFileImport } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from 'react-router';
 
 /*
@@ -19,10 +19,6 @@ import { useParams } from 'react-router';
     - description
   - add split transactions?
       https://fontawesome.com/icons/arrows-split-up-and-left?f=classic&s=solid&rt=flip-horizontal
-  - add hide transactions:
-      https://fontawesome.com/icons/eye-slash?f=classic&s=solid
-  - add marking as duplicate
-      maybe: https://fontawesome.com/icons/arrows-rotate?f=classic&s=solid
   - modify description?
   - popup window to add notes, tags, etc and edit item
   - import PLAID
@@ -47,6 +43,7 @@ export const Transactions: React.FC = () => {
     description: string;
     keywordEnvID: number;
     isDuplicate: number;
+    isVisible: number;
   }
   interface EnvelopeList {
     envID: number; 
@@ -174,6 +171,12 @@ export const Transactions: React.FC = () => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.SET_DUPLICATE, [txID, isDuplicate]);
+  };
+
+  const toggleVisibility = ({txID, isVisible}) => {
+    // Request we update the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.SET_VISIBILITY, [txID, isVisible]);
   };
 
   const handleImport = async () => {
@@ -304,6 +307,7 @@ export const Transactions: React.FC = () => {
                   <th className="TransactionTableHeaderCell">{'Envelope'}</th>
                   <th className="TransactionTableHeaderCellCenter">{' KW '}</th>
                   <th className="TransactionTableHeaderCellCenter">{' Dup '}</th>
+                  <th className="TransactionTableHeaderCellCenter">{' Vis '}</th>
                 </tr>
               </thead>
     
@@ -335,6 +339,15 @@ export const Transactions: React.FC = () => {
                         }}
                         className={"ToggleDuplicate" + (item.isDuplicate?"-yes":"-no")}>
                         <FontAwesomeIcon icon={faCopy} />
+                      </div>
+                    </td>
+                    <td className="TransactionTableCell">
+                      <div
+                        onClick={() => {
+                          toggleVisibility({txID: item.txID, isVisible: (item.isVisible?0:1)});
+                        }}
+                        className={"ToggleVisibility" + (item.isVisible?"-no":"-yes")}>
+                        <FontAwesomeIcon icon={faEyeSlash} />
                       </div>
                     </td>
                   </tr>
