@@ -10,7 +10,6 @@ import { Link } from 'react-router-dom';
   TODO:
   - Color based on how healthy the envelope is
   - Click on curr balance to move envelope balance option
-  - Click to show anything that isn't in a category (tx list with undefined? filter)
 */
 
 export const Envelopes: React.FC = () => {
@@ -568,7 +567,9 @@ export const Envelopes: React.FC = () => {
                 <div className="envelopeDataDiffItem">
                   <div>Missing:</div>
                   <div className="envelopeDataDiffItemCurr">
-                    {formatWholeCurrency(curTotalActualUndefined)}
+                    <Link to={"/Transactions/-2/" + year + "/" + month}>
+                      {formatWholeCurrency(curTotalActualUndefined)}
+                    </Link>
                   </div>
                 </div>
                 

@@ -115,7 +115,7 @@ export const Transactions: React.FC = () => {
   const load_envelope_list = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_ENV_LIST);
+    ipcRenderer.send(channels.GET_ENV_LIST, {includeInactive: 1});
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
@@ -127,8 +127,12 @@ export const Transactions: React.FC = () => {
       setEnvListLoaded(true);
 
       setFilterEnvList([{
-        envID: -2,
+        envID: -3,
         category: "All",
+        envelope: "", 
+      },{
+        envID: -2,
+        category: "Not in current budget",
         envelope: "", 
       },{
         envID: -1,

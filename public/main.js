@@ -463,7 +463,16 @@ ipcMain.on(channels.GET_TX_DATA, (event, [find_date, filterEnvID]) => {
     .orderBy('transaction.txDate');
 
   if (filterEnvID > -2) {
-    query.where('transaction.envelopeID', filterEnvID);
+    query = query.andWhere('transaction.envelopeID', filterEnvID);
+  } else {
+    if (filterEnvID > -3) {
+      query = query.andWhere(function () {
+        this.where('transaction.envelopeID', -1).orWhere(
+          'envelope.isActive',
+          0
+        );
+      });
+    }
   }
 
   query
@@ -499,9 +508,10 @@ ipcMain.on(channels.ADD_TX, (event, data) => {
   });
 });
 
-ipcMain.on(channels.GET_ENV_LIST, (event) => {
+ipcMain.on(channels.GET_ENV_LIST, (event, { includeInactive }) => {
   console.log(channels.GET_ENV_LIST);
-  knex
+
+  let query = knex
     .select(
       'envelope.id as envID',
       'category.category as category',
@@ -511,8 +521,13 @@ ipcMain.on(channels.GET_ENV_LIST, (event) => {
     .leftJoin('category', function () {
       this.on('category.id', '=', 'envelope.categoryID');
     })
-    .where('envelope.isActive', 1)
-    .orderBy('category.category', 'envelope.envelope')
+    .orderBy('category.category', 'envelope.envelope');
+
+  if (includeInactive === 0) {
+    query.where('envelope.isActive', 1);
+  }
+
+  query
     .then((data) => {
       event.sender.send(channels.LIST_ENV_LIST, data);
     })
