@@ -433,8 +433,14 @@ ipcMain.on(channels.GET_MONTHLY_AVG, (event, find_date) => {
 
 ipcMain.on(
   channels.GET_TX_DATA,
-  (event, [find_date, filterEnvID, filterAccID]) => {
-    console.log(channels.GET_TX_DATA, find_date, filterEnvID, filterAccID);
+  (event, [find_date, filterEnvID, filterAccID, filterDesc]) => {
+    console.log(
+      channels.GET_TX_DATA,
+      find_date,
+      filterEnvID,
+      filterAccID,
+      filterDesc
+    );
 
     const month = Moment(new Date(find_date)).format('MM');
     const year = Moment(new Date(find_date)).format('YYYY');
@@ -487,6 +493,10 @@ ipcMain.on(
     }
     if (filterAccID > -1) {
       query = query.andWhere('transaction.accountID', filterAccID);
+    }
+    if (filterDesc?.length) {
+      filterDesc = '%' + filterDesc + '%';
+      query = query.andWhereRaw(`'transaction'.description LIKE ?`, filterDesc);
     }
 
     query

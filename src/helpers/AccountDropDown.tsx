@@ -34,7 +34,7 @@ export const AccountDropDown = ({keyID, id, data, changeCallback}) => {
       name={my_key}
       value={my_id}
       onChange={handleChange}
-      className={"envelopeDropDown"+(id === -1 ? "-undefined":"")}>
+      className="envelopeDropDown">
         {my_data.map(o => (
           <option 
             key={o.id} 

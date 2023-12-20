@@ -74,8 +74,12 @@ export const Transactions: React.FC = () => {
   // Filter by account
   const [filterAccList, setFilterAccList] = useState<AccountList[]>([]);
   const [filterAccListLoaded, setFilterAccListLoaded] = useState(false);
-  const [filterAccID, setFilterAccID] = useState(in_envID);
+  const [filterAccID, setFilterAccID] = useState(-1);
   const [filterAccName, setFilterAccName] = useState(null);
+
+  // Filter by description
+  const [filterDesc, setFilterDesc] = useState('');
+  
 
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
@@ -114,7 +118,8 @@ export const Transactions: React.FC = () => {
     ipcRenderer.send(channels.GET_TX_DATA, 
       [ Moment(new Date(year, month+1)).format('YYYY-MM-DD'),
       filterEnvID,
-      filterAccID ]);
+      filterAccID,
+      filterDesc ]);
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
@@ -358,6 +363,21 @@ export const Transactions: React.FC = () => {
                   id={filterAccID}
                   data={filterAccList}
                   changeCallback={handleFilterAccChange}
+                />
+              </div>
+              <div className="import-container">
+                <span>Description: </span>
+                <input
+                  name="filterDesc"
+                  value={filterDesc}
+                  onChange={(e) => {
+                    setFilterDesc(e.target.value);
+                  }}
+                  onBlur={() => {
+                    if (gotMonthData) {
+                      load_transactions();
+                    }
+                  }}
                 />
               </div>
           </AccordionDetails>
