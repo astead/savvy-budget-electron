@@ -93,7 +93,7 @@ export const Charts: React.FC = () => {
       <header className="App-header">
         {<Header />}
       </header>
-      <div>
+      <div className="mainContent">
         Charts<br/>
         {filterEnvListLoaded &&
           <div className="import-container">

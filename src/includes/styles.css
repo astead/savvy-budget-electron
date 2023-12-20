@@ -12,14 +12,7 @@ input[type="text"], button {
   font: inherit;
 }
 
-main {
-  margin: auto;
-  max-width: 600px;
-  background-color: #F8FAFC;
-  padding: 1rem 2rem;
-  border-radius: 15px;
-  box-shadow: 2px 2px 5px #333;
-}
+
 
 h1 {
   margin: 0.5rem 0;
@@ -33,6 +26,23 @@ div.NavBar {
   padding-right:10px;
 }
 
+div.App {
+  align-content:center;
+  align-items: center;
+  align-self: center;
+  text-align: center;
+  width:100%;
+}
+
+div.mainContent {
+  align-content: center;
+  align-items: center;
+  align-self: center;
+  text-align: center;
+  width:fit-content;
+  padding-left: 20px;
+  margin:auto;
+}
 
 
 div.new-category-container{
@@ -388,7 +398,8 @@ input.import-file {
   border: 1px solid black; 
   padding: 0;
   margin: 0;
-  padding-left:2px; 
+  padding-left:2px;
+  text-align:left; 
 }
 
 .BudgetTableGroupHeaderRow {
@@ -404,6 +415,7 @@ input.import-file {
   padding: 0;
   margin: 0;
   padding-left:2px;
+  text-align: left;
 }
 
 
@@ -428,6 +440,7 @@ input.import-file {
   padding: 0;
   margin: 0;
   padding-left:2px;
+  text-align:center;
 }
 
 .TransactionTableHeaderCellDate {
@@ -490,6 +503,7 @@ input.import-file {
   padding: 0;
   margin: 0;
   padding-left:2px; 
+  text-align:left;
 }
 
 .TransactionTableCellCenter {

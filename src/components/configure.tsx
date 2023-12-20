@@ -435,7 +435,7 @@ export const Configure: React.FC = () => {
       <header className="App-header">
         {<Header />}
       </header>
-      <div>
+      <div className="mainContent">
         Configure<br/>
         
         <Box sx={{ width: '100%' }}>

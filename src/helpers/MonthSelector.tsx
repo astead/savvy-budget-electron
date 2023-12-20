@@ -2,11 +2,6 @@ import React, { useEffect, useState } from 'react';
 import 'react-edit-text/dist/index.css';import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 
-/*
-TODO: 
- - Store CurMonth in local storage, so it persists?
-*/
-
 export const MonthSelector = ({ numMonths, startMonth, curIndex, parentCallback}) => {
    
   const [myStartMonth, setMyStartMonth] = useState(new Date(startMonth));

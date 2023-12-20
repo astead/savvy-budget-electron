@@ -433,7 +433,7 @@ export const Envelopes: React.FC = () => {
       <header className="App-header">
         {<Header />}
       </header>
-      <div>
+      <div className="mainContent">
         Envelopes<br/>
         {gotMonthData &&
           <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
