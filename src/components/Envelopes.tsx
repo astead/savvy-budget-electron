@@ -8,7 +8,6 @@ import { Link } from 'react-router-dom';
 
 /*
   TODO:
-  - Click on envelope to list those transactions
   - Color based on how healthy the envelope is
   - Click on curr balance to move envelope balance option
   - Click to show anything that isn't in a category (tx list with undefined? filter)
@@ -503,7 +502,11 @@ export const Envelopes: React.FC = () => {
                       <td className="BudgetTableCell">{item.envelope}</td>
                       <td className="BudgetTableCellCurr">{formatCurrency(item.prevBudget)}</td>
                       <td className="BudgetTableCellCurr">
-                        <Link to={"/Transactions/" + item.envID}>
+                        <Link to={
+                          "/Transactions" +
+                          "/" + item.envID + 
+                          "/" + new Date(year, month-1).getFullYear() + 
+                          "/" + new Date(year, month-1).getMonth()}>
                           {formatCurrency(item.prevActual)}
                         </Link>
                       </td>
@@ -515,7 +518,7 @@ export const Envelopes: React.FC = () => {
                           initialValue={item.currBudget}/>
                       </td>
                       <td className="BudgetTableCellCurr">
-                        <Link to={"/Transactions/" + item.envID}>
+                        <Link to={"/Transactions/" + item.envID + "/" + year + "/" + month}>
                           {formatCurrency(item.currActual)}
                         </Link>
                       </td>

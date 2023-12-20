@@ -31,7 +31,7 @@ import { useParams } from 'react-router';
 
 export const Transactions: React.FC = () => {
   
-  const { envID } = useParams();
+  const { in_envID, in_year, in_month } = useParams();
   
   interface TransactionNodeData {
     txID: number;
@@ -56,11 +56,10 @@ export const Transactions: React.FC = () => {
   function formatCurrency(currencyNumber:number) {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
   }
-
   
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
-  const [filterEnvID, setFilterEnvID] = useState(envID);
+  const [filterEnvID, setFilterEnvID] = useState(in_envID);
   const [filterEnvelopeName, setFilterEnvelopeName] = useState(null);
 
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
@@ -70,8 +69,8 @@ export const Transactions: React.FC = () => {
   
 
   /* Month Selector code -------------------------------------------*/
-  const [year, setYear] = useState((new Date()).getFullYear());
-  const [month, setMonth] = useState((new Date()).getMonth());
+  const [year, setYear] = useState(in_year?parseInt(in_year):new Date().getFullYear());
+  const [month, setMonth] = useState(in_month?parseInt(in_month):new Date().getMonth());
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
   const [myStartMonth, setMyStartMonth] = useState(new Date(year, month-8));
   const [myCurIndex, setMyCurIndex] = useState(8);
@@ -227,17 +226,10 @@ export const Transactions: React.FC = () => {
     if (gotMonthData) {
       load_transactions();
     }
-  }, [curMonth, filterEnvID]);
+  }, [curMonth, filterEnvID, gotMonthData]);
 
   useEffect(() => {
-    // which tab were we on?
-    const my_monthData_str = localStorage.getItem('transaction-month-data');
-    if (my_monthData_str?.length) {
-      const my_monthData = JSON.parse(my_monthData_str);
-      if (my_monthData) {
-        monthSelectorCallback(my_monthData);
-      }
-    }
+    monthSelectorCallback({childStartMonth: new Date(year, month-8), childCurIndex: 8});
     setGotMonthData(true);
     
     load_envelope_list();

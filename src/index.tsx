@@ -24,7 +24,7 @@ root.render(
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/Charts/:envID" element={<Charts />} />
-        <Route path="/Transactions/:envID" element={<Transactions />} />
+        <Route path="/Transactions/:in_envID/:in_year/:in_month" element={<Transactions />} />
         <Route path="/Envelopes" element={<Envelopes />} />
         <Route path="/Configure" element={<Configure />} />
       </Routes>
