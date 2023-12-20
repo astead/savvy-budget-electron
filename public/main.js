@@ -915,24 +915,105 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
             txAmt = txAmt.replace(/\"/g, '');
           }
 
-          //let description3 = tx_values[38].replace(/\"/g, '').trim();
-          //if (description3?.length) {
-          //  description += ' : ' + description3;
-          //}
-          let refNumber = tx_values[j + 5].replace(/\"/g, '').trim();
-
-          insert_transaction_node(
+          await insert_transaction_node(
             accountID,
             txAmt,
             txDate,
             description,
-            refNumber
+            ''
+          );
+        }
+      }
+    });
+  }
+  if (account_string === 'Mint') {
+    nodes.map(async (tx, i) => {
+      if (i > 0) {
+        const tx_values = tx.split(',');
+
+        if (tx_values?.length) {
+          let txDate = Moment(
+            new Date(tx_values[0].replace(/\"/g, '').trim())
+          ).format('YYYY-MM-DD');
+
+          let j = 1;
+          let description = tx_values[j];
+          if (description[0] === '"') {
+            while (!tx_values[j].endsWith('"')) {
+              j++;
+              description += ',' + tx_values[j];
+            }
+            description = description.replace(/\"/g, '');
+          }
+
+          j += 2;
+          let txAmt = tx_values[j];
+          if (txAmt.startsWith('"')) {
+            while (!tx_values[j].endsWith('"')) {
+              j++;
+              txAmt += tx_values[j];
+            }
+            txAmt = parseFloat(txAmt.replace(/\"/g, ''));
+          }
+
+          j += 1;
+          if (tx_values[j] === 'debit') {
+            txAmt = txAmt * -1;
+          }
+
+          j += 1;
+          //let category = tx_values[j];
+
+          j += 1;
+          let account_str = tx_values[j];
+          accountID = await lookup_account(account_str);
+
+          //let refNumber = tx_values[j + 5].replace(/\"/g, '').trim();
+
+          await basic_insert_transaction_node(
+            accountID,
+            txAmt,
+            txDate,
+            description,
+            '',
+            -1
           );
         }
       }
     });
   }
 });
+
+async function basic_insert_transaction_node(
+  accountID,
+  txAmt,
+  txDate,
+  description,
+  refNumber,
+  envID
+) {
+  let my_txDate = Moment(new Date(txDate)).format('YYYY-MM-DD');
+
+  // Prepare the data node
+  const myNode = {
+    envelopeID: envID,
+    txAmt: txAmt,
+    txDate: my_txDate,
+    description: description,
+    refNumber: refNumber,
+    isBudget: 0,
+    isTransfer: 0,
+    isDuplicate: 0,
+    isSplit: 0,
+    accountID: accountID,
+    isVisible: 1,
+  };
+
+  // Insert the node
+  await knex('transaction').insert(myNode);
+
+  process.stdout.write('.');
+}
 
 //console.log(channels.IMPORT_OFX, ofxString);
 async function insert_transaction_node(
