@@ -482,7 +482,6 @@ export const Envelopes: React.FC = () => {
               
                 <thead className="BudgetTableHeader">
                   <tr className="BudgetTableHeaderRow">
-                    <th className="BudgetTableHeaderCell">{' \n '}</th>
                     <th className="BudgetTableHeaderCell">{' \nEnvelope'}</th>
                     <th className="BudgetTableHeaderCellCurr">{'Prev\nBudget'}</th>
                     <th className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</th>
@@ -490,7 +489,6 @@ export const Envelopes: React.FC = () => {
                     <th className="BudgetTableHeaderCellCurr">{disp_date_label(month, year) + '\nBudget'}</th>
                     <th className="BudgetTableHeaderCellCurr">{'Curr\nActual'}</th>
                     <th className="BudgetTableHeaderCellCurr">{'Monthly\nAvg'}</th>
-                    <th className="BudgetTableHeaderCell">{' \n '}</th>
                   </tr>
                 </thead>
       
@@ -499,11 +497,10 @@ export const Envelopes: React.FC = () => {
                     <React.Fragment key={index}>
                     { (index === 0 || (index > 0 && item.category !== myArray[index - 1].category)) && (
                       <tr key={'header-'+item.envID} className="BudgetTableGroupHeaderRow">
-                        <td colSpan={9} className="BudgetTableGroupHeader">{item.category}</td>
+                        <td colSpan={7} className="BudgetTableGroupHeader">{item.category}</td>
                       </tr>
                     )}
                     <tr key={item.envID} className="BudgetTableRow">
-                      <td className="BudgetTableCellCurr">&nbsp;</td>
                       <td className="BudgetTableCell">{item.envelope}</td>
                       <td className="BudgetTableCellCurr">{formatCurrency(item.prevBudget)}</td>
                       <td className="BudgetTableCellCurr">{formatCurrency(item.prevActual)}</td>
@@ -516,7 +513,6 @@ export const Envelopes: React.FC = () => {
                       </td>
                       <td className="BudgetTableCellCurr">{formatCurrency(item.currActual)}</td>
                       <td className="BudgetTableCellCurr">{formatCurrency(item.monthlyAvg)}</td>
-                      <td className="BudgetTableCellCurr">&nbsp;</td>
                     </tr>
                     </React.Fragment>
                   ))}
@@ -524,28 +520,30 @@ export const Envelopes: React.FC = () => {
               </table>
             </div>
             <div className="envelopeDataDiff">
-              <div className="envelopeDataDiffHeader">
-                <div>Budget Diff:</div>
-              </div>
-              
-              <div className="envelopeDataDiffItem">
-                <div>Income:</div>
-                <div className="envelopeDataDiffItemCurr">
-                  {formatWholeCurrency(curTotalBudgetIncome)}
+              <div className="envelopeDataDiffFixed">
+                <div className="envelopeDataDiffHeader">
+                  <div>Budget Diff:</div>
                 </div>
-              </div>
-              
-              <div className="envelopeDataDiffItem">
-                <div>Spending:</div>
-                <div className="envelopeDataDiffItemCurr">
-                  {formatWholeCurrency(curTotalBudgetSpending)}
+                
+                <div className="envelopeDataDiffItem">
+                  <div>Income:</div>
+                  <div className="envelopeDataDiffItemCurr">
+                    {formatWholeCurrency(curTotalBudgetIncome)}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="envelopeDataDiffItem">
-                <div>Diff:</div>
-                <div className="envelopeDataDiffItemCurr">
-                  {formatWholeCurrency(curTotalBudgetIncome + curTotalBudgetSpending)}
+                
+                <div className="envelopeDataDiffItem">
+                  <div>Spending:</div>
+                  <div className="envelopeDataDiffItemCurr">
+                    {formatWholeCurrency(curTotalBudgetSpending)}
+                  </div>
+                </div>
+                
+                <div className="envelopeDataDiffItem">
+                  <div>Diff:</div>
+                  <div className="envelopeDataDiffItemCurr">
+                    {formatWholeCurrency(curTotalBudgetIncome + curTotalBudgetSpending)}
+                  </div>
                 </div>
               </div>
             </div>
