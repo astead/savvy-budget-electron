@@ -7,8 +7,12 @@ import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
 //import Papa from 'papaparse';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopy, faEyeSlash, faFileImport } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faEyeSlash, faFileImport, faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from 'react-router';
+
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
 
 /*
  TODO:
@@ -21,6 +25,7 @@ import { useParams } from 'react-router';
       https://fontawesome.com/icons/arrows-split-up-and-left?f=classic&s=solid&rt=flip-horizontal
   - modify description?
   - popup window to add notes, tags, etc and edit item
+    https://mui.com/material-ui/react-modal/
   - import PLAID
   - somehow highlight if we could set a keyword
 */
@@ -286,16 +291,26 @@ export const Transactions: React.FC = () => {
           </button>
         </div>
         {filterEnvListLoaded &&
-          <div className="import-container">
-            <span>Filter: </span>
-            <CategoryDropDown 
-              id={-1}
-              envID={filterEnvID}
-              data={filterEnvList}
-              changeCallback={handleFilterEnvChange}
-
-            />
-          </div>
+          <Accordion>
+          <AccordionSummary
+            expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
+            aria-controls="filter-content"
+            id="filter-header"
+          >
+            Filter
+          </AccordionSummary>
+          <AccordionDetails>
+              <div className="import-container">
+                <span>Envelope: </span>
+                <CategoryDropDown 
+                  id={-1}
+                  envID={filterEnvID}
+                  data={filterEnvList}
+                  changeCallback={handleFilterEnvChange}
+                />
+              </div>
+          </AccordionDetails>
+        </Accordion>
         }
         <br/>
         {txData?.length > 0 && envListLoaded &&
