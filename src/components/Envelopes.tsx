@@ -12,7 +12,6 @@ import Moment from 'moment';
   - Color based on how healthy the envelope is
   - Click on curr balance to move envelope balance option
   - Click to show anything that isn't in a category
-  - Show current diff in budget on the right.
 */
 
 export const Envelopes: React.FC = () => {
