@@ -431,65 +431,71 @@ ipcMain.on(channels.GET_MONTHLY_AVG, (event, find_date) => {
     .catch((err) => console.log(err));
 });
 
-ipcMain.on(channels.GET_TX_DATA, (event, [find_date, filterEnvID]) => {
-  console.log(channels.GET_TX_DATA, find_date, filterEnvID);
+ipcMain.on(
+  channels.GET_TX_DATA,
+  (event, [find_date, filterEnvID, filterAccID]) => {
+    console.log(channels.GET_TX_DATA, find_date, filterEnvID, filterAccID);
 
-  const month = Moment(new Date(find_date)).format('MM');
-  const year = Moment(new Date(find_date)).format('YYYY');
+    const month = Moment(new Date(find_date)).format('MM');
+    const year = Moment(new Date(find_date)).format('YYYY');
 
-  let query = knex
-    .select(
-      'transaction.id as txID',
-      'envelope.categoryID as catID',
-      'transaction.envelopeID as envID',
-      'category.category as category',
-      'envelope.envelope as envelope',
-      'transaction.accountID as accountID',
-      'account.account as account',
-      'transaction.txDate as txDate',
-      'transaction.txAmt as txAmt',
-      'transaction.description as description',
-      'keyword.envelopeID as keywordEnvID',
-      'transaction.isDuplicate as isDuplicate',
-      'transaction.isVisible as isVisible'
-    )
-    .from('transaction')
-    .leftJoin('envelope', function () {
-      this.on('envelope.id', '=', 'transaction.envelopeID');
-    })
-    .leftJoin('category', function () {
-      this.on('category.id', '=', 'envelope.categoryID');
-    })
-    .leftJoin('account', function () {
-      this.on('account.id', '=', 'transaction.accountID');
-    })
-    .leftJoin('keyword', function () {
-      this.on('keyword.description', '=', 'transaction.description');
-    })
-    .where({ isBudget: 0 })
-    .andWhereRaw(`strftime('%m', txDate) = ?`, month)
-    .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
-    .orderBy('transaction.txDate');
+    let query = knex
+      .select(
+        'transaction.id as txID',
+        'envelope.categoryID as catID',
+        'transaction.envelopeID as envID',
+        'category.category as category',
+        'envelope.envelope as envelope',
+        'transaction.accountID as accountID',
+        'account.account as account',
+        'transaction.txDate as txDate',
+        'transaction.txAmt as txAmt',
+        'transaction.description as description',
+        'keyword.envelopeID as keywordEnvID',
+        'transaction.isDuplicate as isDuplicate',
+        'transaction.isVisible as isVisible'
+      )
+      .from('transaction')
+      .leftJoin('envelope', function () {
+        this.on('envelope.id', '=', 'transaction.envelopeID');
+      })
+      .leftJoin('category', function () {
+        this.on('category.id', '=', 'envelope.categoryID');
+      })
+      .leftJoin('account', function () {
+        this.on('account.id', '=', 'transaction.accountID');
+      })
+      .leftJoin('keyword', function () {
+        this.on('keyword.description', '=', 'transaction.description');
+      })
+      .where({ isBudget: 0 })
+      .andWhereRaw(`strftime('%m', txDate) = ?`, month)
+      .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
+      .orderBy('transaction.txDate');
 
-  if (filterEnvID > -2) {
-    query = query.andWhere('transaction.envelopeID', filterEnvID);
-  } else {
-    if (filterEnvID > -3) {
-      query = query.andWhere(function () {
-        this.where('transaction.envelopeID', -1).orWhere(
-          'envelope.isActive',
-          0
-        );
-      });
+    if (filterEnvID > -2) {
+      query = query.andWhere('transaction.envelopeID', filterEnvID);
+    } else {
+      if (filterEnvID > -3) {
+        query = query.andWhere(function () {
+          this.where('transaction.envelopeID', -1).orWhere(
+            'envelope.isActive',
+            0
+          );
+        });
+      }
     }
-  }
+    if (filterAccID > -1) {
+      query = query.andWhere('transaction.accountID', filterAccID);
+    }
 
-  query
-    .then((data) => {
-      event.sender.send(channels.LIST_TX_DATA, data);
-    })
-    .catch((err) => console.log(err));
-});
+    query
+      .then((data) => {
+        event.sender.send(channels.LIST_TX_DATA, data);
+      })
+      .catch((err) => console.log(err));
+  }
+);
 
 ipcMain.on(channels.ADD_TX, (event, data) => {
   console.log(channels.ADD_TX);

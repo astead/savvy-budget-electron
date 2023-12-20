@@ -3,6 +3,7 @@ import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
 import { MonthSelector } from '../helpers/MonthSelector.tsx';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
+import { AccountDropDown } from '../helpers/AccountDropDown.tsx';
 import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
 //import Papa from 'papaparse';
@@ -54,15 +55,27 @@ export const Transactions: React.FC = () => {
     category: string;
     envelope: string; 
   }
+  interface AccountList {
+    id: number; 
+    refNumber: string;
+    account: string;
+  }
   
   function formatCurrency(currencyNumber:number) {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
   }
   
+  // Filter by envelope
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
   const [filterEnvID, setFilterEnvID] = useState(in_envID);
   const [filterEnvelopeName, setFilterEnvelopeName] = useState(null);
+
+  // Filter by account
+  const [filterAccList, setFilterAccList] = useState<AccountList[]>([]);
+  const [filterAccListLoaded, setFilterAccListLoaded] = useState(false);
+  const [filterAccID, setFilterAccID] = useState(in_envID);
+  const [filterAccName, setFilterAccName] = useState(null);
 
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
@@ -100,7 +113,8 @@ export const Transactions: React.FC = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_TX_DATA, 
       [ Moment(new Date(year, month+1)).format('YYYY-MM-DD'),
-      filterEnvID ]);
+      filterEnvID,
+      filterAccID ]);
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
@@ -151,6 +165,28 @@ export const Transactions: React.FC = () => {
     };
   }
 
+  const load_account_list = () => {
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_ACCOUNTS);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_ACCOUNTS, (arg) => {
+      setFilterAccList([{
+        id: -1,
+        refNumber: '',
+        account: "All", 
+      }, ...(arg as AccountList[])]);
+      setFilterAccListLoaded(true);
+      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
+    };
+  }
+
   function nthIndex(str, pat, n){
     var L= str.length, i= -1;
     while(n-- && i++<L){
@@ -163,6 +199,11 @@ export const Transactions: React.FC = () => {
   const handleFilterEnvChange = ({id, new_value, new_text}) => {
     setFilterEnvID(new_value);
     setFilterEnvelopeName(new_text);
+  };
+
+  const handleFilterAccChange = ({id, new_value, new_text}) => {
+    setFilterAccID(new_value);
+    setFilterAccName(new_text);
   };
 
   const handleChange = ({id, new_value}) => {
@@ -247,13 +288,14 @@ export const Transactions: React.FC = () => {
     if (gotMonthData) {
       load_transactions();
     }
-  }, [curMonth, filterEnvID, gotMonthData]);
+  }, [curMonth, filterEnvID, gotMonthData, filterAccID]);
 
   useEffect(() => {
     monthSelectorCallback({childStartMonth: new Date(year, month-8), childCurIndex: 8});
     setGotMonthData(true);
     
     load_envelope_list();
+    load_account_list();
   }, []);
 
   return (
@@ -290,7 +332,7 @@ export const Transactions: React.FC = () => {
               <FontAwesomeIcon icon={faFileImport} />
           </button>
         </div>
-        {filterEnvListLoaded &&
+        {filterEnvListLoaded && filterAccListLoaded &&
           <Accordion>
           <AccordionSummary
             expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
@@ -307,6 +349,15 @@ export const Transactions: React.FC = () => {
                   envID={filterEnvID}
                   data={filterEnvList}
                   changeCallback={handleFilterEnvChange}
+                />
+              </div>
+              <div className="import-container">
+                <span>Account: </span>
+                <AccountDropDown 
+                  keyID={-1}
+                  id={filterAccID}
+                  data={filterAccList}
+                  changeCallback={handleFilterAccChange}
                 />
               </div>
           </AccordionDetails>
