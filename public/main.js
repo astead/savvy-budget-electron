@@ -859,7 +859,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
   const nodes = ofxString.split('\n');
 
   if (account_string.startsWith('sofi-')) {
-    nodes.map(async (tx, i) => {
+    for (const [i, tx] of nodes.entries()) {
       if (i > 0) {
         const tx_values = tx.split(',');
 
@@ -871,10 +871,10 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
           ''
         );
       }
-    });
+    }
   }
   if (account_string === 'Venmo') {
-    nodes.map(async (tx, i) => {
+    for (const [i, tx] of nodes.entries()) {
       if (i > 3 && tx[0] === ',') {
         const tx_values = tx.split(',');
 
@@ -911,10 +911,10 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
           );
         }
       }
-    });
+    }
   }
   if (account_string === 'PayPal') {
-    nodes.map(async (tx, i) => {
+    for (const [i, tx] of nodes.entries()) {
       if (i > 0) {
         const tx_values = tx.split(',');
 
@@ -948,10 +948,10 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
           );
         }
       }
-    });
+    }
   }
   if (account_string === 'Mint') {
-    nodes.map(async (tx, i) => {
+    for (const [i, tx] of nodes.entries()) {
       if (i > 0) {
         const tx_values = tx.split(',');
 
@@ -1004,7 +1004,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
           );
         }
       }
-    });
+    }
   }
 });
 
