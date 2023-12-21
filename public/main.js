@@ -507,7 +507,7 @@ ipcMain.on(
       .where({ isBudget: 0 })
       .andWhereRaw(`strftime('%m', txDate) = ?`, month)
       .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
-      .orderBy('transaction.txDate');
+      .orderBy('transaction.txDate', 'desc');
 
     if (filterEnvID > -2) {
       query = query.andWhere('transaction.envelopeID', filterEnvID);
