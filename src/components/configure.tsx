@@ -9,21 +9,19 @@ import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable
 import NewCategory from '../helpers/NewCategory.tsx';
 import EditableCategory from '../helpers/EditableCategory.tsx';
 import EditableEnvelope from '../helpers/EditableEnvelope.tsx';
+import EditableAccount from '../helpers/EditableAccount.tsx';
+import EditableKeyword from '../helpers/EditableKeyword.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
 import { channels } from '../shared/constants.js';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
-import { EditableAccount } from '../helpers/EditableAccount.tsx';
+
 
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-
 /*
   TODO:
-  - Edit keyword text
-  - Add option to check if description starts with a keyword
-    MAYBE: https://fontawesome.com/icons/backward-step?f=classic&s=solid
   - Show keyword conflicts? 
 */
 export const Configure: React.FC = () => {
@@ -506,7 +504,11 @@ export const Configure: React.FC = () => {
               return (
                 <tr key={index} className="TransactionTableRow">
                   
-                  <td className="TransactionTableCell">{description}</td>
+                  <td className="TransactionTableCell">
+                    <EditableKeyword
+                      initialID={id.toString()}
+                      initialDescription={description} />
+                  </td>
                   <td className="TransactionTableCell">
                     <CategoryDropDown 
                       id={id}

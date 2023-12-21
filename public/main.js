@@ -564,26 +564,33 @@ ipcMain.on(channels.UPDATE_TX_ENV, (event, [txID, envID]) => {
   console.log(channels.UPDATE_TX_ENV, txID, envID);
 
   knex
-    .select('id', 'txAmt')
+    .select('id', 'txAmt', 'envelopeID')
     .from('transaction')
     .where({ id: txID })
     .then((rows) => {
       if (rows?.length) {
-        knex
-          .raw(
-            `update 'envelope' set balance = balance - ` +
-              rows[0].txAmt +
-              ` where id = ` +
-              rows[0].envelopeID
-          )
-          .then(() => {
-            knex.raw(
-              `update 'envelope' set balance = balance + ` +
+        if (rows[0].envelopeID > 0) {
+          knex
+            .raw(
+              `update 'envelope' set balance = balance - ` +
                 rows[0].txAmt +
                 ` where id = ` +
-                envID
-            );
-          })
+                rows[0].envelopeID
+            )
+            .then()
+            .catch((err) => {
+              console.log('Error: ' + err);
+            });
+        }
+
+        knex
+          .raw(
+            `update 'envelope' set balance = balance + ` +
+              rows[0].txAmt +
+              ` where id = ` +
+              envID
+          )
+          .then()
           .catch((err) => {
             console.log('Error: ' + err);
           });
@@ -637,7 +644,7 @@ function adjust_balance(txID, add_or_remove) {
     .then((data) => {
       if (data?.length) {
         update_env_balance(
-          data[0].id,
+          data[0].envelopeID,
           add_or_remove === 'add' ? data[0].txAmt : -1 * data[0].txAmt
         );
       }
@@ -765,9 +772,14 @@ async function lookup_if_duplicate(
 }
 
 async function update_env_balance(envID, amt) {
-  await knex.raw(
-    `UPDATE 'envelope' SET balance = balance + ` + amt + ` WHERE id = ` + envID
-  );
+  await knex
+    .raw(
+      `UPDATE 'envelope' SET balance = balance + ` +
+        amt +
+        ` WHERE id = ` +
+        envID
+    )
+    .then();
 }
 
 ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
@@ -1147,6 +1159,14 @@ ipcMain.on(channels.DEL_KEYWORD, (event, { id }) => {
   console.log(channels.DEL_KEYWORD, { id });
   knex('keyword')
     .delete()
+    .where({ id: id })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.UPDATE_KEYWORD, (event, { id, new_value }) => {
+  console.log(channels.UPDATE_KEYWORD, { id, new_value });
+  knex('keyword')
+    .update({ description: new_value })
     .where({ id: id })
     .catch((err) => console.log(err));
 });
