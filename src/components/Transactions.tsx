@@ -18,10 +18,8 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 /*
  TODO:
   - add filter options:
-    - bank
     - date?
     - amount
-    - description
   - add split transactions?
       https://fontawesome.com/icons/arrows-split-up-and-left?f=classic&s=solid&rt=flip-horizontal
   - modify description?
@@ -29,6 +27,7 @@ import AccordionDetails from '@mui/material/AccordionDetails';
     https://mui.com/material-ui/react-modal/
   - import PLAID
   - somehow highlight if we could set a keyword
+  - select multiple to delete?
 */
 
 export const Transactions: React.FC = () => {

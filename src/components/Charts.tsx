@@ -10,6 +10,7 @@ import { useParams } from 'react-router';
   TODO:
   - better month x-axis labels
   - add "vs Budget" line series for comparison
+  - pie chart?
 */
 
 export const Charts: React.FC = () => {

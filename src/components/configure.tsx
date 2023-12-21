@@ -21,8 +21,6 @@ import Box from '@mui/material/Box';
 
 /*
   TODO:
-  - Set all matching keywords - force set all
-    https://fontawesome.com/icons/reply-all?f=classic&s=solid&rt=flip-horizontal
   - Edit keyword text
   - Add option to check if description starts with a keyword
     MAYBE: https://fontawesome.com/icons/backward-step?f=classic&s=solid
