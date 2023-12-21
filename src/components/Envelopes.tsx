@@ -116,7 +116,7 @@ export const Envelopes: React.FC = () => {
   const load_PrevBudget = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_PREV_BUDGET, Moment(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_PREV_BUDGET, Moment(new Date(year, month-1)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_BUDGET, (arg) => {
@@ -206,7 +206,7 @@ export const Envelopes: React.FC = () => {
   const load_CurrBudget = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CUR_BUDGET, Moment(new Date(year, month+1)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_CUR_BUDGET, Moment(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CUR_BUDGET, (arg) => {
