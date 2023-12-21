@@ -159,6 +159,7 @@ export const Transactions: React.FC = () => {
         envelope: "", 
       }, ...(arg as EnvelopeList[])]);
       setFilterEnvListLoaded(true);
+
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
     
@@ -181,6 +182,7 @@ export const Transactions: React.FC = () => {
         account: "All", 
       }, ...(arg as AccountList[])]);
       setFilterAccListLoaded(true);
+
       ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
     });
     
@@ -200,11 +202,13 @@ export const Transactions: React.FC = () => {
   }
 
   const handleFilterEnvChange = ({id, new_value, new_text}) => {
+    localStorage.setItem('transaction-filter-envID', JSON.stringify({ filterEnvID: new_value}));
     setFilterEnvID(new_value);
     setFilterEnvelopeName(new_text);
   };
 
   const handleFilterAccChange = ({id, new_value, new_text}) => {
+    localStorage.setItem('transaction-filter-accID', JSON.stringify({ filterAccID: new_value}));
     setFilterAccID(new_value);
     setFilterAccName(new_text);
   };
@@ -282,6 +286,25 @@ export const Transactions: React.FC = () => {
   }, [curMonth, filterEnvID, gotMonthData, filterAccID]);
 
   useEffect(() => {
+    
+    const my_filter_envID_str = localStorage.getItem('transaction-filter-envID');
+    if (my_filter_envID_str?.length) {
+      const my_filter_envID = JSON.parse(my_filter_envID_str);
+      if (my_filter_envID) {
+        if (in_envID === "-3" && my_filter_envID.filterEnvID) {
+          setFilterEnvID(my_filter_envID.filterEnvID);
+        }
+      }
+    }
+      
+    const my_filter_accID_str = localStorage.getItem('transaction-filter-accID');
+    if (my_filter_accID_str?.length) {
+      const my_filter_accID = JSON.parse(my_filter_accID_str);
+      if (my_filter_accID) {
+        setFilterAccID(my_filter_accID.filterAccID);
+      }
+    }
+    
     monthSelectorCallback({childStartMonth: new Date(year, month-8), childCurIndex: 8});
     setGotMonthData(true);
     
