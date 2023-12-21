@@ -8,6 +8,7 @@ import { useParams } from 'react-router';
 
 /*
   TODO:
+  - fix it....
   - better month x-axis labels
   - add "vs Budget" line series for comparison
   - pie chart?
