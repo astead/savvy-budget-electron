@@ -335,7 +335,7 @@ export const Envelopes: React.FC = () => {
         }
       }
       const curDate = new Date(year, month);
-      const numMonths = monthDiff(firstDate, curDate);
+      const numMonths = monthDiff(firstDate, curDate)+1;
       
       if (numMonths > 0) {
         for (let i=0; i < arg.length; i++) {
