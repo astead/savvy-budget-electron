@@ -10,9 +10,6 @@ import BudgetBalanceModal from '../helpers/BudgetBalanceModal.tsx';
 /*
   TODO:
   - Color based on how healthy the envelope is
-  - Click on curr balance to move envelope balance option
-    https://mui.com/material-ui/react-modal/
-  - Edit balance value
 */
 
 export const Envelopes: React.FC = () => {
