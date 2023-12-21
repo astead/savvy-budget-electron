@@ -14,7 +14,6 @@ import { Configure } from './components/Configure.tsx';
   - Improve CRUD reposting
   - DRY stylesheets
   - Consolidate Editable?
-  - Import Full Mint Data
   - Import old data
 */
 

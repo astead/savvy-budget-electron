@@ -1006,6 +1006,45 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
       }
     }
   }
+  if (account_string === 'mint tab') {
+    const accountArr = [];
+
+    for (const [i, tx] of nodes.entries()) {
+      const tx_values = tx.trim().split('\t');
+
+      if (tx?.length && tx_values?.length) {
+        let envID = tx_values[0].trim();
+        let txAmt = tx_values[1].trim();
+        let txDate = tx_values[2].trim();
+        let description = tx_values[3].trim();
+        let account_str = tx_values[4].trim();
+
+        let accountID = '';
+        if (accountArr?.length) {
+          const found = accountArr.find((e) => e.name === account_str);
+          if (found) {
+            accountID = found.id;
+          } else {
+            accountID = await lookup_account(account_str);
+            accountArr.push({ name: account_str, id: accountID });
+          }
+        } else {
+          accountID = await lookup_account(account_str);
+          accountArr.push({ name: account_str, id: accountID });
+        }
+
+        await basic_insert_transaction_node(
+          accountID,
+          txAmt,
+          txDate,
+          description,
+          '',
+          envID
+        );
+      }
+    }
+    console.log('');
+  }
 });
 
 async function basic_insert_transaction_node(

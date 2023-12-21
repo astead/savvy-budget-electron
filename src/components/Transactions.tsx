@@ -6,7 +6,6 @@ import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 import { AccountDropDown } from '../helpers/AccountDropDown.tsx';
 import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
-//import Papa from 'papaparse';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faEyeSlash, faFileImport, faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from 'react-router';
@@ -265,27 +264,15 @@ export const Transactions: React.FC = () => {
 
           ipcRenderer.send(channels.IMPORT_CSV, [account_string, ofxString]);
         }
+        if (filename.toLowerCase().endsWith("txt")) {
+          ipcRenderer.send(channels.IMPORT_CSV, ["mint tab", ofxString]);
+        }
       }
     });
   }
 
   const save_file_name = (event) => {
     setFilename(event.target.files[0].path);
-  }
-
-  const import_mint = (event) => {
-    /*
-    Papa.parse(event.target.files[0], {
-      header: false,
-      skipEmptyLines: true,
-      complete: function (results) {
-        
-        // Insert this transaction
-        const ipcRenderer = (window as any).ipcRenderer;
-        ipcRenderer.send(channels.ADD_TX, results.data);
-      }
-    });
-    */
   }
 
   useEffect(() => {
@@ -312,21 +299,12 @@ export const Transactions: React.FC = () => {
         <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
         }
         <br/>
-        {false &&
-          <input
-            type="file"
-            name="file"
-            accept=".csv"
-            onChange={import_mint}
-            style={{ display: "block", margin: "10px auto" }}
-          />
-        }
         <div className="import-container">
           <span>Import: </span>
           <input
               type="file"
               name="file"
-              accept=".qfx,.csv"
+              accept=".qfx,.csv,.txt"
               className="import-file"
               onChange={save_file_name}
           />
