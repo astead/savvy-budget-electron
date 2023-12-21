@@ -32,6 +32,8 @@ module.exports = {
     MOV_ENVELOPE: 'move_envelope',
 
     UPDATE_BUDGET: 'update_budget',
+    UPDATE_BALANCE: 'update_balance',
+    MOVE_BALANCE: 'move_balance',
 
     ADD_TX: 'add_transaction',
     UPDATE_TX_ENV: 'update_tx_envelope',

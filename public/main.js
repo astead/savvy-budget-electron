@@ -275,6 +275,40 @@ ipcMain.on(
   }
 );
 
+ipcMain.on(channels.UPDATE_BALANCE, (event, [id, newAmt]) => {
+  console.log(channels.UPDATE_BALANCE, id, newAmt);
+
+  knex('envelope')
+    .update({ balance: newAmt })
+    .where({ id: id })
+    .then()
+    .catch((err) => {
+      console.log('Error updating balance: ' + err);
+    });
+});
+
+ipcMain.on(channels.MOVE_BALANCE, (event, [transferAmt, fromID, toID]) => {
+  console.log(channels.MOVE_BALANCE, transferAmt, fromID, toID);
+
+  knex
+    .raw(
+      `update 'envelope' set balance = balance - ` +
+        transferAmt +
+        ` where id = ` +
+        fromID
+    )
+    .then();
+
+  knex
+    .raw(
+      `update 'envelope' set balance = balance + ` +
+        transferAmt +
+        ` where id = ` +
+        toID
+    )
+    .then();
+});
+
 ipcMain.on(channels.GET_CAT_ENV, (event) => {
   console.log(channels.GET_CAT_ENV);
   knex

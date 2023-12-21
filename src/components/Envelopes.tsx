@@ -5,6 +5,7 @@ import { EditableBudget } from '../helpers/EditableBudget.tsx';
 import { MonthSelector } from '../helpers/MonthSelector.tsx'
 import Moment from 'moment';
 import { Link } from 'react-router-dom';
+import BudgetBalanceModal from '../helpers/BudgetBalanceModal.tsx';
 
 /*
   TODO:
@@ -52,6 +53,12 @@ export const Envelopes: React.FC = () => {
     prevActual: number;
     currActual: number; 
     prevBudget: number; 
+  };
+
+  interface EnvelopeList {
+    envID: number; 
+    category: string;
+    envelope: string; 
   };
 
   function formatCurrency(currencyNumber:number) {
@@ -112,6 +119,28 @@ export const Envelopes: React.FC = () => {
   const [curTotalBudgetIncome, setCurTotalBudgetIncome] = useState(0);
   const [curTotalBudgetSpending, setCurTotalBudgetSpending] = useState(0);
   const [curTotalActualUndefined, setCurTotalActualUndefined] = useState(0);
+  
+  const [transferEnvList, setTransferEnvList] = useState<EnvelopeList[]>([]);
+  const [transferEnvListLoaded, setTransferEnvListLoaded] = useState(false);
+
+  const load_envelope_list = () => {
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_ENV_LIST, {includeInactive: 1});
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
+      setTransferEnvList(arg as EnvelopeList[]);
+      setTransferEnvListLoaded(true);
+
+      ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
+    };
+  };
 
   const load_PrevBudget = () => {
     // Signal we want to get data
@@ -461,6 +490,7 @@ export const Envelopes: React.FC = () => {
     }
     setGotMonthData(true);
 
+    load_envelope_list();
     load_initialEnvelopes();
   }, []);
 
@@ -511,7 +541,15 @@ export const Envelopes: React.FC = () => {
                           {formatCurrency(item.prevActual)}
                         </Link>
                       </td>
-                      <td className="BudgetTableCellCurr">{formatCurrency(item.currBalance)}</td>
+                      <td className="BudgetTableCellCurr">
+                        <BudgetBalanceModal 
+                          balanceAmt={item.currBalance}
+                          category={item.category}
+                          envelope={item.envelope}
+                          envID={item.envID}
+                          transferEnvList={transferEnvList}
+                        />
+                      </td>
                       <td className="BudgetTableCellInput">
                         <EditableBudget 
                           initialID={item.envID}

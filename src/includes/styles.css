@@ -306,6 +306,18 @@ input.inputCurrency {
   font-weight: bolder;
 }
 
+input.BudgetBalanceTransfer {
+  text-align:right;
+  border-radius: 0px;
+  width: 100px;
+  height: 100%;
+  border: 1px solid black;
+  font-size:100%;
+  font-weight: bolder;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
 .trash-block {
 
   width: 30px;
