@@ -119,7 +119,7 @@ div.month-item {
   height: 30px;
 }
 
-div.month-item:focus, div.month-item:hover {
+div.month-item:hover {
   font-size:.75rem;
   margin-left:2px;
   margin-right:2px;
@@ -333,10 +333,27 @@ input.inputCurrency {
   color: #EF4444;
 }
 
-.trash:focus, .trash:hover {
+.trash:hover {
   filter:brightness(120%);
   color: #F8FAFC;
   background-color: #EF4444;
+}
+
+.applyKeyword {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #1b1b18;
+  border-radius: 10%;
+  cursor: pointer;
+  margin-right:.5rem;
+  margin-left:.5rem;
+  background-color: #F8FAFC;
+  color: #000000;
+}
+
+.applyKeyword:hover {
+  filter:brightness(120%);
+  background-color: limegreen;
 }
 
 div.import-container {
@@ -359,21 +376,19 @@ input.import-file {
 }
 
 .import {
-
-    width: 30px;
-    height: 30px;
-    border: 1px solid #1b1b18;
-    border-radius: 10%;
-    cursor: pointer;
-    margin-right:.5rem;
-    margin-left:.5rem;
-
+  width: 30px;
+  height: 30px;
+  border: 1px solid #1b1b18;
+  border-radius: 10%;
+  cursor: pointer;
+  margin-right:.5rem;
+  margin-left:.5rem;
   border-radius: 6px;
   background-color: #F8FAFC;
   color: black;
 }
 
-.import:focus, .import:hover {
+.import:hover {
   filter:brightness(120%);
   color: black;
   background-color: limegreen;
@@ -391,7 +406,7 @@ input.import-file {
   background-color: #F8FAFC;
 }
 
-.plusButton:focus, .plusButton:hover {
+.plusButton:hover {
   background-color: limegreen;
 }
 

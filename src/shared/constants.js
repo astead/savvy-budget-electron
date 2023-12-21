@@ -49,6 +49,7 @@ module.exports = {
     LIST_KEYWORDS: 'list_keywords',
     UPDATE_KEYWORD_ENV: 'update_keyword_envelope',
     DEL_KEYWORD: 'del_keyword',
+    SET_ALL_KEYWORD: 'set_all_keyword',
 
     GET_ACCOUNTS: 'get_accounts',
     LIST_ACCOUNTS: 'list_accounts',

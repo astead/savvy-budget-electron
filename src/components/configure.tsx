@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faTrash, faChevronUp, faChevronDown } from "@fortawesome/free-solid-svg-icons"
+import { faTrash, faChevronUp, faChevronDown, faReply, faReplyAll } from "@fortawesome/free-solid-svg-icons"
 import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
 import NewCategory from '../helpers/NewCategory.tsx';
@@ -23,13 +23,10 @@ import Box from '@mui/material/Box';
   TODO:
   - Set all matching keywords - force set all
     https://fontawesome.com/icons/reply-all?f=classic&s=solid&rt=flip-horizontal
-  - Set all matching keywords - only if undefined
-    https://fontawesome.com/icons/reply?f=classic&s=solid&rt=flip-horizontal
   - Edit keyword text
   - Add option to check if description starts with a keyword
     MAYBE: https://fontawesome.com/icons/backward-step?f=classic&s=solid
   - Show keyword conflicts? 
-  - allow sorting by keyword description
 */
 export const Configure: React.FC = () => {
 
@@ -245,6 +242,12 @@ export const Configure: React.FC = () => {
     ipcRenderer.send(channels.DEL_KEYWORD, {id});
   };
 
+  const handleKeywordSetAll = (id, force) => {
+    // Request we set the keyword in the DB for undefined tx
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.SET_ALL_KEYWORD, {id, force});
+  };
+
   const handleAccountDelete = (id) => {
     // Request we delete the account in the DB
     const ipcRenderer = (window as any).ipcRenderer;
@@ -260,10 +263,6 @@ export const Configure: React.FC = () => {
   const handleOnDragEnd = (result) => {
     if (!result?.destination) return;
     
-    console.log("result:", result);
-    console.log("src:",result.source);
-    console.log("dest:",result.destination);
-
     if (result.source.droppableId !== result.destination.droppableId) {
       
       // Request we move the envelope in the DB
@@ -295,8 +294,6 @@ export const Configure: React.FC = () => {
   }
 
   const load_keywords = () => {
-    console.log("load_keywords ENTER");
-
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_KEYWORDS);
@@ -317,7 +314,6 @@ export const Configure: React.FC = () => {
     let sortValue = sortKeyword[0];
     let sortDir = sortKeyword[1];
 
-    console.log("sort_keyword_array: sortValue=", sortValue, ", sortDir=", sortDir);
     let tmpArr = arr as KeywordList[];
     
     if (sortValue === '0') {
@@ -372,7 +368,6 @@ export const Configure: React.FC = () => {
   }
 
   useEffect(() => {
-    console.log("useEffect [sortKeyword]: sort val or dir changed.");
     setKeywordData([...sort_keyword_array(keywordData)]);
   }, [sortKeyword]);
 
@@ -436,7 +431,6 @@ export const Configure: React.FC = () => {
                     <article className="envelope-container">
                     {
                       items.map((env, index2) => {
-                        //console.log("env:", env);  
                         return (
                           (env.envID) &&
                           <Draggable key={index2} draggableId={env.envID.toString()} index={index2}>
@@ -502,6 +496,8 @@ export const Configure: React.FC = () => {
               }
             </th>
             <th className="TransactionTableHeaderCell">{' '}</th>
+            <th className="TransactionTableHeaderCell">{'Set'}</th>
+            <th className="TransactionTableHeaderCell">{'Force'}</th>
           </tr>
         </thead>
 
@@ -527,6 +523,20 @@ export const Configure: React.FC = () => {
                     onClick={() => handleKeywordDelete(id)}>
                       <FontAwesomeIcon icon={faTrash} />
                   </button>
+                  </td>
+                  <td className="TransactionTableCell">
+                    <button 
+                      className='applyKeyword'
+                      onClick={() => handleKeywordSetAll(id, 0)}>
+                        <FontAwesomeIcon icon={faReply} flip="horizontal" />
+                    </button>
+                  </td>
+                  <td className="TransactionTableCell">
+                    <button 
+                      className='applyKeyword'
+                      onClick={() => handleKeywordSetAll(id, 1)}>
+                        <FontAwesomeIcon icon={faReplyAll} flip="horizontal" />
+                    </button>
                   </td>
                 </tr>
               );

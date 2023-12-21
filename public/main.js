@@ -1124,6 +1124,25 @@ ipcMain.on(channels.UPDATE_KEYWORD_ENV, (event, { id, new_value }) => {
     .catch((err) => console.log(err));
 });
 
+ipcMain.on(channels.SET_ALL_KEYWORD, (event, { id, force }) => {
+  console.log(channels.SET_ALL_KEYWORD, { id });
+
+  knex
+    .select('envelopeID', 'description')
+    .from('keyword')
+    .where({ id: id })
+    .then((data) => {
+      let query = knex('transaction')
+        .update({ envelopeID: data[0].envelopeID })
+        .where({ description: data[0].description });
+      if (force === 0) {
+        query = query.andWhere({ envelopeID: -1 });
+      }
+      query.then();
+    })
+    .catch((err) => console.log(err));
+});
+
 ipcMain.on(channels.DEL_KEYWORD, (event, { id }) => {
   console.log(channels.DEL_KEYWORD, { id });
   knex('keyword')
