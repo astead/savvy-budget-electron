@@ -256,9 +256,7 @@ ipcMain.on(
             .then(() => {
               knex('transaction')
                 .update({ txAmt: newtxAmt })
-                .where('envelopeID', newEnvelopeID)
-                .andWhere('txDate', newtxDate)
-                .andWhere('isBudget', 1)
+                .where('id', rows[0].id)
                 .then(() => {
                   console.log('Updated budget amt.');
                 })
