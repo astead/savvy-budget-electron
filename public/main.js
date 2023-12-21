@@ -225,8 +225,6 @@ ipcMain.on(
       .andWhere('isBudget', 1)
       .then(async function (rows) {
         if (rows.length === 0) {
-          console.log('no budget entries');
-
           // no matching records found
           return knex('transaction')
             .insert({
@@ -338,7 +336,7 @@ ipcMain.on(channels.GET_PREV_BUDGET, (event, find_date) => {
 });
 
 ipcMain.on(channels.GET_CUR_BUDGET, (event, find_date) => {
-  console.log(channels.GET_CUR_BUDGET);
+  console.log(channels.GET_CUR_BUDGET, find_date);
   knex
     .select('envelopeID', 'txAmt')
     .from('transaction')
