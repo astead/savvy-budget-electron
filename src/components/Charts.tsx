@@ -73,9 +73,18 @@ export const Charts: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_CHART_DATA, (data) => {
+      
       //setEnvList(arg as EnvelopeList[]);
+      data.map(d => {
+        d.month = new Date(d.month);
+        if (!filterEnvelopeName.startsWith("Income")) {
+          d.totalAmt = -1 * d.totalAmt;
+        }
+      })
+      
       setChartData(data as ChartData[]);
       setHaveChartData(true);
+      
       ipcRenderer.removeAllListeners(channels.LIST_ENV_CHART_DATA);
     });
   };
@@ -118,7 +127,19 @@ export const Charts: React.FC = () => {
         {haveChartData && filterEnvelopeName &&
           <LineChart
             dataset={chartData}
-            xAxis={[{ dataKey: 'month', label: 'Month', tickSize: 1, tickMinStep: 1}]}
+            xAxis={[
+              { dataKey: 'month', 
+                label: 'Month', 
+                tickSize: 1, 
+                tickMinStep: 1, 
+                scaleType: 'time', 
+                valueFormatter: (date: Date) =>
+                  date.toLocaleDateString('en-EN', {
+                    month: '2-digit',
+                    year: '2-digit',
+                  }),
+              }
+            ]}
             yAxis={[{position:'left'}]}
             series={[{ dataKey: 'totalAmt', label: filterEnvelopeName}]}
             width={500}

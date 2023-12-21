@@ -1262,15 +1262,17 @@ ipcMain.on(channels.GET_ENV_CHART_DATA, (event, filterEnvID) => {
   const find_date = Moment(new Date()).format('YYYY-MM-DD');
 
   let query = knex('transaction')
-    .select({ month: knex.raw(`strftime("%m", txDate)`) })
+    .select({
+      month: knex.raw(`strftime("%Y-%m", txDate)`),
+    })
     .sum({ totalAmt: 'txAmt' })
-    .orderBy('envelopeID')
     .where({ isBudget: 0 })
     .andWhereRaw(`julianday(?) - julianday(txDate) < 365`, [find_date])
     .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
     .andWhere({ isDuplicate: 0 })
     .andWhere({ isVisible: 1 })
-    .groupBy('month');
+    .groupBy('month')
+    .orderBy('month');
 
   if (filterEnvID > -2) {
     query.where('envelopeID', filterEnvID);
