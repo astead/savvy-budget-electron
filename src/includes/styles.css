@@ -511,7 +511,9 @@ div.envelopeDataContainer {
   text-align: left;
 }
 
-
+.sortIcon {
+  padding-left:20px;
+}
 
 .TransactionTable {
   padding: 0;
@@ -534,6 +536,18 @@ div.envelopeDataContainer {
   margin: 0;
   padding-left:2px;
   text-align:center;
+}
+
+.TransactionTableHeaderCellSort {
+  background-color: #b4b4b4;
+  border: 1px solid black;
+  white-space: pre-wrap;
+  height:100%;
+  padding: 0;
+  margin: 0;
+  padding-left:2px;
+  text-align:center;
+  cursor: pointer;
 }
 
 .TransactionTableHeaderCellDate {

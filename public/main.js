@@ -1084,9 +1084,20 @@ async function insert_transaction_node(
 ipcMain.on(channels.GET_KEYWORDS, (event) => {
   console.log(channels.GET_KEYWORDS);
   knex
-    .select('id', 'envelopeID', 'description')
+    .select(
+      'keyword.id',
+      'keyword.envelopeID',
+      'description',
+      'category',
+      'envelope'
+    )
     .from('keyword')
-    .orderBy('envelopeID')
+    .leftJoin('envelope', function () {
+      this.on('keyword.envelopeID', '=', 'envelope.id');
+    })
+    .leftJoin('category', function () {
+      this.on('category.id', '=', 'envelope.categoryID');
+    })
     .then((data) => {
       event.sender.send(channels.LIST_KEYWORDS, data);
     })

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faTrash, faChevronUp, faChevronDown } from "@fortawesome/free-solid-svg-icons"
 import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
 import NewCategory from '../helpers/NewCategory.tsx';
@@ -45,6 +45,14 @@ export const Configure: React.FC = () => {
     tabValue: number;
   }
 
+  interface KeywordList {
+    id: number;
+    envelopeID: number;
+    description: string;
+    category: string;
+    envelope: string;
+  }
+
   function CustomTabPanel(props: TabPanelProps) {
     const { children, tabValue, index, ...other } = props;
 
@@ -73,12 +81,14 @@ export const Configure: React.FC = () => {
   }
 
   const [catData, setCatData] = useState<any[]>([]);
-  const [keywordData, setKeywordData] = useState<any[]>([]);
+  const [keywordData, setKeywordData] = useState<KeywordList[]>([]);
   const [accountData, setAccountData] = useState<any[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
   const [envListLoaded, setEnvListLoaded] = useState(false);
+
+  const [sortKeyword, setSortKeyword] = useState('10');
  
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     localStorage.setItem('tabValue', JSON.stringify(newValue));
@@ -123,6 +133,90 @@ export const Configure: React.FC = () => {
       }
       return 0;
     }
+  }
+
+  const compareKeywordByEnvelope = (a,b) => {
+    let return_value = 0;
+    if (a.category === 'Uncategorized' || b.category === 'Uncategorized') {
+      if (a.category === 'Uncategorized' && b.category !== 'Uncategorized') {
+        return_value = -1;
+      } else if (a.cat !== 'Uncategorized' && b.cat === 'Uncategorized') {
+        return_value = 1;
+      } else {
+        return_value = 0;
+      }
+    } else if (a.category === 'Income' || b.category === 'Income') {
+      if (a.category === 'Income' && b.category !== 'Income') {
+        return_value = -1;
+      } else if (a.category !== 'Income' && b.category === 'Income') {
+        return_value = 1;
+      } else {
+        return_value = 0;
+      }
+    } else {
+      if (a.category < b.category) {
+        return_value = -1;
+      } else if (a.category > b.category) {
+        return_value = 1;
+      } else {
+        return_value = 0;
+      }
+    }
+
+    if (return_value === 0) {
+      if (a.envelope < b.envelope) {
+        return_value = -1;
+      } else if (a.envelope > b.envelope) {
+        return_value = 1;
+      } else {
+        return_value = 0;
+      }
+    }
+    return return_value;
+  }
+
+  const compareKeywordByEnvelopeDesc = (a,b) => {
+    let return_value = 0;
+    if (a.category === 'Uncategorized' || b.category === 'Uncategorized') {
+      if (a.category === 'Uncategorized' && b.category !== 'Uncategorized') {
+        return_value = 1;
+      } else if (a.cat !== 'Uncategorized' && b.cat === 'Uncategorized') {
+        return_value = -1;
+      } else {
+        return_value = 0;
+      }
+    } else if (a.category === 'Income' || b.category === 'Income') {
+      if (a.category === 'Income' && b.category !== 'Income') {
+        return_value = 1;
+      } else if (a.category !== 'Income' && b.category === 'Income') {
+        return_value = -1;
+      } else {
+        return_value = 0;
+      }
+    } else {
+      if (a.category < b.category) {
+        return_value = 1;
+      } else if (a.category > b.category) {
+        return_value = -1;
+      } else {
+        return_value = 0;
+      }
+    }
+
+    if (return_value === 0) {
+      if (a.envelope < b.envelope) {
+        return_value = 1;
+      } else if (a.envelope > b.envelope) {
+        return_value = -1;
+      } else {
+        return_value = 0;
+      }
+    }
+    return return_value;
+  }
+
+  const set_keyword_sort = (col, dir) => {
+    setSortKeyword(col + dir);
   }
 
   const handleCategoryDelete = (id, name) => {
@@ -201,13 +295,15 @@ export const Configure: React.FC = () => {
   }
 
   const load_keywords = () => {
+    console.log("load_keywords ENTER");
+
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_KEYWORDS);
 
     // Receive the data
     ipcRenderer.on(channels.LIST_KEYWORDS, (arg) => {
-      setKeywordData(arg);
+      setKeywordData([...sort_keyword_array(arg)]);
       ipcRenderer.removeAllListeners(channels.LIST_KEYWORDS);
     });
 
@@ -215,6 +311,29 @@ export const Configure: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_KEYWORDS);
     };
+  }
+
+  const sort_keyword_array = (arr) => {
+    let sortValue = sortKeyword[0];
+    let sortDir = sortKeyword[1];
+
+    console.log("sort_keyword_array: sortValue=", sortValue, ", sortDir=", sortDir);
+    let tmpArr = arr as KeywordList[];
+    
+    if (sortValue === '0') {
+      if (sortDir === '0') {
+        tmpArr.sort((a, b) => a.description > b.description ? 1 : -1)
+      } else {
+        tmpArr.sort((a, b) => a.description < b.description ? 1 : -1)
+      }
+    } else {
+      if (sortDir === '0') {
+        tmpArr.sort(compareKeywordByEnvelope);
+      } else {
+        tmpArr.sort(compareKeywordByEnvelopeDesc);
+      }
+    }
+    return tmpArr;
   }
 
   const load_accounts = () => {
@@ -251,6 +370,11 @@ export const Configure: React.FC = () => {
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     };
   }
+
+  useEffect(() => {
+    console.log("useEffect [sortKeyword]: sort val or dir changed.");
+    setKeywordData([...sort_keyword_array(keywordData)]);
+  }, [sortKeyword]);
 
   useEffect(() => {
     if (!loaded) {
@@ -355,8 +479,28 @@ export const Configure: React.FC = () => {
         <>
         <thead className="TransactionTableHeader">
           <tr className="TransactionTableHeaderRow">
-            <th className="TransactionTableHeaderCell">{'Keyword'}</th>
-            <th className="TransactionTableHeaderCell">{'Envelope'}</th>
+            <th className="TransactionTableHeaderCellSort" onClick={() => {
+              set_keyword_sort('0', (sortKeyword[0] === '0')?((sortKeyword[1] === '0')?('1'):('0')):('0'));
+            }}>
+              {'Keyword'}
+              { sortKeyword === '00' &&
+                 <FontAwesomeIcon icon={faChevronUp} className="sortIcon" />
+              }
+              { sortKeyword=== '01' &&
+                 <FontAwesomeIcon icon={faChevronDown} className="sortIcon" />
+              }
+            </th>
+            <th className="TransactionTableHeaderCellSort" onClick={() => {
+              set_keyword_sort('1', (sortKeyword[0] === '1')?((sortKeyword[1] === '0')?('1'):('0')):('0'));
+            }}>
+              {'Envelope'}
+              { sortKeyword === '10' &&
+                 <FontAwesomeIcon icon={faChevronUp} className="sortIcon" />
+              }
+              { sortKeyword === '11' &&
+                 <FontAwesomeIcon icon={faChevronDown} className="sortIcon" />
+              }
+            </th>
             <th className="TransactionTableHeaderCell">{' '}</th>
           </tr>
         </thead>
