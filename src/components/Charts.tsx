@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
-import Moment from 'moment';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { useParams } from 'react-router';
+
 
 /*
   TODO:
@@ -33,6 +33,7 @@ export const Charts: React.FC = () => {
 
   const [haveChartData, setHaveChartData] = useState(false);
   const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [avgValue, setAvgValue] = useState(0);
 
   const handleFilterEnvChange = ({id, new_value, new_text}) => {
     setHaveChartData(false);
@@ -71,6 +72,7 @@ export const Charts: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_CHART_DATA, (data) => {
+      let totalValue = 0;
       
       //setEnvList(arg as EnvelopeList[]);
       data.map(d => {
@@ -78,7 +80,11 @@ export const Charts: React.FC = () => {
         if (!filterEnvelopeName.startsWith("Income")) {
           d.totalAmt = -1 * d.totalAmt;
         }
+        totalValue += d.totalAmt;
       })
+      if (data?.length) {
+        setAvgValue(totalValue / data?.length);
+      }
       
       setChartData(data as ChartData[]);
       setHaveChartData(true);
@@ -123,27 +129,36 @@ export const Charts: React.FC = () => {
           </div>
         }
         {haveChartData && filterEnvelopeName &&
+          <div className="chartContainer">
           <LineChart
             dataset={chartData}
             xAxis={[
               { dataKey: 'month', 
-                label: 'Month', 
                 tickSize: 1, 
                 tickMinStep: 1, 
                 scaleType: 'time', 
+                tickLabelStyle: {
+                  angle: 270,
+                  textAnchor: 'end',
+                },
                 valueFormatter: (date: Date) =>
                   date.toLocaleDateString('en-EN', {
-                    month: '2-digit',
+                    month: 'short',
                     year: '2-digit',
                   }),
               }
             ]}
-            yAxis={[{position:'left'}]}
-            series={[{ dataKey: 'totalAmt', label: filterEnvelopeName}]}
-            width={500}
-            height={300}
-
+            yAxis={[
+              { position:'left',
+              }
+            ]}
+            series={[
+              { dataKey: 'totalAmt', label: filterEnvelopeName},              
+            ]}
+            width={800}
+            height={500}
           />
+          </div>
         }
 
       </div>
