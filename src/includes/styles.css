@@ -668,9 +668,17 @@ div.envelopeDataContainer {
 }
 
 .PagingContainer {
-  flex-direction: row;
-  
   margin-bottom:40px;
+  display: flex;
+  justify-content: right;
+}
+
+.txFilterLabelCell {
+  text-align: right;
+}
+
+.txFilterCell {
+  text-align: left;
 }
 
 .SaveKeyword {

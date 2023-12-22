@@ -407,90 +407,123 @@ export const Transactions: React.FC = () => {
         <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
         }
         <br/>
-        <div className="import-container">
-          <span>Import: </span>
-          <input
-              type="file"
-              name="file"
-              accept=".qfx,.csv,.txt"
-              className="import-file"
-              onChange={save_file_name}
-          />
-          <button 
-            className='import'
-            onClick={handleImport}>
-              <FontAwesomeIcon icon={faFileImport} />
-          </button>
-        </div>
+        <Accordion>
+          <AccordionSummary
+            expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
+            aria-controls="filter-content"
+            id="filter-header"
+            sx={{pl:1, pr:1, m:0, mt:-1}}
+          >
+            Import and Export
+          </AccordionSummary>
+          <AccordionDetails sx={{textAlign: 'left'}}>
+            <span>Import: </span>
+            <input
+                type="file"
+                name="file"
+                accept=".qfx,.csv,.txt"
+                className="import-file"
+                onChange={save_file_name}
+            />
+            <button 
+              className='import'
+              onClick={handleImport}>
+                <FontAwesomeIcon icon={faFileImport} />
+            </button>
+          </AccordionDetails>
+          </Accordion>
         {filterEnvListLoaded && filterAccListLoaded &&
           <Accordion>
           <AccordionSummary
             expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
             aria-controls="filter-content"
             id="filter-header"
+            sx={{pl:1, pr:1, m:0, mt:-1}}
           >
             Filter
           </AccordionSummary>
           <AccordionDetails>
-              <div className="import-container">
-                <span>Start Date: </span>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    value={filterStartDate}
-                    onChange={(newValue) => {
-                      localStorage.setItem(
-                        'transaction-filter-startDate', 
-                        JSON.stringify({ filterStartDate: newValue?.format('YYYY-MM-DD')}));
-                      setFilterStartDate(newValue);
-                    }}
+            <table><tbody>
+              <tr>
+                <td className="txFilterLabelCell">
+                  <span>Start Date: </span>
+                </td>
+                <td className="txFilterCell">
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      value={filterStartDate}
+                      onChange={(newValue) => {
+                        localStorage.setItem(
+                          'transaction-filter-startDate', 
+                          JSON.stringify({ filterStartDate: newValue?.format('YYYY-MM-DD')}));
+                        setFilterStartDate(newValue);
+                      }}
+                    />
+                  </LocalizationProvider>
+                </td>
+              </tr>
+              <tr>
+                <td className="txFilterLabelCell">
+                  <span>End Date: </span>
+                </td>
+                <td className="txFilterCell">
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      value={filterEndDate}
+                      onChange={(newValue) => {
+                        localStorage.setItem(
+                          'transaction-filter-endDate', 
+                          JSON.stringify({ filterEndDate: newValue}));
+                        setFilterEndDate(newValue);
+                      }}
+                    />
+                  </LocalizationProvider>
+                </td>
+              </tr>
+              <tr>
+                <td className="txFilterLabelCell">
+                  <span>Envelope: </span>
+                </td>
+                <td className="txFilterCell">
+                  <CategoryDropDown 
+                    id={-1}
+                    envID={filterEnvID}
+                    data={filterEnvList}
+                    changeCallback={handleFilterEnvChange}
                   />
-                </LocalizationProvider>
-              </div>
-              <div className="import-container">
-                <span>End Date: </span>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    value={filterEndDate}
-                    onChange={(newValue) => {
-                      localStorage.setItem(
-                        'transaction-filter-endDate', 
-                        JSON.stringify({ filterEndDate: newValue}));
-                      setFilterEndDate(newValue);
-                    }}
+                </td>
+              </tr>
+              <tr>
+                <td className="txFilterLabelCell">
+                  <span>Account: </span>
+                </td>
+                <td className="txFilterCell">
+                  <AccountDropDown 
+                    keyID={-1}
+                    id={filterAccID}
+                    data={filterAccList}
+                    changeCallback={handleFilterAccChange}
                   />
-                </LocalizationProvider>
-              </div>
-              <div className="import-container">
-                <span>Envelope: </span>
-                <CategoryDropDown 
-                  id={-1}
-                  envID={filterEnvID}
-                  data={filterEnvList}
-                  changeCallback={handleFilterEnvChange}
-                />
-              </div>
-              <div className="import-container">
-                <span>Account: </span>
-                <AccountDropDown 
-                  keyID={-1}
-                  id={filterAccID}
-                  data={filterAccList}
-                  changeCallback={handleFilterAccChange}
-                />
-              </div>
-              <div className="import-container">
-                <span>Description: </span>
-                <input
-                  name="filterDescTemp"
-                  defaultValue={filterDescTemp}
-                  onChange={(e) => {
-                    setFilterDescTemp(e.target.value);
-                  }}
-                  onBlur={handleFilterDescChange}
-                />
-              </div>
+                </td>
+              </tr>
+              <tr>
+                <td className="txFilterLabelCell">
+                  <span>Description: </span>
+                </td>
+                <td className="txFilterCell">
+                  <input
+                    name="filterDescTemp"
+                    defaultValue={filterDescTemp}
+                    onChange={(e) => {
+                      setFilterDescTemp(e.target.value);
+                    }}
+                    onBlur={handleFilterDescChange}
+                  />
+                </td>
+              </tr>
+              </tbody></table>
           </AccordionDetails>
-        </Accordion>
+          </Accordion>
         }
         <br/>
         {txData?.length > 0 && envListLoaded &&
@@ -559,14 +592,15 @@ export const Transactions: React.FC = () => {
                 }
               </tbody>
           </table>
-          <div className="PagingContainer">
-            <InputLabel id="demo-select-select-label">Rows per page:</InputLabel>
+          <div className="PagingContainer"><table ><tbody><tr>
+            <td>
+            <span>Rows per page:</span>
+            
             <Select
-              labelId="paging-select-num-per-page-label"
               id="dpaging-select-num-per-page"
               value={pagingPerPage.toString()}
-              label="Rows per page:"
               onChange={handleNumPerPageChange}
+              sx={{ m:0, p:0, ml:1, lineHeight: 'normal', height: 30 }}
             >
               <MenuItem value={10}>10</MenuItem>
               <MenuItem value={20}>20</MenuItem>
@@ -577,14 +611,18 @@ export const Transactions: React.FC = () => {
               <MenuItem value={200}>200</MenuItem>
               <MenuItem value={300}>300</MenuItem>
             </Select>
-            <Pagination
-              count={pagingNumPages}
-              variant="outlined"
-              shape="rounded"
-              onChange={handlePageChange}
-              page={pagingCurPage}
-            />
-          </div>
+            </td>
+            <td >
+              <Pagination
+                count={pagingNumPages}
+                variant="outlined"
+                shape="rounded"
+                onChange={handlePageChange}
+                page={pagingCurPage}
+                sx={{ width: 'fit-content'}}
+              />
+            </td>
+            </tr></tbody></table></div>
           </>
         }
       </div>

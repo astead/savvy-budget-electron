@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './includes/styles.css';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { HomePage } from './components/homePage.tsx';
@@ -8,6 +7,7 @@ import { Charts } from './components/Charts.tsx';
 import { Transactions } from './components/Transactions.tsx';
 import { Envelopes } from './components/Envelopes.tsx';
 import { Configure } from './components/Configure.tsx';
+import './includes/styles.css';
 
 /*
   TODO:
