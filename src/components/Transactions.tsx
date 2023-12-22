@@ -528,68 +528,83 @@ export const Transactions: React.FC = () => {
         {txData?.length > 0 && envListLoaded &&
           <>
           <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
-              <thead className="TransactionTableHeader">
-                <tr className="TransactionTableHeaderRow">
-                  <th className="TransactionTableHeaderCellDate">{'Date'}</th>
-                  <th className="TransactionTableHeaderCellAccount">{'Account'}</th>
-                  <th className="TransactionTableHeaderCell">{'Description'}</th>
-                  <th className="TransactionTableHeaderCellCurr">{'Amount'}</th>
-                  <th className="TransactionTableHeaderCell">{'Envelope'}</th>
-                  <th className="TransactionTableHeaderCellCenter">{' KW '}</th>
-                  <th className="TransactionTableHeaderCellCenter">{' Dup '}</th>
-                  <th className="TransactionTableHeaderCellCenter">{' Vis '}</th>
-                </tr>
-              </thead>
-    
-              <tbody className="TransactionTableBody">
-                {
-                //for (const [index, item] of txData.entries()) {
-                  txData.map((item, index) => (
-                    index < (pagingCurPage * pagingPerPage) &&
-                    index >= ((pagingCurPage-1) * pagingPerPage) &&
-                    <tr key={index} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
-                      <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
-                      <td className="TransactionTableCellAccount">{item.account}</td>
-                      <td className="TransactionTableCell">{item.description}</td>
-                      <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
-                      <td className="TransactionTableCellCenter">
-                        <CategoryDropDown 
-                          id={item.txID}
+            <thead className="TransactionTableHeader">
+              <tr className="TransactionTableHeaderRow">
+                <th className="TransactionTableHeaderCellDate">{'Date'}</th>
+                <th className="TransactionTableHeaderCellAccount">{'Account'}</th>
+                <th className="TransactionTableHeaderCell">{'Description'}</th>
+                <th className="TransactionTableHeaderCellCurr">{'Amount'}</th>
+                <th className="TransactionTableHeaderCell">{'Envelope'}</th>
+                <th className="TransactionTableHeaderCellCenter">{' KW '}</th>
+                <th className="TransactionTableHeaderCellCenter">{' Dup '}</th>
+                <th className="TransactionTableHeaderCellCenter">{' Vis '}</th>
+              </tr>
+            </thead>
+  
+            <tbody className="TransactionTableBody">
+              {
+              //for (const [index, item] of txData.entries()) {
+                txData.map((item, index) => (
+                  index < (pagingCurPage * pagingPerPage) &&
+                  index >= ((pagingCurPage-1) * pagingPerPage) &&
+                  <tr key={index} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
+                    <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
+                    <td className="TransactionTableCellAccount">{item.account}</td>
+                    <td className="TransactionTableCell">{item.description}</td>
+                    <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
+                    <td className="TransactionTableCellCenter">
+                      <CategoryDropDown 
+                        id={item.txID}
+                        envID={item.envID}
+                        data={envList}
+                        changeCallback={handleChange}
+                      />
+                    </td>
+                    <td className="TransactionTableCell">
+                        <KeywordSave
+                          txID={item.txID}
                           envID={item.envID}
-                          data={envList}
-                          changeCallback={handleChange}
-                        />
-                      </td>
-                      <td className="TransactionTableCell">
-                          <KeywordSave
-                            txID={item.txID}
-                            envID={item.envID}
-                            description={item.description}
-                            keywordEnvID={item.keywordEnvID} />
-                      </td>
-                      <td className="TransactionTableCell">
-                        <div
-                          onClick={() => {
-                            toggleDuplicate({txID: item.txID, isDuplicate: (item.isDuplicate?0:1)});
-                          }}
-                          className={"ToggleDuplicate" + (item.isDuplicate?"-yes":"-no")}>
-                          <FontAwesomeIcon icon={faCopy} />
-                        </div>
-                      </td>
-                      <td className="TransactionTableCell">
-                        <div
-                          onClick={() => {
-                            toggleVisibility({txID: item.txID, isVisible: (item.isVisible?0:1)});
-                          }}
-                          className={"ToggleVisibility" + (item.isVisible?"-no":"-yes")}>
-                          <FontAwesomeIcon icon={faEyeSlash} />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                //}
-                }
-              </tbody>
+                          description={item.description}
+                          keywordEnvID={item.keywordEnvID} />
+                    </td>
+                    <td className="TransactionTableCell">
+                      <div
+                        onClick={() => {
+                          toggleDuplicate({txID: item.txID, isDuplicate: (item.isDuplicate?0:1)});
+                        }}
+                        className={"ToggleDuplicate" + (item.isDuplicate?"-yes":"-no")}>
+                        <FontAwesomeIcon icon={faCopy} />
+                      </div>
+                    </td>
+                    <td className="TransactionTableCell">
+                      <div
+                        onClick={() => {
+                          toggleVisibility({txID: item.txID, isVisible: (item.isVisible?0:1)});
+                        }}
+                        className={"ToggleVisibility" + (item.isVisible?"-no":"-yes")}>
+                        <FontAwesomeIcon icon={faEyeSlash} />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              //}
+              }
+            </tbody>
+            <tfoot>
+              <tr className="TransactionTableHeaderRow">
+                <td className="TransactionTableCellCurr" colSpan={3}>
+                  (Only filtered data, but including all pages) Total:
+                </td>
+                <td className="TransactionTableCellCurr">{
+                  formatCurrency(
+                    txData.reduce((total, curItem, curIndex) => {
+                      return total + curItem.txAmt;
+                    }, 0)
+                  )
+                }</td>
+                <td className="TransactionTableCellCurr" colSpan={4}></td>
+              </tr>
+            </tfoot>
           </table>
           <div className="PagingContainer"><table ><tbody><tr>
             <td>
