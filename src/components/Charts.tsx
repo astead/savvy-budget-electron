@@ -81,7 +81,8 @@ export const Charts: React.FC = () => {
           d.totalAmt = -1 * d.totalAmt;
         }
         totalValue += d.totalAmt;
-      })
+      });
+
       if (data?.length) {
         setAvgValue(totalValue / data?.length);
       }
@@ -153,7 +154,15 @@ export const Charts: React.FC = () => {
               }
             ]}
             series={[
-              { dataKey: 'totalAmt', label: filterEnvelopeName},              
+              { 
+                dataKey: 'totalAmt', 
+                label: filterEnvelopeName
+              },
+              { 
+                data: chartData.map(d => avgValue) as number[], 
+                label: 'Avg',
+                showMark: false,
+              },         
             ]}
             width={800}
             height={500}
