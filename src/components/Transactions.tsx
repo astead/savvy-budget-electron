@@ -9,6 +9,15 @@ import Moment from 'moment';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faEyeSlash, faFileImport, faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from 'react-router';
+import { Dayjs } from 'dayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Pagination from '@mui/material/Pagination';
 
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -77,13 +86,27 @@ export const Transactions: React.FC = () => {
 
   // Filter by description
   const [filterDesc, setFilterDesc] = useState('');
+  const [filterDescTemp, setFilterDescTemp] = useState('');
   
+  // Filter by Date
+  const [filterStartDate, setFilterStartDate] = useState<Dayjs | null>(null);
+  const [filterEndDate, setFilterEndDate] = useState<Dayjs | null>(null);
 
+  // Transaction data
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
+  
+  // Category : Envelope data for drop down lists
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
   const [envListLoaded, setEnvListLoaded] = useState(false);
+  
+  // Import filename
   const [filename, setFilename] = useState('');
   
+  // Variables for data table paging
+  const [pagingCurPage, setPagingCurPage] = useState(1);
+  const [pagingPerPage, setPagingPerPage] = useState(50);
+  const [pagingNumPages, setPagingNumPages] = useState(1);
+  const [pagingTotalRecords, setPagingTotalRecords] = useState(0);
 
   /* Month Selector code -------------------------------------------*/
   const [year, setYear] = useState(in_year?parseInt(in_year):new Date().getFullYear());
@@ -110,18 +133,39 @@ export const Transactions: React.FC = () => {
   }
   /* End Month Selector code ---------------------------------------*/
 
+  const handlePageChange = (event, page: number) => {
+    setPagingCurPage(page);
+  };
+
+  const handleNumPerPageChange = (event: SelectChangeEvent) => {
+    setPagingPerPage(parseInt(event.target.value));
+  };
+
   const load_transactions = () => {
+    console.log('load_transactions ENTER');
+    console.log('filterStartDate: ', filterStartDate?.format('YYYY-MM-DD'));
+    console.log('filterEndDate: ', filterEndDate?.format('YYYY-MM-DD'));
+
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_TX_DATA, 
-      [ Moment(new Date(year, month+1)).format('YYYY-MM-DD'),
-      filterEnvID,
-      filterAccID,
-      filterDesc ]);
+      [ filterStartDate?.format('YYYY-MM-DD'),
+        filterEndDate?.format('YYYY-MM-DD'),
+        filterEnvID,
+        filterAccID,
+        filterDesc ]);
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
       setTxData(arg as TransactionNodeData[]);
+      const numtx = arg?.length;
+      if (numtx > 0) {
+        setPagingTotalRecords(numtx);
+        setPagingNumPages(Math.ceil(numtx / pagingPerPage));
+      } else {
+        setPagingTotalRecords(0);
+        setPagingNumPages(1);
+      }
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     });
     
@@ -214,17 +258,12 @@ export const Transactions: React.FC = () => {
   };
 
   const handleFilterDescChange = () => {
-    localStorage.setItem('transaction-filter-desc', JSON.stringify({ filterDesc: filterDesc}));
-    if (gotMonthData) {
-      load_transactions();
-    }
+    localStorage.setItem('transaction-filter-desc', JSON.stringify({ filterDesc: filterDescTemp}));
+    setFilterDesc(filterDescTemp);
   };
 
   
-  if (gotMonthData) {
-    load_transactions();
-  }
-
+  
   const handleChange = ({id, new_value}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
@@ -292,10 +331,20 @@ export const Transactions: React.FC = () => {
   }
 
   useEffect(() => {
+    // TODO: Not super happy with this, but it will do for now.
+    const oldNumPer = Math.ceil(pagingTotalRecords / pagingNumPages);
+    const oldItemIndex = (pagingCurPage-1) * oldNumPer;
+    const newItemIndex = Math.ceil(oldItemIndex / pagingPerPage)
+    setPagingCurPage(newItemIndex?newItemIndex:1);
+    
+    setPagingNumPages(Math.ceil(pagingTotalRecords / pagingPerPage));
+  }, [pagingPerPage]);
+
+  useEffect(() => {
     if (gotMonthData) {
       load_transactions();
     }
-  }, [curMonth, filterEnvID, gotMonthData, filterAccID]);
+  }, [curMonth, filterEnvID, gotMonthData, filterAccID, filterDesc, filterStartDate, filterEndDate]);
 
   useEffect(() => {
     
@@ -321,6 +370,7 @@ export const Transactions: React.FC = () => {
     if (my_filter_desc_str?.length) {
       const my_filter_desc = JSON.parse(my_filter_desc_str);
       if (my_filter_desc) {
+        setFilterDescTemp(my_filter_desc.filterDesc);
         setFilterDesc(my_filter_desc.filterDesc);
       }
     }    
@@ -368,6 +418,18 @@ export const Transactions: React.FC = () => {
           </AccordionSummary>
           <AccordionDetails>
               <div className="import-container">
+                <span>Start Date: </span>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker  value={filterStartDate} onChange={(newValue) => setFilterStartDate(newValue)} />
+                </LocalizationProvider>
+              </div>
+              <div className="import-container">
+                <span>End Date: </span>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker  value={filterEndDate} onChange={(newValue) => setFilterEndDate(newValue)} />
+                </LocalizationProvider>
+              </div>
+              <div className="import-container">
                 <span>Envelope: </span>
                 <CategoryDropDown 
                   id={-1}
@@ -388,10 +450,10 @@ export const Transactions: React.FC = () => {
               <div className="import-container">
                 <span>Description: </span>
                 <input
-                  name="filterDesc"
-                  defaultValue={filterDesc}
+                  name="filterDescTemp"
+                  defaultValue={filterDescTemp}
                   onChange={(e) => {
-                    setFilterDesc(e.target.value);
+                    setFilterDescTemp(e.target.value);
                   }}
                   onBlur={handleFilterDescChange}
                 />
@@ -401,8 +463,8 @@ export const Transactions: React.FC = () => {
         }
         <br/>
         {txData?.length > 0 && envListLoaded &&
+          <>
           <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
-            <>
               <thead className="TransactionTableHeader">
                 <tr className="TransactionTableHeaderRow">
                   <th className="TransactionTableHeaderCellDate">{'Date'}</th>
@@ -417,50 +479,82 @@ export const Transactions: React.FC = () => {
               </thead>
     
               <tbody className="TransactionTableBody">
-                {txData.map((item, index) => (
-                  <tr key={index} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
-                    <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
-                    <td className="TransactionTableCellAccount">{item.account}</td>
-                    <td className="TransactionTableCell">{item.description}</td>
-                    <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
-                    <td className="TransactionTableCellCenter">
-                      <CategoryDropDown 
-                        id={item.txID}
-                        envID={item.envID}
-                        data={envList}
-                        changeCallback={handleChange}
-                      />
-                    </td>
-                    <td className="TransactionTableCell">
-                        <KeywordSave
-                          txID={item.txID}
+                {
+                //for (const [index, item] of txData.entries()) {
+                  txData.map((item, index) => (
+                    index < (pagingCurPage * pagingPerPage) &&
+                    index >= ((pagingCurPage-1) * pagingPerPage) &&
+                    <tr key={index} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
+                      <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
+                      <td className="TransactionTableCellAccount">{item.account}</td>
+                      <td className="TransactionTableCell">{item.description}</td>
+                      <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
+                      <td className="TransactionTableCellCenter">
+                        <CategoryDropDown 
+                          id={item.txID}
                           envID={item.envID}
-                          description={item.description}
-                          keywordEnvID={item.keywordEnvID} />
-                    </td>
-                    <td className="TransactionTableCell">
-                      <div
-                        onClick={() => {
-                          toggleDuplicate({txID: item.txID, isDuplicate: (item.isDuplicate?0:1)});
-                        }}
-                        className={"ToggleDuplicate" + (item.isDuplicate?"-yes":"-no")}>
-                        <FontAwesomeIcon icon={faCopy} />
-                      </div>
-                    </td>
-                    <td className="TransactionTableCell">
-                      <div
-                        onClick={() => {
-                          toggleVisibility({txID: item.txID, isVisible: (item.isVisible?0:1)});
-                        }}
-                        className={"ToggleVisibility" + (item.isVisible?"-no":"-yes")}>
-                        <FontAwesomeIcon icon={faEyeSlash} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          data={envList}
+                          changeCallback={handleChange}
+                        />
+                      </td>
+                      <td className="TransactionTableCell">
+                          <KeywordSave
+                            txID={item.txID}
+                            envID={item.envID}
+                            description={item.description}
+                            keywordEnvID={item.keywordEnvID} />
+                      </td>
+                      <td className="TransactionTableCell">
+                        <div
+                          onClick={() => {
+                            toggleDuplicate({txID: item.txID, isDuplicate: (item.isDuplicate?0:1)});
+                          }}
+                          className={"ToggleDuplicate" + (item.isDuplicate?"-yes":"-no")}>
+                          <FontAwesomeIcon icon={faCopy} />
+                        </div>
+                      </td>
+                      <td className="TransactionTableCell">
+                        <div
+                          onClick={() => {
+                            toggleVisibility({txID: item.txID, isVisible: (item.isVisible?0:1)});
+                          }}
+                          className={"ToggleVisibility" + (item.isVisible?"-no":"-yes")}>
+                          <FontAwesomeIcon icon={faEyeSlash} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                //}
+                }
               </tbody>
-            </>
           </table>
+          <div className="PagingContainer">
+            <InputLabel id="demo-select-select-label">Rows per page:</InputLabel>
+            <Select
+              labelId="paging-select-num-per-page-label"
+              id="dpaging-select-num-per-page"
+              value={pagingPerPage.toString()}
+              label="Rows per page:"
+              onChange={handleNumPerPageChange}
+            >
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={20}>20</MenuItem>
+              <MenuItem value={30}>30</MenuItem>
+              <MenuItem value={40}>40</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+              <MenuItem value={100}>100</MenuItem>
+              <MenuItem value={200}>200</MenuItem>
+              <MenuItem value={300}>300</MenuItem>
+            </Select>
+            <Pagination
+              count={pagingNumPages}
+              variant="outlined"
+              shape="rounded"
+              onChange={handlePageChange}
+              page={pagingCurPage}
+            />
+          </div>
+          </>
         }
       </div>
     </div>

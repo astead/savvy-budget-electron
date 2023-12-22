@@ -545,6 +545,7 @@ div.envelopeDataContainer {
 .TransactionTable {
   padding: 0;
   margin: 0;
+  margin-bottom:10px;
   border-collapse:collapse,
 }
 
@@ -664,6 +665,12 @@ div.envelopeDataContainer {
   padding: 0;
   margin: 0;
   text-align:center;
+}
+
+.PagingContainer {
+  flex-direction: row;
+  
+  margin-bottom:40px;
 }
 
 .SaveKeyword {

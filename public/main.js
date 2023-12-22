@@ -463,17 +463,18 @@ ipcMain.on(channels.GET_MONTHLY_AVG, (event, find_date) => {
 
 ipcMain.on(
   channels.GET_TX_DATA,
-  (event, [find_date, filterEnvID, filterAccID, filterDesc]) => {
+  (
+    event,
+    [filterStartDate, filterEndDate, filterEnvID, filterAccID, filterDesc]
+  ) => {
     console.log(
       channels.GET_TX_DATA,
-      find_date,
+      filterStartDate,
+      filterEndDate,
       filterEnvID,
       filterAccID,
       filterDesc
     );
-
-    const month = Moment(new Date(find_date)).format('MM');
-    const year = Moment(new Date(find_date)).format('YYYY');
 
     let query = knex
       .select(
@@ -505,8 +506,6 @@ ipcMain.on(
         this.on('keyword.description', '=', 'transaction.description');
       })
       .where({ isBudget: 0 })
-      .andWhereRaw(`strftime('%m', txDate) = ?`, month)
-      .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
       .orderBy('transaction.txDate', 'desc');
 
     if (filterEnvID > -2) {
@@ -527,6 +526,12 @@ ipcMain.on(
     if (filterDesc?.length) {
       filterDesc = '%' + filterDesc + '%';
       query = query.andWhereRaw(`'transaction'.description LIKE ?`, filterDesc);
+    }
+    if (filterStartDate) {
+      query = query.andWhereRaw(`'transaction'.txDate > ?`, filterStartDate);
+    }
+    if (filterEndDate) {
+      query = query.andWhereRaw(`'transaction'.txDate < ?`, filterEndDate);
     }
 
     query
