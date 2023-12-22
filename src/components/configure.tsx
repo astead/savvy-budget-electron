@@ -58,7 +58,7 @@ export const Configure: React.FC = () => {
         {...other}
       >
         {tabValue === index && (
-          <Box sx={{ p: 3 }}>
+          <Box sx={{ pt: 3, m: 'auto' }}>
             <Typography component={"span"}>{children}</Typography>
           </Box>
         )}
@@ -604,7 +604,7 @@ export const Configure: React.FC = () => {
       <div className="mainContent">
           <Box 
             sx={{ 
-              width: '750px', 
+              width: '800', 
               bgcolor: 'lightgray', 
               borderBottom: 1, 
               borderColor: 'divider',
@@ -616,7 +616,7 @@ export const Configure: React.FC = () => {
               aria-label="basic tabs example"
               variant="fullWidth"
               textColor="primary"
-              indicatorColor="primary"  sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }}>
+              indicatorColor="primary"  sx={{ padding: 0, margin: 0, height: 30, minHeight:30, width: 800}}>
               <Tab label="Categories" {...a11yProps(0)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
               <Tab label="Key Words" {...a11yProps(1)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
               <Tab label="Accounts" {...a11yProps(2)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
