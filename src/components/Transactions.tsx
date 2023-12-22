@@ -6,6 +6,7 @@ import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 import { AccountDropDown } from '../helpers/AccountDropDown.tsx';
 import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
+import * as dayjs from 'dayjs'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faEyeSlash, faFileImport, faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from 'react-router';
@@ -130,6 +131,9 @@ export const Transactions: React.FC = () => {
     setYear(tmpDate.getFullYear());
     setMonth(tmpDate.getMonth());
     setCurMonth(Moment(tmpDate).format('YYYY-MM-DD'));
+
+    setFilterStartDate(dayjs(new Date(child_year, child_month + childCurIndex)));
+    setFilterEndDate(dayjs(new Date(child_year, child_month + childCurIndex+1)));
   }
   /* End Month Selector code ---------------------------------------*/
 
@@ -142,10 +146,6 @@ export const Transactions: React.FC = () => {
   };
 
   const load_transactions = () => {
-    console.log('load_transactions ENTER');
-    console.log('filterStartDate: ', filterStartDate?.format('YYYY-MM-DD'));
-    console.log('filterEndDate: ', filterEndDate?.format('YYYY-MM-DD'));
-
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_TX_DATA, 
@@ -347,7 +347,22 @@ export const Transactions: React.FC = () => {
   }, [curMonth, filterEnvID, gotMonthData, filterAccID, filterDesc, filterStartDate, filterEndDate]);
 
   useEffect(() => {
-    
+    const my_filter_startDate_str = localStorage.getItem('transaction-filter-startDate');
+    if (my_filter_startDate_str?.length) {
+      const my_filter_startDate = JSON.parse(my_filter_startDate_str);
+      if (my_filter_startDate) {
+        setFilterStartDate(dayjs(my_filter_startDate.filterStartDate));
+      }
+    }
+
+    const my_filter_endDate_str = localStorage.getItem('transaction-filter-startDate');
+    if (my_filter_endDate_str?.length) {
+      const my_filter_endDate = JSON.parse(my_filter_endDate_str);
+      if (my_filter_endDate) {
+        setFilterEndDate(dayjs(my_filter_endDate.filterEndDate));
+      }
+    }
+
     const my_filter_envID_str = localStorage.getItem('transaction-filter-envID');
     if (my_filter_envID_str?.length) {
       const my_filter_envID = JSON.parse(my_filter_envID_str);
@@ -420,13 +435,29 @@ export const Transactions: React.FC = () => {
               <div className="import-container">
                 <span>Start Date: </span>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker  value={filterStartDate} onChange={(newValue) => setFilterStartDate(newValue)} />
+                  <DatePicker
+                    value={filterStartDate}
+                    onChange={(newValue) => {
+                      localStorage.setItem(
+                        'transaction-filter-startDate', 
+                        JSON.stringify({ filterStartDate: newValue?.format('YYYY-MM-DD')}));
+                      setFilterStartDate(newValue);
+                    }}
+                  />
                 </LocalizationProvider>
               </div>
               <div className="import-container">
                 <span>End Date: </span>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker  value={filterEndDate} onChange={(newValue) => setFilterEndDate(newValue)} />
+                  <DatePicker
+                    value={filterEndDate}
+                    onChange={(newValue) => {
+                      localStorage.setItem(
+                        'transaction-filter-endDate', 
+                        JSON.stringify({ filterEndDate: newValue}));
+                      setFilterEndDate(newValue);
+                    }}
+                  />
                 </LocalizationProvider>
               </div>
               <div className="import-container">
