@@ -213,6 +213,18 @@ export const Transactions: React.FC = () => {
     setFilterAccName(new_text);
   };
 
+  const handleFilterDescChange = () => {
+    localStorage.setItem('transaction-filter-desc', JSON.stringify({ filterDesc: filterDesc}));
+    if (gotMonthData) {
+      load_transactions();
+    }
+  };
+
+  
+  if (gotMonthData) {
+    load_transactions();
+  }
+
   const handleChange = ({id, new_value}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
@@ -304,6 +316,14 @@ export const Transactions: React.FC = () => {
         setFilterAccID(my_filter_accID.filterAccID);
       }
     }
+      
+    const my_filter_desc_str = localStorage.getItem('transaction-filter-desc');
+    if (my_filter_desc_str?.length) {
+      const my_filter_desc = JSON.parse(my_filter_desc_str);
+      if (my_filter_desc) {
+        setFilterDesc(my_filter_desc.filterDesc);
+      }
+    }    
     
     monthSelectorCallback({childStartMonth: new Date(year, month-8), childCurIndex: 8});
     setGotMonthData(true);
@@ -369,15 +389,11 @@ export const Transactions: React.FC = () => {
                 <span>Description: </span>
                 <input
                   name="filterDesc"
-                  value={filterDesc}
+                  defaultValue={filterDesc}
                   onChange={(e) => {
                     setFilterDesc(e.target.value);
                   }}
-                  onBlur={() => {
-                    if (gotMonthData) {
-                      load_transactions();
-                    }
-                  }}
+                  onBlur={handleFilterDescChange}
                 />
               </div>
           </AccordionDetails>
