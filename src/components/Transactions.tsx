@@ -27,7 +27,6 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 /*
  TODO:
   - add filter options:
-    - date?
     - amount
   - add split transactions?
       https://fontawesome.com/icons/arrows-split-up-and-left?f=classic&s=solid&rt=flip-horizontal
