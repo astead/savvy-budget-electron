@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import 'react-edit-text/dist/index.css';
 import { channels } from '../shared/constants.js'
 
-export const CategoryDropDown = ({id, envID, data, changeCallback}) => {
+export const CategoryDropDown = ({id, envID, data, changeCallback, className}) => {
   
   if (envID === null) {
     envID = -1;
@@ -34,7 +34,7 @@ export const CategoryDropDown = ({id, envID, data, changeCallback}) => {
       name={my_id}
       value={my_envID}
       onChange={handleChange}
-      className={"envelopeDropDown"+(envID === -1 ? "-undefined":"")}>
+      className={className+(envID === -1 ? "-undefined":"")}>
         {my_data.map(o => (
           <option 
             key={o.envID} 

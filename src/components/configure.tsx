@@ -515,6 +515,7 @@ export const Configure: React.FC = () => {
                       envID={envelopeID}
                       data={envList}
                       changeCallback={handleEnvelopeChange}
+                      className="envelopeDropDown"
                     />
                   </td>
                   <td className="TransactionTableCell">

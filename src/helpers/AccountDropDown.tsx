@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import 'react-edit-text/dist/index.css';
 import { channels } from '../shared/constants.js'
 
-export const AccountDropDown = ({keyID, id, data, changeCallback}) => {
+export const AccountDropDown = ({keyID, id, data, changeCallback, className}) => {
   
   if (id === null) {
     id = -1;
@@ -34,7 +34,7 @@ export const AccountDropDown = ({keyID, id, data, changeCallback}) => {
       name={my_key}
       value={my_id}
       onChange={handleChange}
-      className="envelopeDropDown">
+      className={className}>
         {my_data.map(o => (
           <option 
             key={o.id} 

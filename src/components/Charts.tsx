@@ -126,6 +126,7 @@ export const Charts: React.FC = () => {
               envID={filterEnvID}
               data={filterEnvList}
               changeCallback={handleFilterEnvChange}
+              className="envelopeDropDown"
             />
           </div>
         }

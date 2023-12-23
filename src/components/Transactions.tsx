@@ -471,6 +471,7 @@ export const Transactions: React.FC = () => {
                           setFilterEndDate(newValue?.add(1, 'day'));
                         }
                       }}
+                      sx={{ width:250, pr:0 }}
                     />
                   </LocalizationProvider>
                 </td>
@@ -489,6 +490,7 @@ export const Transactions: React.FC = () => {
                           JSON.stringify({ filterEndDate: newValue}));
                         setFilterEndDate(newValue);
                       }}
+                      sx={{ width:250}}
                     />
                   </LocalizationProvider>
                 </td>
@@ -503,6 +505,7 @@ export const Transactions: React.FC = () => {
                     envID={filterEnvID}
                     data={filterEnvList}
                     changeCallback={handleFilterEnvChange}
+                    className="filterEnvelope"
                   />
                 </td>
               </tr>
@@ -516,6 +519,7 @@ export const Transactions: React.FC = () => {
                     id={filterAccID}
                     data={filterAccList}
                     changeCallback={handleFilterAccChange}
+                    className="filterAccount"
                   />
                 </td>
               </tr>
@@ -531,6 +535,7 @@ export const Transactions: React.FC = () => {
                       setFilterDescTemp(e.target.value);
                     }}
                     onBlur={handleFilterDescChange}
+                    className="filterDescription"
                   />
                 </td>
               </tr>
@@ -572,6 +577,7 @@ export const Transactions: React.FC = () => {
                         envID={item.envID}
                         data={envList}
                         changeCallback={handleChange}
+                        className="filterEnvelope"
                       />
                     </td>
                     <td className="TransactionTableCell">
