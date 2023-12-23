@@ -685,6 +685,10 @@ div.envelopeDataContainer {
   width:242px;
 }
 
+.filterAmount {
+  width:242px;
+}
+
 .filterAccount {
   width:250px;
   height:21px;

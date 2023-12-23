@@ -26,6 +26,12 @@ export const Charts: React.FC = () => {
     [key: string]: string | number | Date;
   }
 
+  type myChartData = {
+    date: Date;
+    actualTotals?: number; // Optional actual sum
+    budgetTotals?: number | null; // Optional budget sum
+  };
+
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
   const [filterEnvID, setFilterEnvID] = useState(envID);
@@ -74,20 +80,62 @@ export const Charts: React.FC = () => {
     ipcRenderer.on(channels.LIST_ENV_CHART_DATA, (data) => {
       let totalValue = 0;
       
-      //setEnvList(arg as EnvelopeList[]);
-      data.map(d => {
-        d.month = new Date(d.month);
-        if (!filterEnvelopeName.startsWith("Income")) {
-          d.totalAmt = -1 * d.totalAmt;
+      const myChartData = data.reduce((acc, obj) => {
+        // Find the existing entry for the date
+        const existingEntry = acc.find((entry) => {
+          return (
+            (entry.month as Date)
+              .toLocaleDateString('en-EN', {
+                month: 'short',
+                year: '2-digit',
+              }) === 
+            new Date(obj.month)
+              .toLocaleDateString('en-EN', {
+                month: 'short',
+                year: '2-digit',
+              })
+          )
+        });
+      
+        if (!obj.isBudget) {
+          // Let's show spending as positive, it's easier to read in a chart,
+          // and also compare against the budget.
+          if (!filterEnvelopeName.startsWith("Income")) {
+            obj.totalAmt = -1 * obj.totalAmt;
+          }
+          totalValue += obj.totalAmt;
+        } else {
+          // Let's show income budget values as positive, for the same
+          // reason as above.
+          if (filterEnvelopeName.startsWith("Income")) {
+            obj.totalAmt = -1 * obj.totalAmt;
+          }
         }
-        totalValue += d.totalAmt;
-      });
 
-      if (data?.length) {
-        setAvgValue(totalValue / data?.length);
+        if (existingEntry) {
+          // Update existing entry
+          if (obj.isBudget) {
+            existingEntry.budgetTotals = obj.totalAmt;
+          } else {
+            existingEntry.actualTotals = obj.totalAmt;
+          }
+        } else {
+          // Add a new entry
+          acc.push({
+            month: new Date(obj.month),
+            actualTotals: obj.isBudget ? 0 : obj.totalAmt,
+            budgetTotals: obj.isBudget ? obj.totalAmt : null,
+          });
+        }
+      
+        return acc;
+      }, []);
+
+      if (myChartData?.length) {
+        setAvgValue(totalValue / myChartData?.length);
       }
       
-      setChartData(data as ChartData[]);
+      setChartData(myChartData as ChartData[]);
       setHaveChartData(true);
       
       ipcRenderer.removeAllListeners(channels.LIST_ENV_CHART_DATA);
@@ -156,8 +204,13 @@ export const Charts: React.FC = () => {
             ]}
             series={[
               { 
-                dataKey: 'totalAmt', 
-                label: filterEnvelopeName
+                dataKey: 'actualTotals', 
+                label: filterEnvelopeName,
+                color: 'black',
+              },
+              { 
+                dataKey: 'budgetTotals', 
+                label: 'Budget'
               },
               { 
                 data: chartData.map(d => avgValue) as number[], 

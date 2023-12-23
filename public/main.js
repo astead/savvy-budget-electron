@@ -232,6 +232,8 @@ ipcMain.on(
               txDate: newtxDate,
               isBudget: 1,
               txAmt: newtxAmt,
+              isDuplicate: 0,
+              isVisible: 1,
             })
             .then(async () => {
               await knex.raw(
@@ -465,7 +467,14 @@ ipcMain.on(
   channels.GET_TX_DATA,
   (
     event,
-    [filterStartDate, filterEndDate, filterEnvID, filterAccID, filterDesc]
+    [
+      filterStartDate,
+      filterEndDate,
+      filterEnvID,
+      filterAccID,
+      filterDesc,
+      filterAmount,
+    ]
   ) => {
     console.log(
       channels.GET_TX_DATA,
@@ -473,7 +482,8 @@ ipcMain.on(
       filterEndDate,
       filterEnvID,
       filterAccID,
-      filterDesc
+      filterDesc,
+      filterAmount
     );
 
     let query = knex
@@ -532,6 +542,12 @@ ipcMain.on(
     }
     if (filterEndDate) {
       query = query.andWhereRaw(`'transaction'.txDate < ?`, filterEndDate);
+    }
+    if (filterAmount?.length) {
+      query = query.andWhereRaw(
+        `'transaction'.txAmt = ?`,
+        parseFloat(filterAmount)
+      );
     }
 
     query
@@ -1269,14 +1285,14 @@ ipcMain.on(channels.GET_ENV_CHART_DATA, (event, filterEnvID) => {
   let query = knex('transaction')
     .select({
       month: knex.raw(`strftime("%Y-%m", txDate)`),
+      isBudget: 'isBudget',
     })
     .sum({ totalAmt: 'txAmt' })
-    .where({ isBudget: 0 })
+    .where({ isDuplicate: 0 })
+    .andWhere({ isVisible: 1 })
     .andWhereRaw(`julianday(?) - julianday(txDate) < 365`, [find_date])
     .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
-    .andWhere({ isDuplicate: 0 })
-    .andWhere({ isVisible: 1 })
-    .groupBy('month')
+    .groupBy('month', 'isBudget')
     .orderBy('month');
 
   if (filterEnvID > -2) {

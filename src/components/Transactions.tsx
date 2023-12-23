@@ -87,6 +87,10 @@ export const Transactions: React.FC = () => {
   // Filter by description
   const [filterDesc, setFilterDesc] = useState('');
   const [filterDescTemp, setFilterDescTemp] = useState('');
+
+  // Filter by amount
+  const [filterAmount, setFilterAmount] = useState('');
+  const [filterAmountTemp, setFilterAmountTemp] = useState('');
   
   // Filter by Date
   const [filterStartDate, setFilterStartDate] = useState<Dayjs | null>(null);
@@ -154,7 +158,8 @@ export const Transactions: React.FC = () => {
         filterEndDate?.format('YYYY-MM-DD'),
         filterEnvID,
         filterAccID,
-        filterDesc ]);
+        filterDesc,
+        filterAmount ]);
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
@@ -247,20 +252,37 @@ export const Transactions: React.FC = () => {
   }
 
   const handleFilterEnvChange = ({id, new_value, new_text}) => {
-    localStorage.setItem('transaction-filter-envID', JSON.stringify({ filterEnvID: new_value}));
+    localStorage.setItem(
+      'transaction-filter-envID', 
+      JSON.stringify({ filterEnvID: new_value})
+    );
     setFilterEnvID(new_value);
     setFilterEnvelopeName(new_text);
   };
 
   const handleFilterAccChange = ({id, new_value, new_text}) => {
-    localStorage.setItem('transaction-filter-accID', JSON.stringify({ filterAccID: new_value}));
+    localStorage.setItem(
+      'transaction-filter-accID', 
+      JSON.stringify({ filterAccID: new_value})
+    );
     setFilterAccID(new_value);
     setFilterAccName(new_text);
   };
 
   const handleFilterDescChange = () => {
-    localStorage.setItem('transaction-filter-desc', JSON.stringify({ filterDesc: filterDescTemp}));
+    localStorage.setItem(
+      'transaction-filter-desc', 
+      JSON.stringify({ filterDesc: filterDescTemp})
+    );
     setFilterDesc(filterDescTemp);
+  };  
+
+  const handleFilterAmountChange = () => {
+    localStorage.setItem(
+      'transaction-filter-amount', 
+      JSON.stringify({ filterAmount: filterAmountTemp})
+    );
+    setFilterAmount(filterAmountTemp);
   };  
   
   const handleChange = ({id, new_value}) => {
@@ -343,7 +365,8 @@ export const Transactions: React.FC = () => {
     if (gotMonthData) {
       load_transactions();
     }
-  }, [curMonth, filterEnvID, gotMonthData, filterAccID, filterDesc, filterStartDate, filterEndDate]);
+  }, [curMonth, filterEnvID, gotMonthData, filterAccID, 
+      filterDesc, filterStartDate, filterEndDate, filterAmount]);
 
   useEffect(() => {
     const my_filter_startDate_str = localStorage.getItem('transaction-filter-startDate');
@@ -387,7 +410,16 @@ export const Transactions: React.FC = () => {
         setFilterDescTemp(my_filter_desc.filterDesc);
         setFilterDesc(my_filter_desc.filterDesc);
       }
-    }    
+    }
+      
+    const my_filter_amount_str = localStorage.getItem('transaction-filter-amount');
+    if (my_filter_amount_str?.length) {
+      const my_filter_amount = JSON.parse(my_filter_amount_str);
+      if (my_filter_amount) {
+        setFilterAmountTemp(my_filter_amount.filterAmount);
+        setFilterAmount(my_filter_amount.filterAmount);
+      }
+    }
     
     monthSelectorCallback(
       { childStartMonth: new Date(year, month-8), 
@@ -475,6 +507,21 @@ export const Transactions: React.FC = () => {
                     />
                   </LocalizationProvider>
                 </td>
+                <td width="50"></td>
+                <td className="txFilterLabelCell">
+                  <span>Description: </span>
+                </td>
+                <td className="txFilterCell">
+                  <input
+                    name="filterDescTemp"
+                    defaultValue={filterDescTemp}
+                    onChange={(e) => {
+                      setFilterDescTemp(e.target.value);
+                    }}
+                    onBlur={handleFilterDescChange}
+                    className="filterDescription"
+                  />
+                </td>
               </tr>
               <tr>
                 <td className="txFilterLabelCell">
@@ -493,6 +540,21 @@ export const Transactions: React.FC = () => {
                       sx={{ width:250}}
                     />
                   </LocalizationProvider>
+                </td>
+                <td></td>
+                <td className="txFilterLabelCell">
+                  <span>Amount: </span>
+                </td>
+                <td className="txFilterCell">
+                  <input
+                      name="filterAmountTemp"
+                      defaultValue={filterAmountTemp}
+                      onChange={(e) => {
+                        setFilterAmountTemp(e.target.value);
+                      }}
+                      onBlur={handleFilterAmountChange}
+                      className="filterAmount"
+                    />
                 </td>
               </tr>
               <tr>
@@ -520,22 +582,6 @@ export const Transactions: React.FC = () => {
                     data={filterAccList}
                     changeCallback={handleFilterAccChange}
                     className="filterAccount"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td className="txFilterLabelCell">
-                  <span>Description: </span>
-                </td>
-                <td className="txFilterCell">
-                  <input
-                    name="filterDescTemp"
-                    defaultValue={filterDescTemp}
-                    onChange={(e) => {
-                      setFilterDescTemp(e.target.value);
-                    }}
-                    onBlur={handleFilterDescChange}
-                    className="filterDescription"
                   />
                 </td>
               </tr>
