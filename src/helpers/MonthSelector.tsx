@@ -10,36 +10,55 @@ export const MonthSelector = ({ numMonths, startMonth, curIndex, parentCallback}
 
   const handleMonthAdjust = (i) => {
     const start = new Date(myStartMonth);
-    const month = start.getMonth();
-    const year = start.getFullYear();
-    
-    const tmpStart = new Date(year, month+i);
-    let tmpCur = myCurIndex;
-    if (i<0) {
-      tmpCur = myCurIndex<numMonths-1 ? myCurIndex+1 : myCurIndex;
-    } else {
-      tmpCur = myCurIndex>0 ? myCurIndex-1 : myCurIndex;
+    if (start) {
+      const month = start.getMonth();
+      const year = start.getFullYear();
+      
+      const tmpStart = new Date(year, month+i);
+      let tmpCur = myCurIndex;
+      if (i<0) {
+        tmpCur = myCurIndex<numMonths-1 ? myCurIndex+1 : myCurIndex;
+      } else {
+        tmpCur = myCurIndex>0 ? myCurIndex-1 : myCurIndex;
+      }
+      setMyStartMonth(tmpStart)
+      setMyCurIndex(tmpCur);
+      parentCallback(
+        { childStartMonth: tmpStart, 
+          childCurIndex: tmpCur,
+          source: 1 });
     }
-    setMyStartMonth(tmpStart)
-    setMyCurIndex(tmpCur);
-    parentCallback({ childStartMonth: tmpStart, childCurIndex: tmpCur });
   }
 
   useEffect(() => {
-    const start = myStartMonth;
-    const month = start.getMonth() + 1;
-    const year = start.getFullYear();
+    const start = new Date(myStartMonth);
+    if (start) {
+      const month = start.getMonth() + 1;
+      const year = start.getFullYear();
 
-    const tmpMonths = Array.from({length: numMonths}, (item, i) => {
-      const myDate = new Date(year, month+i-1);
-      const monthString = 
-        myDate.toLocaleString('en-US', {month: 'short'}) + "\n'" + 
-        myDate.toLocaleString('en-US', {year: 'numeric'}).slice(2) ;
-      return monthString;
-    });  
+      const tmpMonths = Array.from({length: numMonths}, (item, i) => {
+        const myDate = new Date(year, month+i-1);
+        const monthString = 
+          myDate.toLocaleString('en-US', {month: 'short'}) + "\n'" + 
+          myDate.toLocaleString('en-US', {year: 'numeric'}).slice(2) ;
+        return monthString;
+      });  
 
-    setArrayMonths(tmpMonths);
-  }, [myStartMonth]);
+      setArrayMonths(tmpMonths);
+    }
+  }, [myStartMonth, myCurIndex]);
+
+  useEffect(() => {
+    setMyStartMonth(startMonth);
+  }, [startMonth]);
+
+  useEffect(() => {
+    setMyCurIndex(curIndex);
+  }, [curIndex]);
+
+  useEffect(() => {
+    
+  }, []);
 
   return (
     <div className="months-container">
@@ -53,7 +72,10 @@ export const MonthSelector = ({ numMonths, startMonth, curIndex, parentCallback}
             className={"month-item"+(myCurIndex === index ? "-selected":"")}
             onClick={() => {
               setMyCurIndex(index);
-              parentCallback({ childStartMonth: myStartMonth, childCurIndex: index });
+              parentCallback(
+                { childStartMonth: myStartMonth, 
+                  childCurIndex: index,
+                  source: 1 });
           }}>
             {myMonth}
           </div>

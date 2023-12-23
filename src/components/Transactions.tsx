@@ -116,7 +116,7 @@ export const Transactions: React.FC = () => {
   const [myCurIndex, setMyCurIndex] = useState(8);
   const [gotMonthData, setGotMonthData] = useState(false);
   
-  const monthSelectorCallback = ({ childStartMonth, childCurIndex }) => {    
+  const monthSelectorCallback = ({ childStartMonth, childCurIndex, source }) => {    
     
     // Need to adjust our month/year to reflect the change
     const child_start = new Date(childStartMonth);
@@ -131,8 +131,10 @@ export const Transactions: React.FC = () => {
     setMonth(tmpDate.getMonth());
     setCurMonth(Moment(tmpDate).format('YYYY-MM-DD'));
 
-    setFilterStartDate(dayjs(new Date(child_year, child_month + childCurIndex)));
-    setFilterEndDate(dayjs(new Date(child_year, child_month + childCurIndex+1)));
+    if (source === 1) {
+      setFilterStartDate(dayjs(new Date(child_year, child_month + childCurIndex)));
+      setFilterEndDate(dayjs(new Date(child_year, child_month + childCurIndex+1)));
+    }
   }
   /* End Month Selector code ---------------------------------------*/
 
@@ -259,9 +261,7 @@ export const Transactions: React.FC = () => {
   const handleFilterDescChange = () => {
     localStorage.setItem('transaction-filter-desc', JSON.stringify({ filterDesc: filterDescTemp}));
     setFilterDesc(filterDescTemp);
-  };
-
-  
+  };  
   
   const handleChange = ({id, new_value}) => {
     // Request we update the DB
@@ -389,7 +389,11 @@ export const Transactions: React.FC = () => {
       }
     }    
     
-    monthSelectorCallback({childStartMonth: new Date(year, month-8), childCurIndex: 8});
+    monthSelectorCallback(
+      { childStartMonth: new Date(year, month-8), 
+        childCurIndex: 8,
+        source: 0 }
+    );
     setGotMonthData(true);
     
     load_envelope_list();
@@ -456,6 +460,16 @@ export const Transactions: React.FC = () => {
                           'transaction-filter-startDate', 
                           JSON.stringify({ filterStartDate: newValue?.format('YYYY-MM-DD')}));
                         setFilterStartDate(newValue);
+                        
+                        monthSelectorCallback(
+                          { childStartMonth: newValue?.subtract(8,'month').toDate(), 
+                            childCurIndex: 8, 
+                            source: 0, }
+                        );
+
+                        if (filterEndDate && newValue && filterEndDate.diff(newValue) <= 0 ) {
+                          setFilterEndDate(newValue?.add(1, 'day'));
+                        }
                       }}
                     />
                   </LocalizationProvider>
