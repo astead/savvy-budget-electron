@@ -22,7 +22,7 @@ export const Envelopes: React.FC = () => {
   const [myCurIndex, setMyCurIndex] = useState(0);
   const [gotMonthData, setGotMonthData] = useState(false);
   
-  const monthSelectorCallback = ({ childStartMonth, childCurIndex }) => {    
+  const monthSelectorCallback = ({ childStartMonth, childCurIndex, source }) => {
     
     // Need to adjust our month/year to reflect the change
     const child_start = new Date(childStartMonth);
