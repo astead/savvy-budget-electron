@@ -380,6 +380,18 @@ div.import-container {
   width: fit-content;
 }
 
+div.chart-filter-container {
+  border-radius: 0px;
+  border: none;
+  padding:0;
+  margin:0;
+  vertical-align: middle;
+  width:500px;
+  text-align:center;
+  padding:5px;
+  width: fit-content;
+}
+
 input.import-file {
   border: 0.5px solid #18181B;
   padding:0;

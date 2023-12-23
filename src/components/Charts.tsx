@@ -8,7 +8,6 @@ import { useParams } from 'react-router';
 
 /*
   TODO:
-  - add "vs Budget" line series for comparison
   - pie chart?
 */
 
@@ -167,8 +166,8 @@ export const Charts: React.FC = () => {
       </header>
       <div className="mainContent">
         {filterEnvListLoaded &&
-          <div className="import-container">
-            <span>Filter: </span>
+          <div className="chart-filter-container">
+            <span>Envelope: </span>
             <CategoryDropDown 
               id={-1}
               envID={filterEnvID}
