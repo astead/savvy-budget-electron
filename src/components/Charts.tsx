@@ -9,6 +9,9 @@ import { useParams } from 'react-router';
 /*
   TODO:
   - pie chart?
+  - Add filter options:
+      - show all income
+      - show all spending
 */
 
 export const Charts: React.FC = () => {

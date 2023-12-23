@@ -34,6 +34,7 @@ import AccordionDetails from '@mui/material/AccordionDetails';
   - import PLAID
   - somehow highlight if we could set a keyword
   - select multiple to delete?
+  - Import from Mint: Create Envelopes on the fly, how we create the accounts on the fly
 */
 
 export const Transactions: React.FC = () => {
