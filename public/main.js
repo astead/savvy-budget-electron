@@ -1,11 +1,12 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const isDev = require('electron-is-dev'); // To check if electron is in development mode
 const path = require('path');
-const knex = require('./db/db.js');
-const { channels } = require('../src/shared/constants');
+const initializeKnexInstance = require('./db/db.js');
+const { channels } = require('../src/shared/constants.js');
 const Moment = require('moment');
 const { BankTransferList, Ofx } = require('ofx-convert');
 const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
+const { Knex } = require('knex');
 
 /*
   TODO:
@@ -84,6 +85,24 @@ process.on('uncaughtException', (error) => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+let knex = null;
+
+// Initialize the knexInstance with the initial dbPath
+initializeKnexInstance((instance) => {
+  knex = instance;
+  // Continue with other code that depends on knexInstance
+});
+
+ipcMain.on(channels.SET_DB_PATH, (event, dbPath) => {
+  if (!knex) {
+    // Continue with other code that doesn't depend on knexInstance immediately
+    // Initialize the knexInstance with the new path
+    initializeKnexInstance((instance) => {
+      knex = instance;
+      // Continue with other code that depends on knexInstance
+    });
+  }
+});
 
 ipcMain.on(channels.ADD_ENVELOPE, (event, { categoryID }) => {
   console.log(channels.ADD_ENVELOPE, categoryID);
@@ -1302,6 +1321,16 @@ ipcMain.on(channels.GET_ENV_CHART_DATA, (event, filterEnvID) => {
   query
     .then((data) => {
       event.sender.send(channels.LIST_ENV_CHART_DATA, data);
+    })
+    .catch((err) => console.log(err));
+});
+
+ipcMain.on(channels.GET_DB_VER, (event) => {
+  console.log(channels.GET_DB_VER);
+  knex('version')
+    .select('version')
+    .then((data) => {
+      event.sender.send(channels.LIST_DB_VER, data);
     })
     .catch((err) => console.log(err));
 });

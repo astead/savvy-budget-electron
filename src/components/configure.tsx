@@ -26,7 +26,7 @@ import Box from '@mui/material/Box';
   - select DB file, if doesn't exist, create it.
   - allow DB file to be on Google Drive?
 */
-export const Configure: React.FC = () => {
+export const Configure = () => {
 
   interface EnvelopeList {
     envID: number; 
@@ -83,7 +83,12 @@ export const Configure: React.FC = () => {
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
   const [envListLoaded, setEnvListLoaded] = useState(false);
 
-  const [sortKeyword, setSortKeyword] = useState('10');
+  const [sortKeyword, setSortKeyword] = useState('10');  
+  
+  // Database filename
+  const [databaseFile, setDatabaseFile] = useState('');
+  const [databaseExists, setDatabaseExists] = useState(false);
+  const [databaseVersion, setDatabaseVersion] = useState('');
  
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     localStorage.setItem('tabValue', JSON.stringify(newValue));
@@ -269,6 +274,52 @@ export const Configure: React.FC = () => {
     }
   };
 
+  const check_database_file = (event) => {
+    let my_databaseFile = event.target.files[0].path;
+    
+    if (my_databaseFile?.length) {
+      // Check if the database exists
+      const ipcRenderer = (window as any).ipcRenderer;
+      const fs = ipcRenderer.require('fs')
+      
+      if (fs.existsSync(my_databaseFile)) {
+        setDatabaseFile(my_databaseFile);
+        setDatabaseExists(true);
+        get_db_version();
+
+        // Save this in local storage
+        localStorage.setItem('databaseFile', JSON.stringify(my_databaseFile));
+        const ipcRenderer = (window as any).ipcRenderer;
+        ipcRenderer.send(channels.SET_DB_PATH, my_databaseFile);
+      } else {
+        setDatabaseExists(false);
+        setDatabaseVersion('');
+      }
+    }
+  }
+
+  const get_db_version = () => {
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_DB_VER);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_DB_VER, (arg) => {
+      if (arg?.length > 0) {
+        setDatabaseVersion(arg[0].version);
+      } else {
+        setDatabaseVersion('');
+      }
+
+      ipcRenderer.removeAllListeners(channels.LIST_DB_VER);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_DB_VER);
+    };
+  }
+
   const load_cats_and_envs = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
@@ -371,6 +422,25 @@ export const Configure: React.FC = () => {
 
   useEffect(() => {
     if (!loaded) {
+
+      const databaseFile_str = localStorage.getItem('databaseFile');
+      if (databaseFile_str?.length) {
+        const my_databaseFile = JSON.parse(databaseFile_str);
+        if (my_databaseFile) {
+          // Check if the database exists
+          const ipcRenderer = (window as any).ipcRenderer;
+          const fs = ipcRenderer.require('fs')
+          
+          if (fs.existsSync(my_databaseFile)) {
+            setDatabaseFile(my_databaseFile);
+            setDatabaseExists(true);
+            get_db_version();
+          } else {
+
+          }
+        }
+      }
+
       // which tab were we on?
       const my_tabValue_str = localStorage.getItem('tabValue');
       if (my_tabValue_str?.length) {
@@ -599,6 +669,55 @@ export const Configure: React.FC = () => {
     )
   }
 
+  let database_content = (
+    <>
+      {!databaseFile && 
+        <>
+          <span>Select database file:</span>
+          <input
+              type="file"
+              name="file"
+              className="import-file"
+              onChange={check_database_file}          
+          />
+        </>
+      }
+      <span>Database: {databaseFile}</span><br/>
+      {databaseFile && !databaseExists &&
+        <>
+          <span>The database file does not exist.</span>
+        </>
+      }
+      {databaseFile && databaseExists && !databaseVersion &&
+        <>
+          <span>Database appears to be corrupted</span><br/>
+          <button 
+            onClick={() => {}}>
+              Create Database
+          </button>
+        </>
+      }
+      {databaseFile && databaseExists && databaseVersion &&
+        <>
+          <span>Database version: {databaseVersion}</span><br/>
+        </>
+      }
+      {databaseFile && 
+        <>
+          <br/><br/>
+          <span>Change database file:</span>
+          <input
+              type="file"
+              name="file"
+              className="import-file"
+              onChange={check_database_file}          
+          />
+        </>
+      }
+    </>
+  );
+
+
   return (
     <div className="App">
       <header className="App-header">
@@ -623,6 +742,7 @@ export const Configure: React.FC = () => {
               <Tab label="Categories" {...a11yProps(0)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
               <Tab label="Key Words" {...a11yProps(1)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
               <Tab label="Accounts" {...a11yProps(2)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
+              <Tab label="Database" {...a11yProps(3)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
             </Tabs>
           </Box>
           <CustomTabPanel tabValue={tabValue} index={0}>
@@ -633,6 +753,9 @@ export const Configure: React.FC = () => {
           </CustomTabPanel>
           <CustomTabPanel tabValue={tabValue} index={2}>
             {account_content}
+          </CustomTabPanel>
+          <CustomTabPanel tabValue={tabValue} index={3}>
+            {database_content}
           </CustomTabPanel>
       </div>
     </div>

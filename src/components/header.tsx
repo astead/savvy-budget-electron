@@ -7,9 +7,8 @@ export const Header = ({currTab}) => {
   
   const [year, setYear] = useState((new Date()).getFullYear());
   const [month, setMonth] = useState((new Date()).getMonth());
-  
-  useEffect(() => {
-    // which tab were we on?
+
+  useEffect(() => {    
     const my_monthData_str = localStorage.getItem('transaction-month-data');
     let year = (new Date()).getFullYear();
     let month = (new Date()).getMonth();

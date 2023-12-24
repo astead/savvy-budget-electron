@@ -1,19 +1,42 @@
 // db/db.js
-//const sqlite3 = require('sqlite3');
+const { ipcMain } = require('electron');
+const { channels } = require('../../src/shared/constants.js');
+const knex = require('knex');
 
-const path = require('path');
-//const { ipcRenderer, contextBridge, ipcMain } = require('electron');
+let dbPath = '';
+let knexInstance = null;
+let initializationCallback = null;
 
-const dbPath = path.resolve(__dirname, './db.sqlite');
+ipcMain.on(channels.SET_DB_PATH, (event, databaseFile) => {
+  if (!knexInstance) {
+    dbPath = databaseFile;
 
-// Create connection to SQLite database
-const knex = require('knex')({
-  client: 'sqlite3',
-  connection: {
-    filename: dbPath,
-  },
-  useNullAsDefault: true,
+    // Re-initialize knexInstance with the new path
+    knexInstance = knex({
+      client: 'sqlite3',
+      connection: {
+        filename: dbPath,
+      },
+      useNullAsDefault: true,
+    });
+
+    // If there's a callback, invoke it
+    if (initializationCallback) {
+      initializationCallback(knexInstance);
+      initializationCallback = null; // Clear the callback
+    }
+  }
 });
 
+function initializeKnexInstance(callback) {
+  // If knexInstance is already available, invoke the callback immediately
+  if (knexInstance) {
+    callback(knexInstance);
+  } else {
+    // Set the callback for later invocation
+    initializationCallback = callback;
+  }
+}
+
 // Export the database
-module.exports = knex;
+module.exports = initializeKnexInstance;

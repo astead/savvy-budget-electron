@@ -61,5 +61,9 @@ module.exports = {
 
     GET_ENV_CHART_DATA: 'get_env_chart_data',
     LIST_ENV_CHART_DATA: 'list_env_chart_data',
+
+    SET_DB_PATH: 'set_db_path',
+    GET_DB_VER: 'get_db_ver',
+    LIST_DB_VER: 'list_db_ver',
   },
 };
