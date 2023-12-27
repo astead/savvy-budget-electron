@@ -274,24 +274,26 @@ export const Configure = () => {
     }
   };
 
-  const check_database_file = (event) => {
-    let my_databaseFile = event.target.files[0].path;
-    
+  const check_database_file = (my_databaseFile) => {
+    //console.log("Checking DB file: ", my_databaseFile);
     if (my_databaseFile?.length) {
       // Check if the database exists
       const ipcRenderer = (window as any).ipcRenderer;
       const fs = ipcRenderer.require('fs')
       
       if (fs.existsSync(my_databaseFile)) {
+        //console.log("file exists");
         setDatabaseFile(my_databaseFile);
         setDatabaseExists(true);
-        get_db_version();
 
         // Save this in local storage
         localStorage.setItem('databaseFile', JSON.stringify(my_databaseFile));
         const ipcRenderer = (window as any).ipcRenderer;
         ipcRenderer.send(channels.SET_DB_PATH, my_databaseFile);
+
+        get_db_version();
       } else {
+        //console.log("file does not exist");
         setDatabaseExists(false);
         setDatabaseVersion('');
       }
@@ -455,7 +457,7 @@ export const Configure = () => {
       load_keywords();
       load_accounts();
     }
-  }, []);
+  }, [databaseFile]);
 
   let category_content;
   if (catData) {
@@ -678,7 +680,12 @@ export const Configure = () => {
               type="file"
               name="file"
               className="import-file"
-              onChange={check_database_file}          
+              onChange={(e) => {
+                if (e.target.files) {
+                  setLoaded(false);
+                  check_database_file(e.target.files[0].path);
+                }
+              }}          
           />
         </>
       }
@@ -691,10 +698,6 @@ export const Configure = () => {
       {databaseFile && databaseExists && !databaseVersion &&
         <>
           <span>Database appears to be corrupted</span><br/>
-          <button 
-            onClick={() => {}}>
-              Create Database
-          </button>
         </>
       }
       {databaseFile && databaseExists && databaseVersion &&
@@ -710,8 +713,36 @@ export const Configure = () => {
               type="file"
               name="file"
               className="import-file"
-              onChange={check_database_file}          
+              onChange={(e) => {
+                if (e.target.files) {
+                  setLoaded(false);
+                  check_database_file(e.target.files[0].path);
+                }
+              }}          
           />
+          <br/><br/>
+          <button 
+            onClick={() => {
+              const ipcRenderer = (window as any).ipcRenderer;
+              ipcRenderer.send(channels.CREATE_DB);
+
+              // Receive the new filename
+              ipcRenderer.on(channels.LIST_NEW_DB_FILENAME, (arg) => {
+                if (arg?.length > 0) {
+                  setLoaded(false);
+                  check_database_file(arg);
+                }
+
+                ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
+              });
+
+              // Clean the listener after the component is dismounted
+              return () => {
+                ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
+              };
+            }}>
+              Create a new Database
+          </button>
         </>
       }
     </>

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const isDev = require('electron-is-dev'); // To check if electron is in development mode
 const path = require('path');
 const initializeKnexInstance = require('./db/db.js');
@@ -89,18 +89,32 @@ let knex = null;
 
 // Initialize the knexInstance with the initial dbPath
 initializeKnexInstance((instance) => {
+  //console.log(
+  //  'standalone initialize to: ',
+  //  instance.context.client.connectionSettings.filename
+  //);
   knex = instance;
   // Continue with other code that depends on knexInstance
 });
 
 ipcMain.on(channels.SET_DB_PATH, (event, dbPath) => {
   if (!knex) {
+    //console.log(
+    //  'No Knex yet, changing db path in main, setting up nested initialize.'
+    //);
+
     // Continue with other code that doesn't depend on knexInstance immediately
     // Initialize the knexInstance with the new path
     initializeKnexInstance((instance) => {
+      //console.log(
+      //  'nested arrow initialize to: ',
+      //  instance.context.client.connectionSettings.filename
+      //);
       knex = instance;
       // Continue with other code that depends on knexInstance
     });
+    //} else {
+    //  console.log('Already have knex, changing db path in main, do nothing.');
   }
 });
 

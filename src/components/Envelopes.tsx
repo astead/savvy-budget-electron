@@ -10,6 +10,7 @@ import BudgetBalanceModal from '../helpers/BudgetBalanceModal.tsx';
 /*
   TODO:
   - Color based on how healthy the envelope is
+  - BUG: If db is empty then get_budget_envelopes gets called in a loop.
 */
 
 export const Envelopes: React.FC = () => {
@@ -407,6 +408,7 @@ export const Envelopes: React.FC = () => {
         setData({nodes:budgetData});
       }
     } else {
+      console.log("Calling in else when budgetData changes");
       load_initialEnvelopes();
     }
   }, [budgetData]);
@@ -488,6 +490,7 @@ export const Envelopes: React.FC = () => {
     setGotMonthData(true);
 
     load_envelope_list();
+    console.log("Calling in []");
     load_initialEnvelopes();
   }, []);
 

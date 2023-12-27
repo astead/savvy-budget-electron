@@ -65,5 +65,7 @@ module.exports = {
     SET_DB_PATH: 'set_db_path',
     GET_DB_VER: 'get_db_ver',
     LIST_DB_VER: 'list_db_ver',
+    CREATE_DB: 'create_db',
+    LIST_NEW_DB_FILENAME: 'list_new_db_filename',
   },
 };
