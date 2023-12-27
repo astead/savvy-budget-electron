@@ -3,6 +3,11 @@ const { ipcMain, dialog } = require('electron');
 const { channels } = require('../../src/shared/constants.js');
 const knex = require('knex');
 
+/*
+  TODO: 
+  - release db connection when changing.
+  */
+
 let dbPath = '';
 let db = null;
 let initializationCallback = null;

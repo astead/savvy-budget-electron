@@ -23,8 +23,8 @@ import Box from '@mui/material/Box';
 /*
   TODO:
   - Show keyword conflicts? 
-  - select DB file, if doesn't exist, create it.
   - allow DB file to be on Google Drive?
+  - Show more DB data? transaction dates, # transactions, # accounts?
 */
 export const Configure = () => {
 
