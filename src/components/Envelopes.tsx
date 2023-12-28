@@ -10,7 +10,6 @@ import BudgetBalanceModal from '../helpers/BudgetBalanceModal.tsx';
 /*
   TODO:
   - Color based on how healthy the envelope is
-  - BUG: If db is empty then get_budget_envelopes gets called in a loop.
 */
 
 export const Envelopes: React.FC = () => {
