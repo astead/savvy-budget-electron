@@ -1123,102 +1123,105 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
             new Date(tx_values[0].replace(/\"/g, '').trim())
           ).format('YYYY-MM-DD');
 
-          // Description
-          let j = 1;
-          let description = tx_values[j];
-          if (description.startsWith('"')) {
-            while (!tx_values[j].endsWith('"')) {
-              j++;
-              description += ',' + tx_values[j];
+          if (txDate !== 'Invalid date') {
+            // Description
+            let j = 1;
+            let description = tx_values[j];
+            if (description?.startsWith('"')) {
+              while (!tx_values[j]?.endsWith('"')) {
+                j++;
+                description += ',' + tx_values[j];
+              }
+              description = description.replace(/\"/g, '');
             }
-            description = description.replace(/\"/g, '');
-          }
 
-          // Original Description
-          // We don't do anything with this, but need to account
-          // for commas.
-          j += 1;
-          if (tx_values[j].startsWith('"')) {
-            while (!tx_values[j].endsWith('"')) {
-              j++;
+            // Original Description
+            // We don't do anything with this, but need to account
+            // for commas.
+            j += 1;
+            if (tx_values[j]?.startsWith('"')) {
+              while (!tx_values[j]?.endsWith('"')) {
+                j++;
+              }
             }
-          }
 
-          // Amount
-          j += 1;
-          let txAmt = tx_values[j];
-          if (txAmt.startsWith('"')) {
-            while (!tx_values[j].endsWith('"')) {
-              j++;
-              txAmt += tx_values[j];
+            // Amount
+            j += 1;
+            let txAmt = tx_values[j];
+            if (txAmt?.startsWith('"')) {
+              while (!tx_values[j]?.endsWith('"')) {
+                j++;
+                txAmt += tx_values[j];
+              }
+              txAmt = parseFloat(txAmt.replace(/\"/g, ''));
             }
-            txAmt = parseFloat(txAmt.replace(/\"/g, ''));
-          }
 
-          // Transaction type (debit or credit)
-          j += 1;
-          if (tx_values[j] === '"debit"') {
-            txAmt = txAmt * -1;
-          }
-
-          // Category/envelope
-          j += 1;
-          let envelope_str = tx_values[j];
-          if (envelope_str.startsWith('"')) {
-            while (!tx_values[j].endsWith('"')) {
-              j++;
-              envelope_str += ',' + tx_values[j];
+            // Transaction type (debit or credit)
+            j += 1;
+            if (tx_values[j] && tx_values[j].replace(/\"/g, '') === 'debit') {
+              txAmt = txAmt * -1;
             }
-            envelope_str = envelope_str.replace(/\"/g, '').trim();
-          }
-          let envelopeID = '';
-          if (envelopeArr?.length) {
-            const found = envelopeArr.find((e) => e.name === envelope_str);
-            if (found) {
-              envelopeID = found.id;
+
+            // Category/envelope
+            j += 1;
+            let envelope_str = tx_values[j];
+            if (envelope_str?.startsWith('"')) {
+              while (!tx_values[j]?.endsWith('"')) {
+                j++;
+                envelope_str += ',' + tx_values[j];
+              }
+              envelope_str = envelope_str.replace(/\"/g, '').trim();
+            }
+            let envelopeID = '';
+            if (envelopeArr?.length) {
+              const found = envelopeArr.find((e) => e.name === envelope_str);
+              if (found) {
+                envelopeID = found.id;
+              } else {
+                envelopeID = await lookup_envelope(
+                  envelope_str,
+                  uncategorizedID
+                );
+                envelopeArr.push({ name: envelope_str, id: envelopeID });
+              }
             } else {
               envelopeID = await lookup_envelope(envelope_str, uncategorizedID);
               envelopeArr.push({ name: envelope_str, id: envelopeID });
             }
-          } else {
-            envelopeID = await lookup_envelope(envelope_str, uncategorizedID);
-            envelopeArr.push({ name: envelope_str, id: envelopeID });
-          }
 
-          // Account
-          j += 1;
-          let account_str = tx_values[j];
-          if (account_str.startsWith('"')) {
-            while (!tx_values[j].endsWith('"')) {
-              j++;
-              account_str += ',' + tx_values[j];
+            // Account
+            j += 1;
+            let account_str = tx_values[j];
+            if (account_str?.startsWith('"')) {
+              while (!tx_values[j]?.endsWith('"')) {
+                j++;
+                account_str += ',' + tx_values[j];
+              }
+              account_str = account_str.replace(/\"/g, '').trim();
             }
-            account_str = account_str.replace(/\"/g, '').trim();
-          }
-          let accountID = '';
-          if (accountArr?.length) {
-            const found = accountArr.find((e) => e.name === account_str);
-            if (found) {
-              accountID = found.id;
+            let accountID = '';
+            if (accountArr?.length) {
+              const found = accountArr.find((e) => e.name === account_str);
+              if (found) {
+                accountID = found.id;
+              } else {
+                accountID = await lookup_account(account_str);
+                accountArr.push({ name: account_str, id: accountID });
+              }
             } else {
               accountID = await lookup_account(account_str);
               accountArr.push({ name: account_str, id: accountID });
             }
-          } else {
-            accountID = await lookup_account(account_str);
-            accountArr.push({ name: account_str, id: accountID });
+
+            await basic_insert_transaction_node(
+              accountID,
+              txAmt,
+              txDate,
+              description,
+              '',
+              envelopeID
+            );
           }
-
-          //let refNumber = tx_values[j + 5].replace(/\"/g, '').trim();
-
-          await basic_insert_transaction_node(
-            accountID,
-            txAmt,
-            txDate,
-            description,
-            '',
-            envelopeID
-          );
           event.sender.send(channels.UPLOAD_PROGRESS, (i * 100) / totalNodes);
         }
       }
