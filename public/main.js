@@ -346,46 +346,50 @@ ipcMain.on(channels.MOVE_BALANCE, (event, [transferAmt, fromID, toID]) => {
 
 ipcMain.on(channels.GET_CAT_ENV, (event) => {
   console.log(channels.GET_CAT_ENV);
-  knex
-    .select(
-      'category.id as catID',
-      'category.category',
-      'envelope.id as envID',
-      'envelope.envelope',
-      'envelope.balance as currBalance'
-    )
-    .from('category')
-    .leftJoin('envelope', function () {
-      this.on('category.id', '=', 'envelope.categoryID');
-      this.on('envelope.isActive', 1);
-    })
-    .orderBy('category.id')
-    .then((data) => {
-      event.sender.send(channels.LIST_CAT_ENV, data);
-    })
-    .catch((err) => console.log(err));
+  if (knex) {
+    knex
+      .select(
+        'category.id as catID',
+        'category.category',
+        'envelope.id as envID',
+        'envelope.envelope',
+        'envelope.balance as currBalance'
+      )
+      .from('category')
+      .leftJoin('envelope', function () {
+        this.on('category.id', '=', 'envelope.categoryID');
+        this.on('envelope.isActive', 1);
+      })
+      .orderBy('category.id')
+      .then((data) => {
+        event.sender.send(channels.LIST_CAT_ENV, data);
+      })
+      .catch((err) => console.log(err));
+  }
 });
 
 ipcMain.on(channels.GET_BUDGET_ENV, (event) => {
   console.log(channels.GET_BUDGET_ENV);
-  knex
-    .select(
-      'category.id as catID',
-      'category.category',
-      'envelope.id as envID',
-      'envelope.envelope',
-      'envelope.balance as currBalance'
-    )
-    .from('envelope')
-    .leftJoin('category', function () {
-      this.on('category.id', '=', 'envelope.categoryID');
-    })
-    .where('envelope.isActive', 1)
-    .orderBy('category.id')
-    .then((data) => {
-      event.sender.send(channels.LIST_BUDGET_ENV, data);
-    })
-    .catch((err) => console.log(err));
+  if (knex) {
+    knex
+      .select(
+        'category.id as catID',
+        'category.category',
+        'envelope.id as envID',
+        'envelope.envelope',
+        'envelope.balance as currBalance'
+      )
+      .from('envelope')
+      .leftJoin('category', function () {
+        this.on('category.id', '=', 'envelope.categoryID');
+      })
+      .where('envelope.isActive', 1)
+      .orderBy('category.id')
+      .then((data) => {
+        event.sender.send(channels.LIST_BUDGET_ENV, data);
+      })
+      .catch((err) => console.log(err));
+  }
 });
 
 ipcMain.on(channels.GET_PREV_BUDGET, (event, find_date) => {
@@ -519,75 +523,80 @@ ipcMain.on(
       filterAmount
     );
 
-    let query = knex
-      .select(
-        'transaction.id as txID',
-        'envelope.categoryID as catID',
-        'transaction.envelopeID as envID',
-        'category.category as category',
-        'envelope.envelope as envelope',
-        'transaction.accountID as accountID',
-        'account.account as account',
-        'transaction.txDate as txDate',
-        'transaction.txAmt as txAmt',
-        'transaction.description as description',
-        'keyword.envelopeID as keywordEnvID',
-        'transaction.isDuplicate as isDuplicate',
-        'transaction.isVisible as isVisible'
-      )
-      .from('transaction')
-      .leftJoin('envelope', function () {
-        this.on('envelope.id', '=', 'transaction.envelopeID');
-      })
-      .leftJoin('category', function () {
-        this.on('category.id', '=', 'envelope.categoryID');
-      })
-      .leftJoin('account', function () {
-        this.on('account.id', '=', 'transaction.accountID');
-      })
-      .leftJoin('keyword', function () {
-        this.on('keyword.description', '=', 'transaction.description');
-      })
-      .where({ isBudget: 0 })
-      .orderBy('transaction.txDate', 'desc');
+    if (knex) {
+      let query = knex
+        .select(
+          'transaction.id as txID',
+          'envelope.categoryID as catID',
+          'transaction.envelopeID as envID',
+          'category.category as category',
+          'envelope.envelope as envelope',
+          'transaction.accountID as accountID',
+          'account.account as account',
+          'transaction.txDate as txDate',
+          'transaction.txAmt as txAmt',
+          'transaction.description as description',
+          'keyword.envelopeID as keywordEnvID',
+          'transaction.isDuplicate as isDuplicate',
+          'transaction.isVisible as isVisible'
+        )
+        .from('transaction')
+        .leftJoin('envelope', function () {
+          this.on('envelope.id', '=', 'transaction.envelopeID');
+        })
+        .leftJoin('category', function () {
+          this.on('category.id', '=', 'envelope.categoryID');
+        })
+        .leftJoin('account', function () {
+          this.on('account.id', '=', 'transaction.accountID');
+        })
+        .leftJoin('keyword', function () {
+          this.on('keyword.description', '=', 'transaction.description');
+        })
+        .where({ isBudget: 0 })
+        .orderBy('transaction.txDate', 'desc');
 
-    if (filterEnvID > -2) {
-      query = query.andWhere('transaction.envelopeID', filterEnvID);
-    } else {
-      if (filterEnvID > -3) {
-        query = query.andWhere(function () {
-          this.where('transaction.envelopeID', -1).orWhere(
-            'envelope.isActive',
-            0
-          );
-        });
+      if (filterEnvID > -2) {
+        query = query.andWhere('transaction.envelopeID', filterEnvID);
+      } else {
+        if (filterEnvID > -3) {
+          query = query.andWhere(function () {
+            this.where('transaction.envelopeID', -1).orWhere(
+              'envelope.isActive',
+              0
+            );
+          });
+        }
       }
-    }
-    if (filterAccID > -1) {
-      query = query.andWhere('transaction.accountID', filterAccID);
-    }
-    if (filterDesc?.length) {
-      filterDesc = '%' + filterDesc + '%';
-      query = query.andWhereRaw(`'transaction'.description LIKE ?`, filterDesc);
-    }
-    if (filterStartDate) {
-      query = query.andWhereRaw(`'transaction'.txDate > ?`, filterStartDate);
-    }
-    if (filterEndDate) {
-      query = query.andWhereRaw(`'transaction'.txDate < ?`, filterEndDate);
-    }
-    if (filterAmount?.length) {
-      query = query.andWhereRaw(
-        `'transaction'.txAmt = ?`,
-        parseFloat(filterAmount)
-      );
-    }
+      if (filterAccID > -1) {
+        query = query.andWhere('transaction.accountID', filterAccID);
+      }
+      if (filterDesc?.length) {
+        filterDesc = '%' + filterDesc + '%';
+        query = query.andWhereRaw(
+          `'transaction'.description LIKE ?`,
+          filterDesc
+        );
+      }
+      if (filterStartDate) {
+        query = query.andWhereRaw(`'transaction'.txDate > ?`, filterStartDate);
+      }
+      if (filterEndDate) {
+        query = query.andWhereRaw(`'transaction'.txDate < ?`, filterEndDate);
+      }
+      if (filterAmount?.length) {
+        query = query.andWhereRaw(
+          `'transaction'.txAmt = ?`,
+          parseFloat(filterAmount)
+        );
+      }
 
-    query
-      .then((data) => {
-        event.sender.send(channels.LIST_TX_DATA, data);
-      })
-      .catch((err) => console.log(err));
+      query
+        .then((data) => {
+          event.sender.send(channels.LIST_TX_DATA, data);
+        })
+        .catch((err) => console.log(err));
+    }
   }
 );
 
@@ -621,27 +630,29 @@ ipcMain.on(channels.ADD_TX, (event, data) => {
 ipcMain.on(channels.GET_ENV_LIST, (event, { includeInactive }) => {
   console.log(channels.GET_ENV_LIST);
 
-  let query = knex
-    .select(
-      'envelope.id as envID',
-      'category.category as category',
-      'envelope.envelope as envelope'
-    )
-    .from('envelope')
-    .leftJoin('category', function () {
-      this.on('category.id', '=', 'envelope.categoryID');
-    })
-    .orderBy('category.category', 'envelope.envelope');
+  if (knex) {
+    let query = knex
+      .select(
+        'envelope.id as envID',
+        'category.category as category',
+        'envelope.envelope as envelope'
+      )
+      .from('envelope')
+      .leftJoin('category', function () {
+        this.on('category.id', '=', 'envelope.categoryID');
+      })
+      .orderBy('category.category', 'envelope.envelope');
 
-  if (includeInactive === 0) {
-    query.where('envelope.isActive', 1);
+    if (includeInactive === 0) {
+      query.where('envelope.isActive', 1);
+    }
+
+    query
+      .then((data) => {
+        event.sender.send(channels.LIST_ENV_LIST, data);
+      })
+      .catch((err) => console.log(err));
   }
-
-  query
-    .then((data) => {
-      event.sender.send(channels.LIST_ENV_LIST, data);
-    })
-    .catch((err) => console.log(err));
 });
 
 ipcMain.on(channels.UPDATE_TX_ENV, (event, [txID, envID]) => {
@@ -1218,37 +1229,41 @@ async function insert_transaction_node(
 
 ipcMain.on(channels.GET_KEYWORDS, (event) => {
   console.log(channels.GET_KEYWORDS);
-  knex
-    .select(
-      'keyword.id',
-      'keyword.envelopeID',
-      'description',
-      'category',
-      'envelope'
-    )
-    .from('keyword')
-    .leftJoin('envelope', function () {
-      this.on('keyword.envelopeID', '=', 'envelope.id');
-    })
-    .leftJoin('category', function () {
-      this.on('category.id', '=', 'envelope.categoryID');
-    })
-    .then((data) => {
-      event.sender.send(channels.LIST_KEYWORDS, data);
-    })
-    .catch((err) => console.log(err));
+  if (knex) {
+    knex
+      .select(
+        'keyword.id',
+        'keyword.envelopeID',
+        'description',
+        'category',
+        'envelope'
+      )
+      .from('keyword')
+      .leftJoin('envelope', function () {
+        this.on('keyword.envelopeID', '=', 'envelope.id');
+      })
+      .leftJoin('category', function () {
+        this.on('category.id', '=', 'envelope.categoryID');
+      })
+      .then((data) => {
+        event.sender.send(channels.LIST_KEYWORDS, data);
+      })
+      .catch((err) => console.log(err));
+  }
 });
 
 ipcMain.on(channels.GET_ACCOUNTS, (event) => {
   console.log(channels.GET_ACCOUNTS);
-  knex
-    .select('id', 'refNumber', 'account')
-    .from('account')
-    .orderBy('id')
-    .then((data) => {
-      event.sender.send(channels.LIST_ACCOUNTS, data);
-    })
-    .catch((err) => console.log(err));
+  if (knex) {
+    knex
+      .select('id', 'refNumber', 'account')
+      .from('account')
+      .orderBy('id')
+      .then((data) => {
+        event.sender.send(channels.LIST_ACCOUNTS, data);
+      })
+      .catch((err) => console.log(err));
+  }
 });
 
 ipcMain.on(channels.UPDATE_KEYWORD_ENV, (event, { id, new_value }) => {
