@@ -1465,8 +1465,30 @@ ipcMain.on(channels.GET_ENV_CHART_DATA, (event, filterEnvID) => {
     .groupBy('month', 'isBudget')
     .orderBy('month');
 
-  if (filterEnvID > -2) {
-    query.where('envelopeID', filterEnvID);
+  if (parseInt(filterEnvID) > -2) {
+    query = query.where('envelopeID', filterEnvID);
+  }
+
+  if (parseInt(filterEnvID) === -3) {
+    query = query
+      .leftJoin('envelope', function () {
+        this.on('envelope.id', '=', 'transaction.envelopeID');
+      })
+      .leftJoin('category', function () {
+        this.on('category.id', '=', 'envelope.categoryID');
+      })
+      .andWhere({ category: 'Income' });
+  }
+
+  if (parseInt(filterEnvID) === -2) {
+    query = query
+      .leftJoin('envelope', function () {
+        this.on('envelope.id', '=', 'transaction.envelopeID');
+      })
+      .leftJoin('category', function () {
+        this.on('category.id', '=', 'envelope.categoryID');
+      })
+      .andWhereNot({ category: 'Income' });
   }
 
   query

@@ -9,9 +9,6 @@ import { useParams } from 'react-router';
 /*
   TODO:
   - pie chart?
-  - Add filter options:
-      - show all income
-      - show all spending
 */
 
 export const Charts: React.FC = () => {
@@ -58,8 +55,16 @@ export const Charts: React.FC = () => {
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
       setFilterEnvList([{
-        envID: -2,
+        envID: -4,
         category: "All",
+        envelope: "", 
+      },{
+        envID: -3,
+        category: "All Income",
+        envelope: "", 
+      },{
+        envID: -2,
+        category: "All Spending",
         envelope: "", 
       },{
         envID: -1,
@@ -102,14 +107,14 @@ export const Charts: React.FC = () => {
         if (!obj.isBudget) {
           // Let's show spending as positive, it's easier to read in a chart,
           // and also compare against the budget.
-          if (!filterEnvelopeName.startsWith("Income")) {
+          if (!filterEnvelopeName.includes("Income")) {
             obj.totalAmt = -1 * obj.totalAmt;
           }
           totalValue += obj.totalAmt;
         } else {
           // Let's show income budget values as positive, for the same
           // reason as above.
-          if (filterEnvelopeName.startsWith("Income")) {
+          if (filterEnvelopeName.includes("Income")) {
             obj.totalAmt = -1 * obj.totalAmt;
           }
         }
