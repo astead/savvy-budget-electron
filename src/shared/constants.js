@@ -46,6 +46,7 @@ module.exports = {
 
     IMPORT_OFX: 'import_ofx',
     IMPORT_CSV: 'import_csv',
+    UPLOAD_PROGRESS: 'upload_progress',
 
     GET_KEYWORDS: 'get_keywords',
     LIST_KEYWORDS: 'list_keywords',

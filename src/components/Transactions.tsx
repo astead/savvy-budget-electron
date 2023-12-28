@@ -24,6 +24,12 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 
+import CircularProgress, {
+  CircularProgressProps,
+} from '@mui/material/CircularProgress';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+
 /*
  TODO:
   - add split transactions
@@ -104,6 +110,8 @@ export const Transactions: React.FC = () => {
   
   // Import filename
   const [filename, setFilename] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = React.useState(0);
   
   // Variables for data table paging
   const [pagingCurPage, setPagingCurPage] = useState(1);
@@ -148,6 +156,35 @@ export const Transactions: React.FC = () => {
   const handleNumPerPageChange = (event: SelectChangeEvent) => {
     setPagingPerPage(parseInt(event.target.value));
   };
+
+  function CircularProgressWithLabel(
+    props: CircularProgressProps & { value: number },
+  ) {
+    return (
+      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+        <CircularProgress variant="determinate" {...props} />
+        <Box
+          sx={{
+            top: 0,
+            left: 0,
+            bottom: 0,
+            right: 0,
+            position: 'absolute',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Typography
+            variant="caption"
+            component="div"
+            color="text.secondary"
+          >{`${Math.round(props.value)}%`}</Typography>
+        </Box>
+      </Box>
+    );
+  }
+  
 
   const load_transactions = () => {
     // Signal we want to get data
@@ -336,8 +373,22 @@ export const Transactions: React.FC = () => {
               account_string = "Mint";
             }
           }
-
+          setUploading(true);
           ipcRenderer.send(channels.IMPORT_CSV, [account_string, ofxString]);
+          
+          // Listen for progress updates
+          ipcRenderer.on(channels.UPLOAD_PROGRESS, (data) => {
+            setProgress(data);
+            if (data >= 100) {
+              ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
+              setUploading(false);
+            }
+          });
+          
+          // Clean the listener after the component is dismounted
+          return () => {
+            ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
+          };
         }
         if (filename.toLowerCase().endsWith("txt")) {
           ipcRenderer.send(channels.IMPORT_CSV, ["mint tab", ofxString]);
@@ -464,6 +515,7 @@ export const Transactions: React.FC = () => {
               onClick={handleImport}>
                 <FontAwesomeIcon icon={faFileImport} />
             </button>
+            {uploading && <CircularProgressWithLabel value={progress} />}
           </AccordionDetails>
           </Accordion>
         {filterEnvListLoaded && filterAccListLoaded &&

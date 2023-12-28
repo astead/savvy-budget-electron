@@ -999,6 +999,7 @@ ipcMain.on(channels.IMPORT_OFX, async (event, ofxString) => {
 
 ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
   let accountID = '';
+  let totalNodes = 0;
 
   // Find the financial institution ID
   console.log('Account string: ', account_string);
@@ -1007,6 +1008,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
 
   if (account_string.startsWith('sofi-')) {
     accountID = await lookup_account(account_string);
+    totalNodes = nodes.length;
     for (const [i, tx] of nodes.entries()) {
       if (i > 0) {
         const tx_values = tx.split(',');
@@ -1018,11 +1020,13 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
           tx_values[1],
           ''
         );
+        event.sender.send(channels.UPLOAD_PROGRESS, (i * 100) / totalNodes);
       }
     }
   }
   if (account_string === 'Venmo') {
     accountID = await lookup_account(account_string);
+    totalNodes = nodes.length;
     for (const [i, tx] of nodes.entries()) {
       if (i > 3 && tx[0] === ',') {
         const tx_values = tx.split(',');
@@ -1058,12 +1062,14 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
             description,
             refNumber
           );
+          event.sender.send(channels.UPLOAD_PROGRESS, (i * 100) / totalNodes);
         }
       }
     }
   }
   if (account_string === 'PayPal') {
     accountID = await lookup_account(account_string);
+    totalNodes = nodes.length;
     for (const [i, tx] of nodes.entries()) {
       if (i > 0) {
         const tx_values = tx.split(',');
@@ -1096,6 +1102,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
             description,
             ''
           );
+          event.sender.send(channels.UPLOAD_PROGRESS, (i * 100) / totalNodes);
         }
       }
     }
@@ -1104,8 +1111,8 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
     const accountArr = [];
     const envelopeArr = [];
     const uncategorizedID = await lookup_uncategorized();
-    console.log('uncategorized category ID: ', uncategorizedID);
 
+    totalNodes = nodes.length;
     for (const [i, tx] of nodes.entries()) {
       if (tx?.length) {
         const tx_values = tx.split(',');
@@ -1212,6 +1219,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
             '',
             envelopeID
           );
+          event.sender.send(channels.UPLOAD_PROGRESS, (i * 100) / totalNodes);
         }
       }
     }
