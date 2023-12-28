@@ -368,22 +368,22 @@ export const Envelopes: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_BUDGET_ENV, (arg) => {
-      
-      const defaultValues = {
-        prevBudget: 0,
-        prevActual: 0,
-        currBalance: 0,
-        currBudget: 0,
-        monthlyAvg: 0,
-        currActual: 0,
-      };
+      if (arg?.length) {
+        const defaultValues = {
+          prevBudget: 0,
+          prevActual: 0,
+          currBalance: 0,
+          currBudget: 0,
+          monthlyAvg: 0,
+          currActual: 0,
+        };
 
-      for (let i=0; i < arg.length; i++) {
-        arg[i] = {...arg[i], ...defaultValues} as BudgetNodeData;
-      };
-      const sortedData = Object.values(arg).sort(compare) as BudgetNodeData[];
-      setBudgetData(sortedData as BudgetNodeData[]);
-            
+        for (let i=0; i < arg.length; i++) {
+          arg[i] = {...arg[i], ...defaultValues} as BudgetNodeData;
+        };
+        const sortedData = Object.values(arg).sort(compare) as BudgetNodeData[];
+        setBudgetData(sortedData as BudgetNodeData[]);
+      }
       ipcRenderer.removeAllListeners(channels.LIST_BUDGET_ENV);
     });
 
@@ -408,7 +408,6 @@ export const Envelopes: React.FC = () => {
         setData({nodes:budgetData});
       }
     } else {
-      console.log("Calling in else when budgetData changes");
       load_initialEnvelopes();
     }
   }, [budgetData]);
@@ -490,7 +489,6 @@ export const Envelopes: React.FC = () => {
     setGotMonthData(true);
 
     load_envelope_list();
-    console.log("Calling in []");
     load_initialEnvelopes();
   }, []);
 
