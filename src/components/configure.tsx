@@ -689,26 +689,31 @@ export const Configure = () => {
           />
         </>
       }
-      <span>Database: {databaseFile}</span><br/>
+      {databaseFile &&
+        <span>Database: {databaseFile}</span>
+      }
       {databaseFile && !databaseExists &&
         <>
+          <br/>
           <span>The database file does not exist.</span>
         </>
       }
       {databaseFile && databaseExists && !databaseVersion &&
         <>
+          <br/>
           <span>Database appears to be corrupted</span><br/>
         </>
       }
       {databaseFile && databaseExists && databaseVersion &&
         <>
+          <br/>
           <span>Database version: {databaseVersion}</span><br/>
         </>
       }
       {databaseFile && 
         <>
           <br/><br/>
-          <span>Change database file:</span>
+          <span>Select a different database file:</span>
           <input
               type="file"
               name="file"
@@ -721,6 +726,7 @@ export const Configure = () => {
               }}          
           />
           <br/><br/>
+          <span>Create a new database file:</span>
           <button 
             onClick={() => {
               const ipcRenderer = (window as any).ipcRenderer;
@@ -741,7 +747,7 @@ export const Configure = () => {
                 ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
               };
             }}>
-              Create a new Database
+              Create New
           </button>
         </>
       }
