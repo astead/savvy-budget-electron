@@ -9,6 +9,7 @@ import { useParams } from 'react-router';
 /*
   TODO:
   - pie chart?
+  - Add time frame selection (1yr, 2yr, 3yr, 4yr, 5yr, all?)
 */
 
 export const Charts: React.FC = () => {

@@ -11,6 +11,7 @@ const { Knex } = require('knex');
 /*
   TODO:
   - consolidate redundant work?
+  - use transactions for anything requiring multiple DB calls.
 */
 
 function createWindow() {

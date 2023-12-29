@@ -24,6 +24,7 @@ import Box from '@mui/material/Box';
   TODO:
   - Show keyword conflicts? 
   - allow DB file to be on Google Drive?
+    Not sure we if need to do anything special here if we have a local copy of the file.
   - Show more DB data? transaction dates, # transactions, # accounts?
 */
 export const Configure = () => {

@@ -38,6 +38,7 @@ import Box from '@mui/material/Box';
   - import PLAID
   - somehow highlight if we could set a keyword
   - select multiple to delete?
+  - Don't think balance is getting modified on import.
 */
 
 export const Transactions: React.FC = () => {
