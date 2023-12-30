@@ -35,10 +35,8 @@ import Box from '@mui/material/Box';
   - modify description?
   - popup window to add notes, tags, etc and edit item
     https://mui.com/material-ui/react-modal/
-  - import PLAID
   - somehow highlight if we could set a keyword
   - select multiple to delete?
-  - Don't think balance is getting modified on import.
 */
 
 export const Transactions: React.FC = () => {
