@@ -1070,7 +1070,7 @@ export const Configure = () => {
               { PLAIDAccounts.map((acc, index, myArray) => (
                 <React.Fragment key={index}>
                   { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
-                    <React.Fragment key={index}>
+                    <React.Fragment>
                     <tr className="BudgetTableGroupHeaderRow">
                       <td className="BudgetTableCell">{acc.institution}</td>
                       <td className="BudgetTableCell">{acc.lastTx && Moment(acc.lastTx).format('M/D/YYYY')}</td>
