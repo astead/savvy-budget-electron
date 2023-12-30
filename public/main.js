@@ -1899,56 +1899,62 @@ ipcMain.on(channels.DEL_ACCOUNT, (event, { id, value }) => {
     .catch((err) => console.log(err));
 });
 
-ipcMain.on(channels.GET_ENV_CHART_DATA, (event, filterEnvID) => {
-  console.log(channels.GET_ENV_CHART_DATA, filterEnvID);
+ipcMain.on(
+  channels.GET_ENV_CHART_DATA,
+  (event, { filterEnvID, filterTimeFrameID }) => {
+    console.log(channels.GET_ENV_CHART_DATA, filterEnvID);
 
-  const find_date = Moment(new Date()).format('YYYY-MM-DD');
+    const find_date = Moment(new Date()).format('YYYY-MM-DD');
 
-  let query = knex('transaction')
-    .select({
-      month: knex.raw(`strftime("%Y-%m", txDate)`),
-      isBudget: 'isBudget',
-    })
-    .sum({ totalAmt: 'txAmt' })
-    .where({ isDuplicate: 0 })
-    .andWhere({ isVisible: 1 })
-    .andWhereRaw(`julianday(?) - julianday(txDate) < 365`, [find_date])
-    .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
-    .groupBy('month', 'isBudget')
-    .orderBy('month');
+    let query = knex('transaction')
+      .select({
+        month: knex.raw(`strftime("%Y-%m", txDate)`),
+        isBudget: 'isBudget',
+      })
+      .sum({ totalAmt: 'txAmt' })
+      .where({ isDuplicate: 0 })
+      .andWhere({ isVisible: 1 })
+      .andWhereRaw(`julianday(?) - julianday(txDate) < ?`, [
+        find_date,
+        365 * filterTimeFrameID,
+      ])
+      .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
+      .groupBy('month', 'isBudget')
+      .orderBy('month');
 
-  if (parseInt(filterEnvID) > -2) {
-    query = query.where('envelopeID', filterEnvID);
+    if (parseInt(filterEnvID) > -2) {
+      query = query.where('envelopeID', filterEnvID);
+    }
+
+    if (parseInt(filterEnvID) === -3) {
+      query = query
+        .leftJoin('envelope', function () {
+          this.on('envelope.id', '=', 'transaction.envelopeID');
+        })
+        .leftJoin('category', function () {
+          this.on('category.id', '=', 'envelope.categoryID');
+        })
+        .andWhere({ category: 'Income' });
+    }
+
+    if (parseInt(filterEnvID) === -2) {
+      query = query
+        .leftJoin('envelope', function () {
+          this.on('envelope.id', '=', 'transaction.envelopeID');
+        })
+        .leftJoin('category', function () {
+          this.on('category.id', '=', 'envelope.categoryID');
+        })
+        .andWhereNot({ category: 'Income' });
+    }
+
+    query
+      .then((data) => {
+        event.sender.send(channels.LIST_ENV_CHART_DATA, data);
+      })
+      .catch((err) => console.log(err));
   }
-
-  if (parseInt(filterEnvID) === -3) {
-    query = query
-      .leftJoin('envelope', function () {
-        this.on('envelope.id', '=', 'transaction.envelopeID');
-      })
-      .leftJoin('category', function () {
-        this.on('category.id', '=', 'envelope.categoryID');
-      })
-      .andWhere({ category: 'Income' });
-  }
-
-  if (parseInt(filterEnvID) === -2) {
-    query = query
-      .leftJoin('envelope', function () {
-        this.on('envelope.id', '=', 'transaction.envelopeID');
-      })
-      .leftJoin('category', function () {
-        this.on('category.id', '=', 'envelope.categoryID');
-      })
-      .andWhereNot({ category: 'Income' });
-  }
-
-  query
-    .then((data) => {
-      event.sender.send(channels.LIST_ENV_CHART_DATA, data);
-    })
-    .catch((err) => console.log(err));
-});
+);
 
 ipcMain.on(channels.GET_DB_VER, (event) => {
   console.log(channels.GET_DB_VER);

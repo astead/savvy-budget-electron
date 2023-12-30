@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
+import { TimeFrameDropDown } from '../helpers/TimeFrameDropDown.tsx';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { useParams } from 'react-router';
 
@@ -9,7 +10,6 @@ import { useParams } from 'react-router';
 /*
   TODO:
   - pie chart?
-  - Add time frame selection (1yr, 2yr, 3yr, 4yr, 5yr, all?)
 */
 
 export const Charts: React.FC = () => {
@@ -26,6 +26,10 @@ export const Charts: React.FC = () => {
     [key: string]: string | number | Date;
   }
 
+  const [filterTimeFrame, setFilterTimeFrame] = useState<any[]>([]);
+  const [filterTimeFrameLoaded, setFilterTimeFrameLoaded] = useState(false);
+  const [filterTimeFrameID, setFilterTimeFrameID] = useState(1);
+
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
   const [filterEnvID, setFilterEnvID] = useState(envID);
@@ -40,6 +44,39 @@ export const Charts: React.FC = () => {
     setFilterEnvID(new_value);
     setFilterEnvelopeName(new_text);
   };
+
+  const handleFilterTimeFrameChange = ({id, new_value}) => {
+    setHaveChartData(false);
+    setFilterTimeFrameID(new_value);
+  };
+
+  const load_filter_timeframe = () => {
+    setFilterTimeFrame([
+      {
+        id: 1,
+        text: '1 Year', 
+      },{
+        id: 2,
+        text: '2 Years', 
+      },{
+        id: 3,
+        text: '3 Years', 
+      },{
+        id: 4,
+        text: '4 Years', 
+      },{
+        id: 5,
+        text: '5 Years', 
+      },{
+        id: 10,
+        text: '10 Years', 
+      },{
+        id: 100,
+        text: 'All', 
+      }]);
+    setFilterTimeFrameLoaded(true);
+    setFilterTimeFrameID(1);
+  }
 
   const load_envelope_list = () => {
     
@@ -76,7 +113,7 @@ export const Charts: React.FC = () => {
   const load_chart = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_ENV_CHART_DATA, filterEnvID );
+    ipcRenderer.send(channels.GET_ENV_CHART_DATA, {filterEnvID, filterTimeFrameID} );
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_CHART_DATA, (data) => {
@@ -156,10 +193,11 @@ export const Charts: React.FC = () => {
     if (filterEnvID && filterEnvelopeName?.length) {
       load_chart();
     }
-  }, [filterEnvID, filterEnvelopeName]);
+  }, [filterEnvID, filterEnvelopeName, filterTimeFrameID]);
 
   useEffect(() => {
     load_envelope_list();
+    load_filter_timeframe();
   }, []);
 
   return (
@@ -176,6 +214,18 @@ export const Charts: React.FC = () => {
               envID={filterEnvID}
               data={filterEnvList}
               changeCallback={handleFilterEnvChange}
+              className="envelopeDropDown"
+            />
+          </div>
+        }
+        {filterTimeFrameLoaded &&
+          <div className="chart-filter-container">
+            <span>Time: </span>
+            <TimeFrameDropDown 
+              id={1}
+              time_id={filterTimeFrameID}
+              data={filterTimeFrame}
+              changeCallback={handleFilterTimeFrameChange}
               className="envelopeDropDown"
             />
           </div>
