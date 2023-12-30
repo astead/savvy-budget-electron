@@ -571,12 +571,6 @@ ipcMain.on(channels.DEL_ENVELOPE, (event, id) => {
     .catch((err) => {
       console.log('Error: ' + err);
     });
-
-  // TODO: What to do with orphaned transactions
-  // Maybe set them to -1?
-  // Or don't show inactive envelopes in budget AND
-  //    have a way to show those at the end of the budget
-  //    and allow setting to those envelopes in other stuff.
 });
 
 ipcMain.on(channels.REN_CATEGORY, (event, { id, name }) => {
