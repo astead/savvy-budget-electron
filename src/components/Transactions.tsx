@@ -183,6 +183,7 @@ export const Transactions: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
+      
       setTxData(arg as TransactionNodeData[]);
       const numtx = arg?.length;
       if (numtx > 0) {

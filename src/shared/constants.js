@@ -68,5 +68,16 @@ module.exports = {
     LIST_DB_VER: 'list_db_ver',
     CREATE_DB: 'create_db',
     LIST_NEW_DB_FILENAME: 'list_new_db_filename',
+
+    PLAID_GET_KEYS: 'plaid_get_keys',
+    PLAID_LIST_KEYS: 'plaid_list_keys',
+    PLAID_SET_KEYS: 'plaid_set_keys',
+    PLAID_GET_TOKEN: 'plaid_get_token',
+    PLAID_LIST_TOKEN: 'plaid_list_token',
+    PLAID_SET_ACCESS_TOKEN: 'plaid_set_access_token',
+    PLAID_GET_TRANSACTIONS: 'plaid_get_transactions',
+    PLAID_LIST_TRANSACTIONS: 'plaid_list_transactions',
+    PLAID_GET_ACCOUNTS: 'plaid_get_accounts',
+    PLAID_LIST_ACCOUNTS: 'plaid_list_accounts',
   },
 };

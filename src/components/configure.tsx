@@ -3,9 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faTrash, faChevronUp, faChevronDown, faReply, faReplyAll } from "@fortawesome/free-solid-svg-icons"
+import { faTrash, faChevronUp, faChevronDown, faReply, faReplyAll, faEyeSlash } from "@fortawesome/free-solid-svg-icons"
 import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
+import Moment from 'moment';
 import NewCategory from '../helpers/NewCategory.tsx';
 import EditableCategory from '../helpers/EditableCategory.tsx';
 import EditableEnvelope from '../helpers/EditableEnvelope.tsx';
@@ -15,11 +16,15 @@ import NewEnvelope from '../helpers/NewEnvelope.tsx';
 import { channels } from '../shared/constants.js';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 
-
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+
+import { usePlaidLink, PlaidLinkOnSuccess, PlaidLinkError } from 'react-plaid-link';
+import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgress';
+
+
 /*
   TODO:
   - Show keyword conflicts? 
@@ -215,6 +220,21 @@ export const Configure = () => {
     }
     return return_value;
   }
+  
+  function LinearProgressWithLabel(props: LinearProgressProps & { value: number }) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ width: '100%', mr: 1 }}>
+          <LinearProgress variant="determinate" {...props} />
+        </Box>
+        <Box sx={{ minWidth: 35 }}>
+          <Typography variant="body2" color="text.secondary">{`${Math.round(
+            props.value,
+          )}%`}</Typography>
+        </Box>
+      </Box>
+    );
+  }  
 
   const set_keyword_sort = (col, dir) => {
     setSortKeyword(col + dir);
@@ -252,10 +272,10 @@ export const Configure = () => {
     ipcRenderer.send(channels.SET_ALL_KEYWORD, {id, force});
   };
 
-  const handleAccountDelete = (id) => {
+  const handleAccountDelete = (id, isActive) => {
     // Request we delete the account in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.DEL_ACCOUNT, {id});
+    ipcRenderer.send(channels.DEL_ACCOUNT, {id, value: (isActive===0?1:0)});
   };
 
   const handleEnvelopeChange = ({id, new_value}) => {
@@ -634,6 +654,7 @@ export const Configure = () => {
           <tr className="TransactionTableHeaderRow">
             <th className="TransactionTableHeaderCell">{'Account'}</th>
             <th className="TransactionTableHeaderCell">{'Name'}</th>
+            <th className="TransactionTableHeaderCell">{'Last Transaction'}</th>
             <th className="TransactionTableHeaderCell">{' '}</th>
           </tr>
         </thead>
@@ -641,8 +662,8 @@ export const Configure = () => {
         <tbody className="TransactionTableBody">
           {
             accountData.map((acc, index) => {
-              const { id, refNumber, account } = acc;
-            
+              const { id, refNumber, account, isActive, lastTx } = acc;
+              
                 return (
               
                   <tr key={index} className="TransactionTableRow">
@@ -653,12 +674,13 @@ export const Configure = () => {
                         initialID={id.toString()}
                         initialName={account} />
                     </td>
+                    <td className="TransactionTableCell">{lastTx && Moment(lastTx).format('M/D/YYYY')}</td>
                     <td className="TransactionTableCell">
-                    <button 
-                      className='trash'
-                      onClick={() => handleAccountDelete(id)}>
-                        <FontAwesomeIcon icon={faTrash} />
-                    </button>
+                    <div 
+                      className={"ToggleVisibility" + (isActive?"-no":"-yes")}
+                      onClick={() => handleAccountDelete(id, isActive)}>
+                        <FontAwesomeIcon icon={faEyeSlash} />
+                    </div>
                     </td>
                   </tr>
 
@@ -755,6 +777,184 @@ export const Configure = () => {
     </>
   );
 
+  interface PLAIDAccount {
+    id: number; 
+    institution: string;
+    account_id: string; 
+    mask: string;
+    account_name: string;
+    account_subtype: string;
+    account_type: string;
+    verification_status: string;
+    item_id: string; 
+    access_token: string;
+    cursor: number;
+    lastTx: number;
+  }
+  
+  const [PLAIDClient, setPLAIDClient] = useState('');
+  const [PLAIDClientTemp, setPLAIDClientTemp] = useState('');
+  const [PLAIDSecret, setPLAIDSecret] = useState('');
+  const [PLAIDSecretTemp, setPLAIDSecretTemp] = useState('');
+  const [PLAIDEnvironment, setPLAIDEnvironment] = useState('');
+  const [PLAIDEnvironmentTemp, setPLAIDEnvironmentTemp] = useState('');
+
+  const [token, setToken] = useState<string | null>(null);
+  const [link_Error, setLink_Error] = useState<string | null>(null);
+  const [PLAIDAccounts, setPLAIDAccounts] = useState<PLAIDAccount[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = React.useState(0);
+  
+  const getPLAIDInfo = () => {
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.PLAID_GET_KEYS);
+
+    // Receive the data
+    ipcRenderer.on(channels.PLAID_LIST_KEYS, (data) => {
+      if (data?.length) {
+        setPLAIDClient(data[0].client_id);
+        setPLAIDClientTemp(data[0].client_id);
+        setPLAIDSecret(data[0].secret);
+        setPLAIDSecretTemp(data[0].secret);
+        setPLAIDEnvironment(data[0].environment);
+        setPLAIDEnvironmentTemp(data[0].environment);
+        
+        if (!token) {
+          createLinkToken();
+        }
+      }
+      ipcRenderer.removeAllListeners(channels.PLAID_LIST_KEYS);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.PLAID_LIST_KEYS);
+    };
+  };
+
+  const getAccountList = () => {
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.PLAID_GET_ACCOUNTS);
+
+    // Receive the data
+    ipcRenderer.on(channels.PLAID_LIST_ACCOUNTS, (data) => {
+      setPLAIDAccounts(data as PLAIDAccount[]);
+      ipcRenderer.removeAllListeners(channels.PLAID_LIST_ACCOUNTS);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.PLAID_LIST_ACCOUNTS);
+    };
+  };
+
+  const createLinkToken = () => {
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.PLAID_GET_TOKEN);
+
+    // Receive the data
+    ipcRenderer.on(channels.PLAID_LIST_TOKEN, (data) => {
+      if (data.link_token?.length) {
+        setToken(data.link_token);
+        setLink_Error(null);
+      }
+      if (data.error_message?.length) {
+        setLink_Error("Error: " + data.error_message);
+      }
+
+      ipcRenderer.removeAllListeners(channels.PLAID_LIST_TOKEN);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.PLAID_LIST_TOKEN);
+    };
+  };
+
+  const get_transactions = (acc : PLAIDAccount) => {
+      console.log("Calling into main to get transaction list. ");
+      setUploading(true);
+      
+      // Get transactions
+      const ipcRenderer = (window as any).ipcRenderer;
+      ipcRenderer.send(channels.PLAID_GET_TRANSACTIONS, 
+        { access_token: acc.access_token,
+          cursor: acc.cursor,
+        }
+      );
+
+      // Listen for progress updates
+      ipcRenderer.on(channels.UPLOAD_PROGRESS, (data) => {
+        setProgress(data);
+        if (data >= 100) {
+          ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
+          setUploading(false);
+        }
+      });
+      
+      // Clean the listener after the component is dismounted
+      return () => {
+        ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
+      };
+  };
+
+
+
+  const onSuccess = React.useCallback((public_token, metadata) => {
+    //console.log("Success linking: ", public_token, metadata);
+    console.log("Calling into main to get access token. ");
+    
+    console.log("public token: ", public_token);
+    console.log("metadata: ", metadata);
+    
+    metadata.accounts.forEach((account, index) => {
+      console.log("Account: ", metadata.institution.name, " : ", account.name);
+    });
+
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.PLAID_SET_ACCESS_TOKEN, {public_token, metadata});
+  }, []);
+
+  const config: Parameters<typeof usePlaidLink>[0] = {
+    token: token!,
+    onSuccess,
+  };
+  
+  const { open, ready } = usePlaidLink(config);
+
+  
+
+  const handlePLAIDClientChange = () => {
+    console.log("setting client to: ", PLAIDClientTemp);
+    setPLAIDClient(PLAIDClientTemp);
+    update_PLAID_keys();
+  };
+  const handlePLAIDSecretChange = () => {
+    console.log("setting secret to: ", PLAIDSecretTemp);
+    setPLAIDSecret(PLAIDSecretTemp);
+    update_PLAID_keys();
+  };
+  const handlePLAIDEnvironmentChange = () => {
+    console.log("setting env to: ", PLAIDEnvironmentTemp);
+    setPLAIDEnvironment(PLAIDEnvironmentTemp);
+    update_PLAID_keys();
+  };
+
+  const update_PLAID_keys = () => {
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.PLAID_SET_KEYS, 
+      { client_id: PLAIDClientTemp, secret: PLAIDSecretTemp, environment: PLAIDEnvironmentTemp }
+    );
+    createLinkToken();
+  };
+
+  useEffect(() => {
+    getPLAIDInfo();
+    getAccountList();
+  }, []);
+
+  
+
 
   return (
     <div className="App">
@@ -781,6 +981,7 @@ export const Configure = () => {
               <Tab label="Key Words" {...a11yProps(1)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
               <Tab label="Accounts" {...a11yProps(2)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
               <Tab label="Database" {...a11yProps(3)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
+              <Tab label="PLAID" {...a11yProps(4)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
             </Tabs>
           </Box>
           <CustomTabPanel tabValue={tabValue} index={0}>
@@ -794,6 +995,113 @@ export const Configure = () => {
           </CustomTabPanel>
           <CustomTabPanel tabValue={tabValue} index={3}>
             {database_content}
+          </CustomTabPanel>
+          <CustomTabPanel tabValue={tabValue} index={4}>
+          <>
+          <table><tbody>
+            <tr>
+              <td className="txFilterLabelCell">
+                Client ID:
+              </td>
+              <td className="txFilterCell">
+                <input
+                  name="PLAIDClient"
+                  defaultValue={PLAIDClientTemp}
+                  onChange={(e) => {
+                    setPLAIDClientTemp(e.target.value);
+                  }}
+                  onBlur={handlePLAIDClientChange}
+                  className="filterDescription"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td className="txFilterLabelCell">
+                Secret:
+              </td>
+              <td className="txFilterCell">
+                <input
+                  name="PLAIDSecret"
+                  defaultValue={PLAIDSecretTemp}
+                  onChange={(e) => {
+                    setPLAIDSecretTemp(e.target.value);
+                  }}
+                  onBlur={handlePLAIDSecretChange}
+                  className="filterDescription"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td className="txFilterLabelCell">
+                Environment:
+              </td>
+              <td className="txFilterCell">
+                <input
+                  name="PLAIDEnvironment"
+                  defaultValue={PLAIDEnvironmentTemp}
+                  onChange={(e) => {
+                    setPLAIDEnvironmentTemp(e.target.value);
+                  }}
+                  onBlur={handlePLAIDEnvironmentChange}
+                  className="filterDescription"
+                />
+              </td>
+            </tr>
+          </tbody></table>
+          <br/>
+          {link_Error && 
+            <div><br/>{link_Error}</div>
+          }
+          <div>
+            <button onClick={() => open()} disabled={!ready}>
+              Link New Account
+            </button>
+          </div>
+          <div>
+            <table className="BudgetTable" cellSpacing={1} cellPadding={1}>
+              <thead>
+                <tr className="TransactionTableHeaderRow">
+                  <th className="BudgetTableHeaderCell">{'Bank'}</th>
+                  <th className="BudgetTableHeaderCell">{'Last Transaction'}</th>
+                  <th className="BudgetTableHeaderCell">{' '}</th>
+                </tr>
+              </thead>
+              <tbody>
+              { PLAIDAccounts.map((acc, index, myArray) => (
+                <React.Fragment key={index}>
+                  { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
+                    <React.Fragment key={index}>
+                    <tr className="BudgetTableGroupHeaderRow">
+                      <td className="BudgetTableCell">{acc.institution}</td>
+                      <td className="BudgetTableCell">{acc.lastTx && Moment(acc.lastTx).format('M/D/YYYY')}</td>
+                      <td className="BudgetTableCell">
+                        <button 
+                          onClick={() => {
+                            get_transactions(acc)
+                          }} 
+                          disabled={!ready}>
+                          Get Transactions
+                        </button>
+                      </td>
+                    </tr>
+                    
+                    {uploading && 
+                      <tr><td colSpan={3}>
+                      <Box sx={{ width: '100%' }}>
+                        <LinearProgressWithLabel value={progress} />
+                      </Box>
+                      </td></tr>
+                    }
+                    </React.Fragment>
+                  )}
+                  <tr key={index}>
+                    <td colSpan={3} align='left'>{acc.account_name + '-' + acc.mask}</td>
+                  </tr>
+                </React.Fragment>
+              ))}
+            </tbody></table>
+          </div>
+          </>
           </CustomTabPanel>
       </div>
     </div>

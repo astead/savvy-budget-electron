@@ -84,6 +84,412 @@ process.on('uncaughtException', (error) => {
   }
 });
 
+const {
+  Configuration,
+  PlaidApi,
+  Products,
+  PlaidEnvironments,
+} = require('plaid');
+
+const APP_PORT = process.env.APP_PORT || 8000;
+let PLAID_CLIENT_ID = '';
+let PLAID_SECRET = '';
+let PLAID_ENV = '';
+
+// PLAID_PRODUCTS is a comma-separated list of products to use when initializing
+// Link. Note that this list must contain 'assets' in order for the app to be
+// able to create and retrieve asset reports.
+const PLAID_PRODUCTS = Products.Auth.split(',');
+
+// PLAID_COUNTRY_CODES is a comma-separated list of countries for which users
+// will be able to select institutions from.
+const PLAID_COUNTRY_CODES = (process.env.PLAID_COUNTRY_CODES || 'US').split(
+  ','
+);
+
+// Parameters used for the OAuth redirect Link flow.
+//
+// Set PLAID_REDIRECT_URI to 'http://localhost:3000'
+// The OAuth redirect flow requires an endpoint on the developer's website
+// that the bank website should redirect to. You will need to configure
+// this redirect URI for your client ID through the Plaid developer dashboard
+// at https://dashboard.plaid.com/team/api.
+const PLAID_REDIRECT_URI =
+  process.env.PLAID_REDIRECT_URI || 'https://localhost:3000';
+
+// Parameter used for OAuth in Android. This should be the package name of your app,
+// e.g. com.plaid.linksample
+const PLAID_ANDROID_PACKAGE_NAME = process.env.PLAID_ANDROID_PACKAGE_NAME || '';
+
+// We store the access_token in memory - in production, store it in a secure
+// persistent data store
+let ACCESS_TOKEN = null;
+let PUBLIC_TOKEN = null;
+let ITEM_ID = null;
+let ACCOUNT_ID = null;
+// The payment_id is only relevant for the UK/EU Payment Initiation product.
+// We store the payment_id in memory - in production, store it in a secure
+// persistent data store along with the Payment metadata, such as userId .
+let PAYMENT_ID = null;
+// The transfer_id and authorization_id are only relevant for Transfer ACH product.
+// We store the transfer_id in memory - in production, store it in a secure
+// persistent data store
+let AUTHORIZATION_ID = null;
+let TRANSFER_ID = null;
+
+// Initialize the Plaid client
+// Find your API keys in the Dashboard (https://dashboard.plaid.com/account/keys)
+
+const configuration = new Configuration({
+  basePath: PlaidEnvironments[PLAID_ENV],
+  baseOptions: {
+    headers: {
+      'PLAID-CLIENT-ID': PLAID_CLIENT_ID,
+      'PLAID-SECRET': PLAID_SECRET,
+      'Plaid-Version': '2020-09-14',
+    },
+  },
+});
+
+const client = new PlaidApi(configuration);
+
+const configs = {
+  user: {
+    // This should correspond to a unique id for the current user.
+    client_user_id: '1',
+  },
+  client_name: 'Savvy Budget',
+  products: PLAID_PRODUCTS,
+  country_codes: PLAID_COUNTRY_CODES,
+  language: 'en',
+};
+
+if (PLAID_REDIRECT_URI !== '') {
+  configs.redirect_uri = PLAID_REDIRECT_URI;
+}
+
+if (PLAID_ANDROID_PACKAGE_NAME !== '') {
+  configs.android_package_name = PLAID_ANDROID_PACKAGE_NAME;
+}
+
+ipcMain.on(channels.PLAID_GET_TOKEN, async (event) => {
+  console.log('Try getting PLAID link token');
+  if (PLAID_CLIENT_ID?.length) {
+    try {
+      const createTokenResponse = await client.linkTokenCreate(configs);
+      event.sender.send(channels.PLAID_LIST_TOKEN, createTokenResponse.data);
+    } catch (error) {
+      // handle error
+      console.log('Error: ', error.response.data.error_message);
+      event.sender.send(channels.PLAID_LIST_TOKEN, error.response.data);
+    }
+  } else {
+    event.sender.send(channels.PLAID_LIST_TOKEN, null);
+  }
+});
+
+ipcMain.on(
+  channels.PLAID_SET_ACCESS_TOKEN,
+  async (event, { public_token, metadata }) => {
+    console.log('Try getting plaid access token');
+
+    try {
+      const response = await client.itemPublicTokenExchange({
+        public_token: public_token,
+      });
+
+      // These values should be saved to a persistent database and
+      // associated with the currently signed-in user
+      const access_token = response.data.access_token;
+      const itemID = response.data.item_id;
+
+      metadata.accounts.forEach((account, index) => {
+        knex('account')
+          .insert({
+            account:
+              metadata.institution.name +
+              '-' +
+              account.name +
+              '-' +
+              account.mask,
+            refNumber:
+              metadata.institution.name +
+              '-' +
+              account.name +
+              '-' +
+              account.mask,
+            plaid_id: account.id,
+            isActive: 1,
+          })
+          .then(() => {
+            knex('plaid_account')
+              .insert({
+                institution: metadata.institution.name,
+                account_id: account.id,
+                mask: account.mask,
+                account_name: account.name,
+                account_subtype: account.subtype,
+                account_type: account.type,
+                verification_status: account.verification_status,
+                item_id: itemID,
+                access_token: access_token,
+                cursor: null,
+              })
+              .then(() => {
+                console.log('Added PLAID account ');
+              })
+              .catch((err) => console.log('Error: ' + err));
+          })
+          .catch((err) => console.log('Error: ' + err));
+      });
+    } catch (error) {
+      // handle error
+      console.log('Error: ', error);
+    }
+  }
+);
+
+ipcMain.on(
+  channels.PLAID_GET_TRANSACTIONS,
+  async (event, { access_token, cursor }) => {
+    console.log('Try getting plaid account transactions ');
+
+    let added = [];
+    let modified = [];
+    let removed = [];
+    let hasMore = true;
+
+    while (hasMore) {
+      console.log('Making the call ');
+      const response = await client.transactionsSync({
+        access_token: access_token,
+        cursor: cursor,
+      });
+      const data = response.data;
+      //console.log(' Response: ', data);
+
+      // Add this page of results
+      added = added.concat(data.added);
+      modified = modified.concat(data.modified);
+      removed = removed.concat(data.removed);
+      hasMore = data.has_more;
+
+      // Update cursor to the next cursor
+      cursor = data.next_cursor;
+    }
+
+    console.log('Done getting the data, now processing');
+
+    let total_records = added.length + modified.length + removed.length;
+    let cur_record = 0;
+
+    // Apply added
+    const accountArr = [];
+    for (const [i, a] of added.entries()) {
+      let account_str = a.account_id;
+      let accountID = '';
+      if (accountArr?.length) {
+        const found = accountArr.find((e) => e.name === account_str);
+        if (found) {
+          accountID = found.id;
+        } else {
+          accountID = await lookup_plaid_account(account_str);
+          accountArr.push({ name: account_str, id: accountID });
+        }
+      } else {
+        accountID = await lookup_plaid_account(account_str);
+        accountArr.push({ name: account_str, id: accountID });
+      }
+
+      let envID = await lookup_keyword(a.name);
+
+      await basic_insert_transaction_node(
+        accountID,
+        -1 * a.amount,
+        a.date,
+        a.name,
+        a.transaction_id,
+        envID
+      );
+
+      cur_record++;
+      event.sender.send(
+        channels.UPLOAD_PROGRESS,
+        (cur_record * 100) / total_records
+      );
+    }
+
+    // Apply removed
+    for (const [i, r] of removed.entries()) {
+      await basic_remove_transaction_node(access_token, r.transaction_id);
+
+      cur_record++;
+      event.sender.send(
+        channels.UPLOAD_PROGRESS,
+        (cur_record * 100) / total_records
+      );
+    }
+
+    // Apply modified
+    for (const [i, m] of modified.entries()) {
+      let account_str = m.account_id;
+      let accountID = '';
+      if (accountArr?.length) {
+        const found = accountArr.find((e) => e.name === account_str);
+        if (found) {
+          accountID = found.id;
+        } else {
+          accountID = await lookup_plaid_account(account_str);
+          accountArr.push({ name: account_str, id: accountID });
+        }
+      } else {
+        accountID = await lookup_plaid_account(account_str);
+        accountArr.push({ name: account_str, id: accountID });
+      }
+
+      let envID = await lookup_keyword(m.name);
+
+      // Rather than modify it, just remove the old and the new
+      // TODO: Not sure how much faster it would be to just update
+      await basic_remove_transaction_node(access_token, m.transaction_id);
+
+      await basic_insert_transaction_node(
+        accountID,
+        -1 * m.amount,
+        m.date,
+        m.name,
+        m.transaction_id,
+        envID
+      );
+
+      cur_record++;
+      event.sender.send(
+        channels.UPLOAD_PROGRESS,
+        (cur_record * 100) / total_records
+      );
+    }
+
+    // Update cursor
+    knex('plaid_account')
+      .where('access_token', access_token)
+      .update('cursor', cursor)
+      .catch((err) => console.log('Error: ' + err));
+
+    event.sender.send(channels.UPLOAD_PROGRESS, 100);
+  }
+);
+
+ipcMain.on(channels.PLAID_GET_KEYS, (event) => {
+  console.log(channels.PLAID_GET_KEYS);
+  if (knex) {
+    knex
+      .select('client_id', 'secret', 'environment')
+      .from('plaid')
+      .then((data) => {
+        PLAID_CLIENT_ID = data[0].client_id.trim();
+        PLAID_SECRET = data[0].secret.trim();
+        PLAID_ENV = data[0].environment.trim();
+
+        client.configuration.baseOptions.headers['PLAID-CLIENT-ID'] =
+          PLAID_CLIENT_ID;
+        client.configuration.baseOptions.headers['PLAID-SECRET'] = PLAID_SECRET;
+        client.configuration.basePath = PlaidEnvironments[PLAID_ENV];
+
+        event.sender.send(channels.PLAID_LIST_KEYS, data);
+      })
+      .catch((err) => console.log(err));
+  }
+});
+
+ipcMain.on(
+  channels.PLAID_SET_KEYS,
+  (event, { client_id, secret, environment }) => {
+    console.log(channels.PLAID_SET_KEYS);
+
+    PLAID_CLIENT_ID = client_id.trim();
+    PLAID_SECRET = secret.trim();
+    PLAID_ENV = environment.trim();
+
+    client.configuration.baseOptions.headers['PLAID-CLIENT-ID'] =
+      PLAID_CLIENT_ID;
+    client.configuration.baseOptions.headers['PLAID-SECRET'] = PLAID_SECRET;
+    client.configuration.basePath = PlaidEnvironments[PLAID_ENV];
+
+    if (knex) {
+      knex
+        .select('client_id')
+        .from('plaid')
+        .then((rows) => {
+          if (rows?.length) {
+            knex('plaid')
+              .update('client_id', client_id)
+              .update('secret', secret)
+              .update('environment', environment)
+              .then()
+              .catch((err) => console.log(err));
+          } else {
+            knex('plaid')
+              .insert({
+                client_id: client_id,
+                secret: secret,
+                environment: environment,
+              })
+              .then()
+              .catch((err) => console.log(err));
+          }
+        })
+        .catch((err) => console.log(err));
+    }
+  }
+);
+
+ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
+  console.log(channels.PLAID_GET_ACCOUNTS);
+  if (knex) {
+    knex
+      .select(
+        'plaid_account.id',
+        'plaid_account.institution',
+        'plaid_account.account_id',
+        'plaid_account.mask',
+        'plaid_account.account_name',
+        'plaid_account.account_subtype',
+        'plaid_account.account_type',
+        'plaid_account.verification_status',
+        'plaid_account.item_id',
+        'plaid_account.access_token',
+        'plaid_account.cursor'
+      )
+      .max({ lastTx: 'txDate' })
+      .from('plaid_account')
+      .join('account', 'plaid_account.account_id', 'account.plaid_id')
+      .leftJoin('transaction', function () {
+        this.on('account.id', '=', 'transaction.accountID')
+          .on('transaction.isBudget', '=', 0)
+          .on('transaction.isVisible', '=', 1)
+          .on('transaction.isDuplicate', '=', 0);
+      })
+      .orderBy('institution', 'public_token')
+      .groupBy(
+        'plaid_account.id',
+        'plaid_account.institution',
+        'plaid_account.account_id',
+        'plaid_account.mask',
+        'plaid_account.account_name',
+        'plaid_account.account_subtype',
+        'plaid_account.account_type',
+        'plaid_account.verification_status',
+        'plaid_account.item_id',
+        'plaid_account.access_token',
+        'plaid_account.cursor'
+      )
+      .then((data) => {
+        event.sender.send(channels.PLAID_LIST_ACCOUNTS, data);
+      })
+      .catch((err) => console.log(err));
+  }
+});
+
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 let knex = null;
@@ -784,7 +1190,46 @@ async function lookup_account(account) {
         } else {
           // If we haven't, lets store this one
           await knex('account')
-            .insert({ account: 'New Account', refNumber: account })
+            .insert({ account: 'New Account', refNumber: account, isActive: 1 })
+            .then((result) => {
+              if (result?.length) {
+                accountID = result[0];
+              }
+            })
+            .catch((err) => {
+              console.log('Error: ' + err);
+            });
+        }
+      })
+      .catch((err) => console.log(err));
+  }
+
+  return accountID;
+}
+
+async function lookup_plaid_account(account) {
+  let accountID = -1;
+
+  // Lookup if we've already use this one
+  if (account?.length) {
+    await knex
+      .select('id', 'account', 'refNumber')
+      .from('account')
+      .orderBy('account')
+      .where({ plaid_id: account })
+      .then(async (data) => {
+        if (data?.length) {
+          // If we have, use this ID
+          accountID = data[0].id;
+        } else {
+          // If we haven't, lets store this one
+          await knex('account')
+            .insert({
+              account: 'New Account',
+              refNumber: account,
+              plaid_id: account,
+              isActive: 1,
+            })
             .then((result) => {
               if (result?.length) {
                 accountID = result[0];
@@ -1297,6 +1742,34 @@ async function basic_insert_transaction_node(
   // Insert the node
   await knex('transaction').insert(myNode);
 
+  // Update the envelope balance
+  if (envID !== -1) {
+    await update_env_balance(envID, txAmt);
+  }
+
+  process.stdout.write('.');
+}
+
+async function basic_remove_transaction_node(access_token, refNumber) {
+  knex
+    .select(
+      'transaction.id as id',
+      'transaction.envelopeID as envelopeID',
+      'transaction.txAmt as txAmt'
+    )
+    .from('plaid_account')
+    .join('account', 'account.plaid_id', 'plaid_account.account_id')
+    .join('transaction', 'transaction.account_id', 'account.id')
+    .where({ access_token: access_token })
+    .andWhere('transaction.refNumber', '=', refNumber)
+    .then(async (data) => {
+      if (data?.length) {
+        await knex('transaction').delete().where({ id: data[0].id });
+        await update_env_balance(data[0].envelopeID, -1 * data[0].txAmt);
+      }
+    })
+    .catch((err) => console.log(err));
+
   process.stdout.write('.');
 }
 
@@ -1379,9 +1852,17 @@ ipcMain.on(channels.GET_ACCOUNTS, (event) => {
   console.log(channels.GET_ACCOUNTS);
   if (knex) {
     knex
-      .select('id', 'refNumber', 'account')
+      .select('account.id', 'account.refNumber', 'account', 'isActive')
+      .max({ lastTx: 'txDate' })
       .from('account')
-      .orderBy('id')
+      .leftJoin('transaction', function () {
+        this.on('account.id', '=', 'transaction.accountID')
+          .on('transaction.isBudget', '=', 0)
+          .on('transaction.isVisible', '=', 1)
+          .on('transaction.isDuplicate', '=', 0);
+      })
+      .orderBy('account.id')
+      .groupBy('account.id', 'account.refNumber', 'account', 'isActive')
       .then((data) => {
         event.sender.send(channels.LIST_ACCOUNTS, data);
       })
@@ -1440,10 +1921,10 @@ ipcMain.on(channels.UPDATE_ACCOUNT, (event, { id, new_value }) => {
     .catch((err) => console.log(err));
 });
 
-ipcMain.on(channels.DEL_ACCOUNT, (event, { id }) => {
-  console.log(channels.DEL_ACCOUNT, { id });
+ipcMain.on(channels.DEL_ACCOUNT, (event, { id, value }) => {
+  console.log(channels.DEL_ACCOUNT, { id, value });
   knex('account')
-    .delete()
+    .update({ isActive: value })
     .where({ id: id })
     .catch((err) => console.log(err));
 });

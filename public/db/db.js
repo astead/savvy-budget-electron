@@ -113,6 +113,8 @@ ipcMain.on(channels.CREATE_DB, async (event) => {
       table.increments('id').primary();
       table.text('account');
       table.text('refNumber');
+      table.text('plaid_id');
+      table.integer('isActive');
     });
 
     // Create Category Table
@@ -153,17 +155,42 @@ ipcMain.on(channels.CREATE_DB, async (event) => {
       table.integer('isVisible');
     });
 
+    // Create PLAID key table
+    await db.schema.createTable('plaid', function (table) {
+      table.text('client_id');
+      table.text('secret');
+      table.text('environment');
+    });
+
+    // Create PLAID account Table
+    await db.schema.createTable('plaid_account', function (table) {
+      table.increments('id').primary();
+      table.text('institution');
+      table.text('account_id');
+      table.text('mask');
+      table.text('account_name');
+      table.text('account_subtype');
+      table.text('account_type');
+      table.text('verification_status');
+      table.text('item_id');
+      table.text('access_token');
+      table.integer('cursor');
+    });
+
     // Create Version Table
     await db.schema.createTable('version', function (table) {
       table.integer('version');
     });
 
     // Set the version to 1
-    db('version').insert({ version: 1 }).then();
+    db('version').insert({ version: 2 }).then();
 
     // Add the Income Category
     db('category').insert({ category: 'Uncategorized' }).then();
     db('category').insert({ category: 'Income' }).then();
+
+    // Add blank plaid info
+    db('plaid').insert({ client_id: '', secret: '', environment: '' }).then();
 
     // Set this as our main instance
     // TODO: Might not need to do this, the callback below
