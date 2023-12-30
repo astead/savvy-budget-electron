@@ -8,9 +8,48 @@ body {
   margin:0px;
 }
 
-input[type="text"], button {
+input[type="text"] {
   font: inherit;
 }
+
+button, .myButton {
+  font: inherit;
+  border:2px;
+  border-bottom:2px;
+  border-top: 2ps;
+  border-left: 2px;
+  border-right: 2px;
+  width:fit-content;
+  padding-top:1px;
+  padding-bottom:1px;
+  padding-left:6px;
+  padding-right:6px;
+  border-radius: 3px;
+  cursor:pointer;
+}
+
+button:hover {
+  
+}
+
+.myButton-disabled {
+  font: inherit;
+  border:2px;
+  border-bottom:2px;
+  border-top: 2ps;
+  border-left: 2px;
+  border-right: 2px;
+  width:fit-content;
+  padding-top:1px;
+  padding-bottom:1px;
+  padding-left:6px;
+  padding-right:6px;
+  border-radius: 3px;
+  cursor:pointer;
+  color: lightslategray;
+  background-color: gray;
+}
+
 
 h1 {
   margin: 0.5rem 0;

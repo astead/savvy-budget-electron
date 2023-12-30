@@ -21,62 +21,9 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-import { usePlaidLink } from 'react-plaid-link';
+
 import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgress';
-
-
-const RenderPLAIDConfig = ({
-  client, modifyClient, setClient,
-  secret, modifySecret, setSecret,
-  env, modifyEnv, setEnv
-}) => {
-  return (
-    <table><tbody>
-    <tr>
-      <td className="txFilterLabelCell">
-        Client ID:
-      </td>
-      <td className="txFilterCell">
-        <input
-          name="PLAIDClient"
-          defaultValue={client}
-          onChange={(e) => modifyClient(e.target.value)}
-          onBlur={setClient}
-          className="filterDescription"
-        />
-      </td>
-    </tr>
-    <tr>
-      <td className="txFilterLabelCell">
-        Secret:
-      </td>
-      <td className="txFilterCell">
-        <input
-          name="PLAIDSecret"
-          defaultValue={secret}
-          onChange={(e) => modifySecret(e.target.value)}
-          onBlur={setSecret}
-          className="filterDescription"
-        />
-      </td>
-    </tr>
-    <tr>
-      <td className="txFilterLabelCell">
-        Environment:
-      </td>
-      <td className="txFilterCell">
-        <input
-          name="PLAIDEnvironment"
-          defaultValue={env}
-          onChange={(e) => modifyEnv(e.target.value)}
-          onBlur={setEnv}
-          className="filterDescription"
-        />
-      </td>
-    </tr>
-  </tbody></table>
-  );
-};
+import PlaidConfig from '../helpers/PlaidConfig.tsx';
 
 /*
   TODO:
@@ -829,246 +776,14 @@ export const Configure = () => {
       }
     </>
   );
-
-  interface PLAIDAccount {
-    id: number; 
-    institution: string;
-    account_id: string; 
-    mask: string;
-    account_name: string;
-    account_subtype: string;
-    account_type: string;
-    verification_status: string;
-    item_id: string; 
-    access_token: string;
-    cursor: number;
-    lastTx: number;
-  }
   
-  const [PLAIDClient, setPLAIDClient] = useState('');
-  const [PLAIDClientTemp, setPLAIDClientTemp] = useState('');
-  const [PLAIDSecret, setPLAIDSecret] = useState('');
-  const [PLAIDSecretTemp, setPLAIDSecretTemp] = useState('');
-  const [PLAIDEnvironment, setPLAIDEnvironment] = useState('');
-  const [PLAIDEnvironmentTemp, setPLAIDEnvironmentTemp] = useState('');
-
-  const [token, setToken] = useState<string | null>(null);
-  const [link_Error, setLink_Error] = useState<string | null>(null);
-  const [PLAIDAccounts, setPLAIDAccounts] = useState<PLAIDAccount[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = React.useState(0);
   
-  const getPLAIDInfo = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.PLAID_GET_KEYS);
-
-    // Receive the data
-    ipcRenderer.on(channels.PLAID_LIST_KEYS, (data) => {
-      if (data?.length) {
-        setPLAIDClient(data[0].client_id);
-        setPLAIDClientTemp(data[0].client_id);
-        setPLAIDSecret(data[0].secret);
-        setPLAIDSecretTemp(data[0].secret);
-        setPLAIDEnvironment(data[0].environment);
-        setPLAIDEnvironmentTemp(data[0].environment);
-        
-        if (!token) {
-          createLinkToken();
-        }
-      }
-      ipcRenderer.removeAllListeners(channels.PLAID_LIST_KEYS);
-    });
-
-    // Clean the listener after the component is dismounted
-    return () => {
-      ipcRenderer.removeAllListeners(channels.PLAID_LIST_KEYS);
-    };
-  };
-
-  const getAccountList = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.PLAID_GET_ACCOUNTS);
-
-    // Receive the data
-    ipcRenderer.on(channels.PLAID_LIST_ACCOUNTS, (data) => {
-      setPLAIDAccounts(data as PLAIDAccount[]);
-      ipcRenderer.removeAllListeners(channels.PLAID_LIST_ACCOUNTS);
-    });
-
-    // Clean the listener after the component is dismounted
-    return () => {
-      ipcRenderer.removeAllListeners(channels.PLAID_LIST_ACCOUNTS);
-    };
-  };
-
-  const createLinkToken = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.PLAID_GET_TOKEN);
-
-    // Receive the data
-    ipcRenderer.on(channels.PLAID_LIST_TOKEN, (data) => {
-      if (data.link_token?.length) {
-        setToken(data.link_token);
-        setLink_Error(null);
-      }
-      if (data.error_message?.length) {
-        setLink_Error("Error: " + data.error_message);
-      }
-
-      ipcRenderer.removeAllListeners(channels.PLAID_LIST_TOKEN);
-    });
-
-    // Clean the listener after the component is dismounted
-    return () => {
-      ipcRenderer.removeAllListeners(channels.PLAID_LIST_TOKEN);
-    };
-  };
-
-  const get_transactions = (acc : PLAIDAccount) => {
-      console.log("Calling into main to get transaction list. ");
-      setUploading(true);
-      
-      // Get transactions
-      const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send(channels.PLAID_GET_TRANSACTIONS, 
-        { access_token: acc.access_token,
-          cursor: acc.cursor,
-        }
-      );
-
-      // Listen for progress updates
-      ipcRenderer.on(channels.UPLOAD_PROGRESS, (data) => {
-        setProgress(data);
-        if (data >= 100) {
-          ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
-          setUploading(false);
-        }
-      });
-      
-      // Clean the listener after the component is dismounted
-      return () => {
-        ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
-      };
-  };
-
-
-
-  const onSuccess = React.useCallback((public_token, metadata) => {
-    //console.log("Success linking: ", public_token, metadata);
-    console.log("Calling into main to get access token. ");
-    
-    console.log("public token: ", public_token);
-    console.log("metadata: ", metadata);
-    
-    metadata.accounts.forEach((account, index) => {
-      console.log("Account: ", metadata.institution.name, " : ", account.name);
-    });
-
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.PLAID_SET_ACCESS_TOKEN, {public_token, metadata});
-  }, []);
-
-  const config: Parameters<typeof usePlaidLink>[0] = {
-    token: token!,
-    onSuccess,
-  };
   
-  const { open, ready } = usePlaidLink(config);
-
   
 
-  const handlePLAIDClientChange = () => {
-    console.log("setting client to: ", PLAIDClientTemp);
-    setPLAIDClient(PLAIDClientTemp);
-    update_PLAID_keys();
-  };
-  const handlePLAIDSecretChange = () => {
-    console.log("setting secret to: ", PLAIDSecretTemp);
-    setPLAIDSecret(PLAIDSecretTemp);
-    update_PLAID_keys();
-  };
-  const handlePLAIDEnvironmentChange = () => {
-    console.log("setting env to: ", PLAIDEnvironmentTemp);
-    setPLAIDEnvironment(PLAIDEnvironmentTemp);
-    update_PLAID_keys();
-  };
-
-  const update_PLAID_keys = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.PLAID_SET_KEYS, 
-      { client_id: PLAIDClientTemp, secret: PLAIDSecretTemp, environment: PLAIDEnvironmentTemp }
-    );
-    createLinkToken();
-  };
-
-  let plaid_content = (
-    <>
-      <RenderPLAIDConfig 
-        client={PLAIDClientTemp} modifyClient={setPLAIDClientTemp} setClient={handlePLAIDClientChange}
-        secret={PLAIDSecretTemp} modifySecret={setPLAIDSecretTemp} setSecret={handlePLAIDSecretChange}
-        env={PLAIDEnvironmentTemp} modifyEnv={setPLAIDEnvironmentTemp} setEnv={handlePLAIDEnvironmentChange}
-      />
-      <br/>
-      {link_Error && 
-        <div><br/>{link_Error}</div>
-      }
-      <div>
-        <button onClick={() => open()} disabled={!ready}>
-          Link New Account
-        </button>
-      </div>
-      <div>
-        <table className="BudgetTable" cellSpacing={1} cellPadding={1}>
-          <thead>
-            <tr className="TransactionTableHeaderRow">
-              <th className="BudgetTableHeaderCell">{'Bank'}</th>
-              <th className="BudgetTableHeaderCell">{'Last Transaction'}</th>
-              <th className="BudgetTableHeaderCell">{' '}</th>
-            </tr>
-          </thead>
-          <tbody>
-          { PLAIDAccounts.map((acc, index, myArray) => (
-            <React.Fragment key={index}>
-              { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
-                <React.Fragment>
-                <tr className="BudgetTableGroupHeaderRow">
-                  <td className="BudgetTableCell">{acc.institution}</td>
-                  <td className="BudgetTableCell">{acc.lastTx && Moment(acc.lastTx).format('M/D/YYYY')}</td>
-                  <td className="BudgetTableCell">
-                    <button 
-                      onClick={() => {
-                        get_transactions(acc)
-                      }} 
-                      disabled={!ready}>
-                      Get Transactions
-                    </button>
-                  </td>
-                </tr>
-                
-                {uploading && 
-                  <tr><td colSpan={3}>
-                  <Box sx={{ width: '100%' }}>
-                    <LinearProgressWithLabel value={progress} />
-                  </Box>
-                  </td></tr>
-                }
-                </React.Fragment>
-              )}
-              <tr key={index}>
-                <td colSpan={3} align='left'>{acc.account_name + '-' + acc.mask}</td>
-              </tr>
-            </React.Fragment>
-          ))}
-        </tbody></table>
-      </div>
-      </>
+  let plaid_config = (
+      <PlaidConfig />
   );
-
-  useEffect(() => {
-    getPLAIDInfo();
-    getAccountList();
-  }, []);
-
   
  
 
@@ -1113,7 +828,7 @@ export const Configure = () => {
             {database_content}
           </CustomTabPanel>
           <CustomTabPanel tabValue={tabValue} index={4}>
-            {plaid_content}
+            {plaid_config}
           </CustomTabPanel>
       </div>
     </div>
