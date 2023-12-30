@@ -121,22 +121,6 @@ const PLAID_REDIRECT_URI =
 // e.g. com.plaid.linksample
 const PLAID_ANDROID_PACKAGE_NAME = process.env.PLAID_ANDROID_PACKAGE_NAME || '';
 
-// We store the access_token in memory - in production, store it in a secure
-// persistent data store
-let ACCESS_TOKEN = null;
-let PUBLIC_TOKEN = null;
-let ITEM_ID = null;
-let ACCOUNT_ID = null;
-// The payment_id is only relevant for the UK/EU Payment Initiation product.
-// We store the payment_id in memory - in production, store it in a secure
-// persistent data store along with the Payment metadata, such as userId .
-let PAYMENT_ID = null;
-// The transfer_id and authorization_id are only relevant for Transfer ACH product.
-// We store the transfer_id in memory - in production, store it in a secure
-// persistent data store
-let AUTHORIZATION_ID = null;
-let TRANSFER_ID = null;
-
 // Initialize the Plaid client
 // Find your API keys in the Dashboard (https://dashboard.plaid.com/account/keys)
 
@@ -565,22 +549,14 @@ ipcMain.on(channels.DEL_CATEGORY, (event, id) => {
   knex('envelope')
     .where('categoryID', id)
     .update('categoryID', uncategorizedID)
-    .catch((err) => {
-      console.log('Error: ' + err);
-    });
-
-  // TODO: Maybe if we hit an error above,
-  //  we shouldn't continue
-  // However what if there are no sub-envelopes.
-  knex('category')
-    .where({ id: id })
-    .del()
     .then(() => {
-      console.log('Deleted category: ' + id);
+      knex('category')
+        .where({ id: id })
+        .del()
+        .then(() => console.log('Deleted category: ' + id))
+        .catch((err) => console.log('Error: ' + err));
     })
-    .catch((err) => {
-      console.log('Error: ' + err);
-    });
+    .catch((err) => console.log('Error: ' + err));
 });
 
 ipcMain.on(channels.DEL_ENVELOPE, (event, id) => {
