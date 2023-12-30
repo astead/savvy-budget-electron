@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faBookmark } from "@fortawesome/free-solid-svg-icons"
 
 export const KeywordSave = ({txID, envID, description, keywordEnvID}) => {
-  const [my_txID, ] = useState(txID);
+  //const [my_txID, ] = useState(txID);
   const [my_envID, setEnvID] = useState(envID);
   const [my_description, setDescription] = useState(description);
   const [my_keywordEnvID, setKeywordEnvID] = useState(keywordEnvID);

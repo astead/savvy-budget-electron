@@ -26,12 +26,6 @@ export const Charts: React.FC = () => {
     [key: string]: string | number | Date;
   }
 
-  type myChartData = {
-    date: Date;
-    actualTotals?: number; // Optional actual sum
-    budgetTotals?: number | null; // Optional budget sum
-  };
-
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
   const [filterEnvID, setFilterEnvID] = useState(envID);

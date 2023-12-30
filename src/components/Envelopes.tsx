@@ -118,7 +118,7 @@ export const Envelopes: React.FC = () => {
   const [curTotalActualUndefined, setCurTotalActualUndefined] = useState(0);
   
   const [transferEnvList, setTransferEnvList] = useState<EnvelopeList[]>([]);
-  const [transferEnvListLoaded, setTransferEnvListLoaded] = useState(false);
+  //const [transferEnvListLoaded, setTransferEnvListLoaded] = useState(false);
 
   const load_envelope_list = () => {
     // Signal we want to get data
@@ -128,7 +128,7 @@ export const Envelopes: React.FC = () => {
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
       setTransferEnvList(arg as EnvelopeList[]);
-      setTransferEnvListLoaded(true);
+      //setTransferEnvListLoaded(true);
 
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
@@ -267,14 +267,13 @@ export const Envelopes: React.FC = () => {
     let myTotalBudgetIncome = 0;
     let myTotalBudgetSpending = 0;
 
-    budgetData.map((n, i) => {
+    for (const [, n] of budgetData.entries()) {
       if (n.category === "Income") {
         myTotalBudgetIncome += n.currBudget;
-
       } else {
         myTotalBudgetSpending += n.currBudget;
       }
-    });
+    };
     
     setCurTotalBudgetIncome(myTotalBudgetIncome);
     setCurTotalBudgetSpending(myTotalBudgetSpending);

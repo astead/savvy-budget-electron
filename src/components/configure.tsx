@@ -21,9 +21,62 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-import { usePlaidLink, PlaidLinkOnSuccess, PlaidLinkError } from 'react-plaid-link';
+import { usePlaidLink } from 'react-plaid-link';
 import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgress';
 
+
+const RenderPLAIDConfig = ({
+  client, modifyClient, setClient,
+  secret, modifySecret, setSecret,
+  env, modifyEnv, setEnv
+}) => {
+  return (
+    <table><tbody>
+    <tr>
+      <td className="txFilterLabelCell">
+        Client ID:
+      </td>
+      <td className="txFilterCell">
+        <input
+          name="PLAIDClient"
+          defaultValue={client}
+          onChange={(e) => modifyClient(e.target.value)}
+          onBlur={setClient}
+          className="filterDescription"
+        />
+      </td>
+    </tr>
+    <tr>
+      <td className="txFilterLabelCell">
+        Secret:
+      </td>
+      <td className="txFilterCell">
+        <input
+          name="PLAIDSecret"
+          defaultValue={secret}
+          onChange={(e) => modifySecret(e.target.value)}
+          onBlur={setSecret}
+          className="filterDescription"
+        />
+      </td>
+    </tr>
+    <tr>
+      <td className="txFilterLabelCell">
+        Environment:
+      </td>
+      <td className="txFilterCell">
+        <input
+          name="PLAIDEnvironment"
+          defaultValue={env}
+          onChange={(e) => modifyEnv(e.target.value)}
+          onBlur={setEnv}
+          className="filterDescription"
+        />
+      </td>
+    </tr>
+  </tbody></table>
+  );
+};
 
 /*
   TODO:
@@ -948,13 +1001,76 @@ export const Configure = () => {
     createLinkToken();
   };
 
+  let plaid_content = (
+    <>
+      <RenderPLAIDConfig 
+        client={PLAIDClientTemp} modifyClient={setPLAIDClientTemp} setClient={handlePLAIDClientChange}
+        secret={PLAIDSecretTemp} modifySecret={setPLAIDSecretTemp} setSecret={handlePLAIDSecretChange}
+        env={PLAIDEnvironmentTemp} modifyEnv={setPLAIDEnvironmentTemp} setEnv={handlePLAIDEnvironmentChange}
+      />
+      <br/>
+      {link_Error && 
+        <div><br/>{link_Error}</div>
+      }
+      <div>
+        <button onClick={() => open()} disabled={!ready}>
+          Link New Account
+        </button>
+      </div>
+      <div>
+        <table className="BudgetTable" cellSpacing={1} cellPadding={1}>
+          <thead>
+            <tr className="TransactionTableHeaderRow">
+              <th className="BudgetTableHeaderCell">{'Bank'}</th>
+              <th className="BudgetTableHeaderCell">{'Last Transaction'}</th>
+              <th className="BudgetTableHeaderCell">{' '}</th>
+            </tr>
+          </thead>
+          <tbody>
+          { PLAIDAccounts.map((acc, index, myArray) => (
+            <React.Fragment key={index}>
+              { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
+                <React.Fragment>
+                <tr className="BudgetTableGroupHeaderRow">
+                  <td className="BudgetTableCell">{acc.institution}</td>
+                  <td className="BudgetTableCell">{acc.lastTx && Moment(acc.lastTx).format('M/D/YYYY')}</td>
+                  <td className="BudgetTableCell">
+                    <button 
+                      onClick={() => {
+                        get_transactions(acc)
+                      }} 
+                      disabled={!ready}>
+                      Get Transactions
+                    </button>
+                  </td>
+                </tr>
+                
+                {uploading && 
+                  <tr><td colSpan={3}>
+                  <Box sx={{ width: '100%' }}>
+                    <LinearProgressWithLabel value={progress} />
+                  </Box>
+                  </td></tr>
+                }
+                </React.Fragment>
+              )}
+              <tr key={index}>
+                <td colSpan={3} align='left'>{acc.account_name + '-' + acc.mask}</td>
+              </tr>
+            </React.Fragment>
+          ))}
+        </tbody></table>
+      </div>
+      </>
+  );
+
   useEffect(() => {
     getPLAIDInfo();
     getAccountList();
   }, []);
 
   
-
+ 
 
   return (
     <div className="App">
@@ -997,111 +1113,7 @@ export const Configure = () => {
             {database_content}
           </CustomTabPanel>
           <CustomTabPanel tabValue={tabValue} index={4}>
-          <>
-          <table><tbody>
-            <tr>
-              <td className="txFilterLabelCell">
-                Client ID:
-              </td>
-              <td className="txFilterCell">
-                <input
-                  name="PLAIDClient"
-                  defaultValue={PLAIDClientTemp}
-                  onChange={(e) => {
-                    setPLAIDClientTemp(e.target.value);
-                  }}
-                  onBlur={handlePLAIDClientChange}
-                  className="filterDescription"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td className="txFilterLabelCell">
-                Secret:
-              </td>
-              <td className="txFilterCell">
-                <input
-                  name="PLAIDSecret"
-                  defaultValue={PLAIDSecretTemp}
-                  onChange={(e) => {
-                    setPLAIDSecretTemp(e.target.value);
-                  }}
-                  onBlur={handlePLAIDSecretChange}
-                  className="filterDescription"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td className="txFilterLabelCell">
-                Environment:
-              </td>
-              <td className="txFilterCell">
-                <input
-                  name="PLAIDEnvironment"
-                  defaultValue={PLAIDEnvironmentTemp}
-                  onChange={(e) => {
-                    setPLAIDEnvironmentTemp(e.target.value);
-                  }}
-                  onBlur={handlePLAIDEnvironmentChange}
-                  className="filterDescription"
-                />
-              </td>
-            </tr>
-          </tbody></table>
-          <br/>
-          {link_Error && 
-            <div><br/>{link_Error}</div>
-          }
-          <div>
-            <button onClick={() => open()} disabled={!ready}>
-              Link New Account
-            </button>
-          </div>
-          <div>
-            <table className="BudgetTable" cellSpacing={1} cellPadding={1}>
-              <thead>
-                <tr className="TransactionTableHeaderRow">
-                  <th className="BudgetTableHeaderCell">{'Bank'}</th>
-                  <th className="BudgetTableHeaderCell">{'Last Transaction'}</th>
-                  <th className="BudgetTableHeaderCell">{' '}</th>
-                </tr>
-              </thead>
-              <tbody>
-              { PLAIDAccounts.map((acc, index, myArray) => (
-                <React.Fragment key={index}>
-                  { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
-                    <React.Fragment>
-                    <tr className="BudgetTableGroupHeaderRow">
-                      <td className="BudgetTableCell">{acc.institution}</td>
-                      <td className="BudgetTableCell">{acc.lastTx && Moment(acc.lastTx).format('M/D/YYYY')}</td>
-                      <td className="BudgetTableCell">
-                        <button 
-                          onClick={() => {
-                            get_transactions(acc)
-                          }} 
-                          disabled={!ready}>
-                          Get Transactions
-                        </button>
-                      </td>
-                    </tr>
-                    
-                    {uploading && 
-                      <tr><td colSpan={3}>
-                      <Box sx={{ width: '100%' }}>
-                        <LinearProgressWithLabel value={progress} />
-                      </Box>
-                      </td></tr>
-                    }
-                    </React.Fragment>
-                  )}
-                  <tr key={index}>
-                    <td colSpan={3} align='left'>{acc.account_name + '-' + acc.mask}</td>
-                  </tr>
-                </React.Fragment>
-              ))}
-            </tbody></table>
-          </div>
-          </>
+            {plaid_content}
           </CustomTabPanel>
       </div>
     </div>

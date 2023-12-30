@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import 'react-edit-text/dist/index.css';
-import { channels } from '../shared/constants.js'
+//import { channels } from '../shared/constants.js'
 
 export const AccountDropDown = ({keyID, id, data, changeCallback, className}) => {
   

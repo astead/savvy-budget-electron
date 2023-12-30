@@ -12,10 +12,10 @@ import { faCopy, faEyeSlash, faFileImport, faChevronDown } from "@fortawesome/fr
 import { useParams } from 'react-router';
 import { Dayjs } from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+//import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import InputLabel from '@mui/material/InputLabel';
+//import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Pagination from '@mui/material/Pagination';
@@ -79,13 +79,13 @@ export const Transactions: React.FC = () => {
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
   const [filterEnvID, setFilterEnvID] = useState(in_envID);
-  const [filterEnvelopeName, setFilterEnvelopeName] = useState(null);
+  //const [filterEnvelopeName, setFilterEnvelopeName] = useState(null);
 
   // Filter by account
   const [filterAccList, setFilterAccList] = useState<AccountList[]>([]);
   const [filterAccListLoaded, setFilterAccListLoaded] = useState(false);
   const [filterAccID, setFilterAccID] = useState(-1);
-  const [filterAccName, setFilterAccName] = useState(null);
+  //const [filterAccName, setFilterAccName] = useState(null);
 
   // Filter by description
   const [filterDesc, setFilterDesc] = useState('');
@@ -278,7 +278,7 @@ export const Transactions: React.FC = () => {
       JSON.stringify({ filterEnvID: new_value})
     );
     setFilterEnvID(new_value);
-    setFilterEnvelopeName(new_text);
+    //setFilterEnvelopeName(new_text);
   };
 
   const handleFilterAccChange = ({id, new_value, new_text}) => {
@@ -287,7 +287,7 @@ export const Transactions: React.FC = () => {
       JSON.stringify({ filterAccID: new_value})
     );
     setFilterAccID(new_value);
-    setFilterAccName(new_text);
+    //setFilterAccName(new_text);
   };
 
   const handleFilterDescChange = () => {
