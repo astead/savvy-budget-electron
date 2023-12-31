@@ -363,6 +363,17 @@ ipcMain.on(
   }
 );
 
+ipcMain.on(channels.DEL_TX_LIST, (event, { del_tx_list }) => {
+  console.log(channels.DEL_TX_LIST);
+  if (knex) {
+    del_tx_list.forEach(async (t) => {
+      if (t.isChecked) {
+        await remove_transaction(t.txID);
+      }
+    });
+  }
+});
+
 ipcMain.on(channels.PLAID_GET_KEYS, (event) => {
   console.log(channels.PLAID_GET_KEYS);
   if (knex) {
@@ -1718,6 +1729,20 @@ async function basic_insert_transaction_node(
   }
 
   process.stdout.write('.');
+}
+
+async function remove_transaction(txID) {
+  knex
+    .select('id', 'envelopeID', 'txAmt')
+    .from('transaction')
+    .where({ id: txID })
+    .then(async (data) => {
+      if (data?.length) {
+        await knex('transaction').delete().where({ id: data[0].id });
+        await update_env_balance(data[0].envelopeID, -1 * data[0].txAmt);
+      }
+    })
+    .catch((err) => console.log(err));
 }
 
 async function basic_remove_transaction_node(access_token, refNumber) {

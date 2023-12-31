@@ -8,7 +8,7 @@ import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
 import * as dayjs from 'dayjs'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopy, faEyeSlash, faFileImport, faChevronDown } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faEyeSlash, faFileImport, faChevronDown, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from 'react-router';
 import { Dayjs } from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -99,6 +99,7 @@ export const Transactions: React.FC = () => {
 
   // Transaction data
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
+  const [isChecked, setIsChecked] = useState<any[]>([]);
   
   // Category : Envelope data for drop down lists
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
@@ -207,6 +208,17 @@ export const Transactions: React.FC = () => {
         setPagingTotalRecords(0);
         setPagingNumPages(1);
       }
+
+      // Set our array of checkboxes
+      let filtered_nodes = arg.filter((item, index) => {
+        return (index < (pagingCurPage * pagingPerPage) &&
+        index >= ((pagingCurPage-1) * pagingPerPage));
+      });
+      let check_list = filtered_nodes.map((item) => {
+        return {txID: item.txID, isChecked: false};
+      });
+      setIsChecked(check_list);
+      
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     });
     
@@ -214,6 +226,12 @@ export const Transactions: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     };
+  }
+
+  const delete_checked_transactions = () => {
+    // Signal we want to del data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.DEL_TX_LIST, {del_tx_list: isChecked});
   }
 
   const load_envelope_list = () => {
@@ -659,6 +677,7 @@ export const Transactions: React.FC = () => {
                 <th className="TransactionTableHeaderCellCenter">{' KW '}</th>
                 <th className="TransactionTableHeaderCellCenter">{' Dup '}</th>
                 <th className="TransactionTableHeaderCellCenter">{' Vis '}</th>
+                <th className="TransactionTableHeaderCellCenter">{' Del '}</th>
               </tr>
             </thead>
   
@@ -707,6 +726,12 @@ export const Transactions: React.FC = () => {
                         <FontAwesomeIcon icon={faEyeSlash} />
                       </div>
                     </td>
+                    <td className="TransactionTableCellCenter">
+                      <input type="checkbox" id={item.txID.toString()} onChange={(e) => {
+                        isChecked.find(n => n.txID === item.txID).isChecked = e.target.checked;
+                        setIsChecked([...isChecked]);
+                      }} />
+                    </td>
                   </tr>
                 ))
               //}
@@ -725,6 +750,15 @@ export const Transactions: React.FC = () => {
                   )
                 }</td>
                 <td className="TransactionTableCellCurr" colSpan={4}></td>
+                <td className="TransactionTableCellInput">
+                  <div
+                    onClick={() => {
+                      delete_checked_transactions();
+                    }}
+                    className="trash-div">
+                    <FontAwesomeIcon icon={faTrash} />
+                  </div>
+                </td>
               </tr>
             </tfoot>
           </table>
