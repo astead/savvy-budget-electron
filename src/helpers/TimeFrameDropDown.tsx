@@ -13,10 +13,7 @@ export const TimeFrameDropDown = ({id, time_id, data, changeCallback, className}
   const [my_data, ] = useState(data);
 
   const handleChange = (e) => {
-    var index = e.nativeEvent.target.selectedIndex;
-    
     changeCallback({id: my_id, new_value: e.target.value});
-    
     setMy_time_id(e.target.value);
   };
 
