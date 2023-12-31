@@ -209,15 +209,7 @@ export const Transactions: React.FC = () => {
         setPagingNumPages(1);
       }
 
-      // Set our array of checkboxes
-      let filtered_nodes = arg.filter((item, index) => {
-        return (index < (pagingCurPage * pagingPerPage) &&
-        index >= ((pagingCurPage-1) * pagingPerPage));
-      });
-      let check_list = filtered_nodes.map((item) => {
-        return {txID: item.txID, isChecked: false};
-      });
-      setIsChecked(check_list);
+      set_checkbox_array(arg);
       
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     });
@@ -228,10 +220,38 @@ export const Transactions: React.FC = () => {
     };
   }
 
+  const set_checkbox_array = (myArr) => {
+    // Set our array of checkboxes
+    let check_list = myArr.map((item) => {
+      return {txID: item.txID, isChecked: false};
+    });
+    setIsChecked(check_list);
+  }
+
+  const look_for_dups = () => {
+    let filtered_nodes = txData.filter((item, index) => {
+      return (index < (pagingCurPage * pagingPerPage) &&
+      index >= ((pagingCurPage-1) * pagingPerPage));
+    });
+    filtered_nodes.forEach((item, index, myArr) => {
+      if (myArr.find((item2, index2) => {
+        return (item.txID !== item2.txID &&
+        item.txAmt === item2.txAmt &&
+        item.txDate === item2.txDate &&
+        item.description === item2.description &&
+        index2 > index);
+        })) {
+          isChecked.find(n => n.txID === item.txID).isChecked = true;
+      }
+    });
+    setIsChecked([...isChecked]);
+  }
+
   const delete_checked_transactions = () => {
+    let filtered_nodes = isChecked.filter((item) => item.isChecked);
     // Signal we want to del data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.DEL_TX_LIST, {del_tx_list: isChecked});
+    ipcRenderer.send(channels.DEL_TX_LIST, {del_tx_list: filtered_nodes});
   }
 
   const load_envelope_list = () => {
@@ -428,6 +448,7 @@ export const Transactions: React.FC = () => {
     
     setPagingNumPages(Math.ceil(pagingTotalRecords / pagingPerPage));
   }, [pagingPerPage]);
+
 
   useEffect(() => {
     if (gotMonthData) {
@@ -675,7 +696,13 @@ export const Transactions: React.FC = () => {
                 <th className="TransactionTableHeaderCellCurr">{'Amount'}</th>
                 <th className="TransactionTableHeaderCell">{'Envelope'}</th>
                 <th className="TransactionTableHeaderCellCenter">{' KW '}</th>
-                <th className="TransactionTableHeaderCellCenter">{' Dup '}</th>
+                <th className="TransactionTableHeaderCellCenter">
+                  <div onClick={() => {
+                      look_for_dups();
+                    }}>
+                    {' Dup '}
+                  </div>
+                </th>
                 <th className="TransactionTableHeaderCellCenter">{' Vis '}</th>
                 <th className="TransactionTableHeaderCellCenter">{' Del '}</th>
               </tr>
@@ -728,9 +755,9 @@ export const Transactions: React.FC = () => {
                     </td>
                     <td className="TransactionTableCellCenter">
                       <input type="checkbox" id={item.txID.toString()} onChange={(e) => {
-                        isChecked.find(n => n.txID === item.txID).isChecked = e.target.checked;
+                        isChecked[index].isChecked = e.target.checked;
                         setIsChecked([...isChecked]);
-                      }} />
+                      }} checked={isChecked[index].isChecked}/>
                     </td>
                   </tr>
                 ))
