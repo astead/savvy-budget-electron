@@ -139,6 +139,22 @@ export const Transactions: React.FC = () => {
     setCurMonth(Moment(tmpDate).format('YYYY-MM-DD'));
 
     if (source === 1) {
+      localStorage.setItem(
+        'transaction-filter-startDate', 
+        JSON.stringify({ filterStartDate: dayjs(new Date(child_year, child_month + childCurIndex))?.format('YYYY-MM-DD')}));
+      localStorage.setItem(
+        'transaction-filter-endDate', 
+        JSON.stringify({ filterStartDate: dayjs(new Date(child_year, child_month + childCurIndex+1))?.format('YYYY-MM-DD')}));
+        
+      setFilterStartDate(dayjs(new Date(child_year, child_month + childCurIndex)));
+      setFilterEndDate(dayjs(new Date(child_year, child_month + childCurIndex+1)));
+    } else {
+      localStorage.setItem(
+        'transaction-filter-startDate', 
+        JSON.stringify({ filterStartDate: dayjs(new Date(child_year, child_month + childCurIndex))?.format('YYYY-MM-DD')}));
+      localStorage.setItem(
+        'transaction-filter-endDate', 
+        JSON.stringify({ filterStartDate: dayjs(new Date(child_year, child_month + childCurIndex+1))?.format('YYYY-MM-DD')}));
       setFilterStartDate(dayjs(new Date(child_year, child_month + childCurIndex)));
       setFilterEndDate(dayjs(new Date(child_year, child_month + childCurIndex+1)));
     }
@@ -411,7 +427,7 @@ export const Transactions: React.FC = () => {
       }
     }
 
-    const my_filter_endDate_str = localStorage.getItem('transaction-filter-startDate');
+    const my_filter_endDate_str = localStorage.getItem('transaction-filter-endDate');
     if (my_filter_endDate_str?.length) {
       const my_filter_endDate = JSON.parse(my_filter_endDate_str);
       if (my_filter_endDate) {
@@ -530,6 +546,7 @@ export const Transactions: React.FC = () => {
                         localStorage.setItem(
                           'transaction-filter-startDate', 
                           JSON.stringify({ filterStartDate: newValue?.format('YYYY-MM-DD')}));
+                          
                         setFilterStartDate(newValue);
                         
                         monthSelectorCallback(
