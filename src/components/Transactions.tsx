@@ -36,7 +36,7 @@ import Box from '@mui/material/Box';
   - popup window to add notes, tags, etc and edit item
     https://mui.com/material-ui/react-modal/
   - somehow highlight if we could set a keyword
-  - select multiple to delete?
+  - auto select all possible duplicates
 */
 
 export const Transactions: React.FC = () => {
