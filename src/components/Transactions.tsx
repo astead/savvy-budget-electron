@@ -64,8 +64,6 @@ export const Transactions: React.FC = () => {
     envelope: string; 
   }
   interface AccountList {
-    id: number; 
-    refNumber: string;
     account: string;
   }
   
@@ -296,10 +294,10 @@ export const Transactions: React.FC = () => {
   const load_account_list = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_ACCOUNTS);
+    ipcRenderer.send(channels.GET_ACCOUNT_NAMES);
 
     // Receive the data
-    ipcRenderer.on(channels.LIST_ACCOUNTS, (arg) => {
+    ipcRenderer.on(channels.LIST_ACCOUNT_NAMES, (arg) => {
       setFilterAccList([{
         id: -1,
         refNumber: '',
@@ -307,12 +305,12 @@ export const Transactions: React.FC = () => {
       }, ...(arg as AccountList[])]);
       setFilterAccListLoaded(true);
 
-      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
+      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNT_NAMES);
     });
     
     // Clean the listener after the component is dismounted
     return () => {
-      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
+      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNT_NAMES);
     };
   }
 

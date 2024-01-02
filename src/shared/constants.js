@@ -59,6 +59,8 @@ module.exports = {
 
     GET_ACCOUNTS: 'get_accounts',
     LIST_ACCOUNTS: 'list_accounts',
+    GET_ACCOUNT_NAMES: 'get_account_names',
+    LIST_ACCOUNT_NAMES: 'list_account_names',
     UPDATE_ACCOUNT: 'update_account',
     DEL_ACCOUNT: 'del_account',
 

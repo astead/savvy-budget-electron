@@ -958,8 +958,8 @@ ipcMain.on(
           });
         }
       }
-      if (filterAccID > -1) {
-        query = query.andWhere('transaction.accountID', filterAccID);
+      if (filterAccID !== '-1') {
+        query = query.andWhere('account.account', filterAccID);
       }
       if (filterDesc?.length) {
         filterDesc = '%' + filterDesc + '%';
@@ -1851,6 +1851,21 @@ ipcMain.on(channels.GET_KEYWORDS, (event) => {
       })
       .then((data) => {
         event.sender.send(channels.LIST_KEYWORDS, data);
+      })
+      .catch((err) => console.log(err));
+  }
+});
+
+ipcMain.on(channels.GET_ACCOUNT_NAMES, (event) => {
+  console.log(channels.GET_ACCOUNT_NAMES);
+  if (knex) {
+    knex
+      .select('account')
+      .from('account')
+      .orderBy('account')
+      .groupBy('account')
+      .then((data) => {
+        event.sender.send(channels.LIST_ACCOUNT_NAMES, data);
       })
       .catch((err) => console.log(err));
   }

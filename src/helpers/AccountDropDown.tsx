@@ -37,8 +37,8 @@ export const AccountDropDown = ({keyID, id, data, changeCallback, className}) =>
       className={className}>
         {my_data.map(o => (
           <option 
-            key={o.id} 
-            value={o.id}>
+            key={o.id?o.id:o.account} 
+            value={o.id?o.id:o.account}>
               {o.account}
           </option>
         ))}
