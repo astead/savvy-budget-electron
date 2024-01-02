@@ -363,6 +363,16 @@ ipcMain.on(
   }
 );
 
+ipcMain.on(
+  channels.UPDATE_TX_ENV_LIST,
+  (event, [new_value, filtered_nodes]) => {
+    console.log(channels.UPDATE_TX_ENV_LIST);
+    filtered_nodes.forEach(async (t) => {
+      update_tx_env(t.txID, new_value);
+    });
+  }
+);
+
 ipcMain.on(channels.DEL_TX_LIST, (event, { del_tx_list }) => {
   console.log(channels.DEL_TX_LIST);
   if (knex) {
@@ -1035,9 +1045,7 @@ ipcMain.on(channels.GET_ENV_LIST, (event, { includeInactive }) => {
   }
 });
 
-ipcMain.on(channels.UPDATE_TX_ENV, (event, [txID, envID]) => {
-  console.log(channels.UPDATE_TX_ENV, txID, envID);
-
+function update_tx_env(txID, envID) {
   knex
     .select('id', 'txAmt', 'envelopeID')
     .from('transaction')
@@ -1084,6 +1092,11 @@ ipcMain.on(channels.UPDATE_TX_ENV, (event, [txID, envID]) => {
     .catch((err) => {
       console.log('Error: ' + err);
     });
+}
+
+ipcMain.on(channels.UPDATE_TX_ENV, (event, [txID, envID]) => {
+  console.log(channels.UPDATE_TX_ENV, txID, envID);
+  update_tx_env(txID, envID);
 });
 
 ipcMain.on(channels.SAVE_KEYWORD, (event, [envID, description]) => {

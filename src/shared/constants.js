@@ -23,6 +23,7 @@ module.exports = {
     GET_TX_DATA: 'get_tx_date',
     LIST_TX_DATA: 'list_tx_data',
     DEL_TX_LIST: 'del_tx_list',
+    UPDATE_TX_ENV_LIST: 'update_tx_env_list',
 
     REN_CATEGORY: 'ren_category',
     DEL_CATEGORY: 'del_category',

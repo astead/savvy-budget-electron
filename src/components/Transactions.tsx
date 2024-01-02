@@ -359,6 +359,13 @@ export const Transactions: React.FC = () => {
     setFilterAmount(filterAmountTemp);
   };  
   
+  const handleChangeAll = ({id, new_value}) => {
+    let filtered_nodes = isChecked.filter((item) => item.isChecked);
+    // Signal we want to del data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.UPDATE_TX_ENV_LIST, [new_value, filtered_nodes]);
+  }; 
+  
   const handleChange = ({id, new_value}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
@@ -788,7 +795,16 @@ export const Transactions: React.FC = () => {
                     }, 0)
                   )
                 }</td>
-                <td className="TransactionTableCellCurr" colSpan={4}></td>
+                <td className="TransactionTableCellCurr">
+                  <CategoryDropDown
+                        id={-1}
+                        envID={-1}
+                        data={envList}
+                        changeCallback={handleChangeAll}
+                        className="filterEnvelope"
+                      />
+                </td>
+                <td className="TransactionTableCellCurr" colSpan={3}></td>
                 <td className="TransactionTableCellInput">
                   <div
                     onClick={() => {
