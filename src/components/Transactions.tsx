@@ -100,6 +100,7 @@ export const Transactions: React.FC = () => {
   // Transaction data
   const [txData, setTxData] = useState<TransactionNodeData[]>([]);
   const [isChecked, setIsChecked] = useState<any[]>([]);
+  const [isAllChecked, setIsAllChecked] = useState(false);
   
   // Category : Envelope data for drop down lists
   const [envList, setEnvList] = useState<EnvelopeList[]>([]);
@@ -704,7 +705,18 @@ export const Transactions: React.FC = () => {
                   </div>
                 </th>
                 <th className="TransactionTableHeaderCellCenter">{' Vis '}</th>
-                <th className="TransactionTableHeaderCellCenter">{' Del '}</th>
+                <th className="TransactionTableHeaderCellCenter">
+                  <input type="checkbox" onChange={(e) => {
+                    for(let iter=((pagingCurPage-1) * pagingPerPage); 
+                      iter < (pagingCurPage * pagingPerPage); iter++) {
+                      if (isChecked[iter]) {
+                        isChecked[iter].isChecked = e.target.checked;
+                      }
+                    }
+                    setIsChecked([...isChecked]);
+                    setIsAllChecked(e.target.checked);
+                  }} checked={isAllChecked}/>
+                </th>
               </tr>
             </thead>
   
