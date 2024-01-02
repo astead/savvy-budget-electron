@@ -636,69 +636,79 @@ ipcMain.on(channels.MOV_ENVELOPE, (event, [id, newCatID]) => {
     });
 });
 
+ipcMain.on(channels.COPY_BUDGET, (event, [newtxDate, budget_values]) => {
+  console.log(channels.COPY_BUDGET, newtxDate, budget_values);
+  budget_values.forEach((item) => {
+    set_or_update_budget_item(item.envID, newtxDate, item.value);
+  });
+});
+
 ipcMain.on(
   channels.UPDATE_BUDGET,
   (event, [newEnvelopeID, newtxDate, newtxAmt]) => {
     console.log(channels.UPDATE_BUDGET, newEnvelopeID, newtxDate, newtxAmt);
-
-    return knex('transaction')
-      .select('id', 'txAmt')
-      .where('envelopeID', newEnvelopeID)
-      .andWhere('txDate', newtxDate)
-      .andWhere('isBudget', 1)
-      .then(async function (rows) {
-        if (rows.length === 0) {
-          // no matching records found
-          return knex('transaction')
-            .insert({
-              envelopeID: newEnvelopeID,
-              txDate: newtxDate,
-              isBudget: 1,
-              txAmt: newtxAmt,
-              isDuplicate: 0,
-              isVisible: 1,
-            })
-            .then(async () => {
-              await knex.raw(
-                `UPDATE 'envelope' SET balance = balance + ` +
-                  newtxAmt +
-                  ` WHERE id = ` +
-                  newEnvelopeID
-              );
-            })
-            .catch((err) => {
-              console.log('Error inserting budget: ' + err);
-            });
-        } else {
-          // Already exist
-          await knex
-            .raw(
-              `UPDATE 'envelope' SET balance = balance + ` +
-                (newtxAmt - rows[0].txAmt) +
-                ` WHERE id = ` +
-                newEnvelopeID
-            )
-            .then(() => {
-              knex('transaction')
-                .update({ txAmt: newtxAmt })
-                .where('id', rows[0].id)
-                .then(() => {
-                  console.log('Updated budget amt.');
-                })
-                .catch((err) => {
-                  console.log('Error updating budget: ' + err);
-                });
-            })
-            .catch((err) => {
-              console.log('Error updating budget: ' + err);
-            });
-        }
-      })
-      .catch((err) => {
-        console.log('Error checking if budget exists: ' + err);
-      });
+    set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt);
   }
 );
+
+function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
+  return knex('transaction')
+    .select('id', 'txAmt')
+    .where('envelopeID', newEnvelopeID)
+    .andWhere('txDate', newtxDate)
+    .andWhere('isBudget', 1)
+    .then(async function (rows) {
+      if (rows.length === 0) {
+        // no matching records found
+        return knex('transaction')
+          .insert({
+            envelopeID: newEnvelopeID,
+            txDate: newtxDate,
+            isBudget: 1,
+            txAmt: newtxAmt,
+            isDuplicate: 0,
+            isVisible: 1,
+          })
+          .then(async () => {
+            await knex.raw(
+              `UPDATE 'envelope' SET balance = balance + ` +
+                newtxAmt +
+                ` WHERE id = ` +
+                newEnvelopeID
+            );
+          })
+          .catch((err) => {
+            console.log('Error inserting budget: ' + err);
+          });
+      } else {
+        // Already exist
+        await knex
+          .raw(
+            `UPDATE 'envelope' SET balance = balance + ` +
+              (newtxAmt - rows[0].txAmt) +
+              ` WHERE id = ` +
+              newEnvelopeID
+          )
+          .then(() => {
+            knex('transaction')
+              .update({ txAmt: newtxAmt })
+              .where('id', rows[0].id)
+              .then(() => {
+                console.log('Updated budget amt.');
+              })
+              .catch((err) => {
+                console.log('Error updating budget: ' + err);
+              });
+          })
+          .catch((err) => {
+            console.log('Error updating budget: ' + err);
+          });
+      }
+    })
+    .catch((err) => {
+      console.log('Error checking if budget exists: ' + err);
+    });
+}
 
 ipcMain.on(channels.UPDATE_BALANCE, (event, [id, newAmt]) => {
   console.log(channels.UPDATE_BALANCE, id, newAmt);

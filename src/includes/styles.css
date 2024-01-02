@@ -407,6 +407,39 @@ input.BudgetBalanceTransfer {
   background-color: #EF4444;
 }
 
+.forward-copy-budget {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #1b1b18;
+  border-radius: 10%;
+  cursor: pointer;
+  margin: auto;
+  margin-left: 5px;
+  margin-right: 2px;
+  padding: 2px;
+  background-color: #F8FAFC;
+  color: #000000;
+}
+
+.forward-copy-budget:hover {
+  filter:brightness(120%);
+  background-color: limegreen;
+}
+
+.PrevBudgetHeaderLabel {
+  margin:auto;
+  width:100%;
+}
+
+.PrevBudgetHeaderContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  vertical-align: middle;
+  width:100%;
+  justify-content: center;
+}
+
 .applyKeyword {
   width: 30px;
   height: 30px;

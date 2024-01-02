@@ -6,6 +6,8 @@ import { MonthSelector } from '../helpers/MonthSelector.tsx'
 import Moment from 'moment';
 import { Link } from 'react-router-dom';
 import BudgetBalanceModal from '../helpers/BudgetBalanceModal.tsx';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
 /*
   TODO:
@@ -105,6 +107,7 @@ export const Envelopes: React.FC = () => {
   const [budgetData, setBudgetData] = useState<BudgetNodeData[]>([]);
   const [data, setData] = useState({});
   const [loaded, setLoaded] = useState(false);
+  const [haveCurrBudget, setHaveCurrBudget] = useState(false);
   const [loadedEnvelopes, setLoadedEnvelopes] = useState(false);
   const [loadedPrevBudget, setLoadedPrevBudget] = useState(false);
   const [loadedCurrBudget, setLoadedCurrBudget] = useState(false);
@@ -238,21 +241,28 @@ export const Envelopes: React.FC = () => {
     ipcRenderer.on(channels.LIST_CUR_BUDGET, (arg) => {
       
       const tmpData = [...budgetData] as BudgetNodeData[]; 
+      let haveValues = false;
     
       // Go through the data and store it into our table array
       for (let i=0; i < arg.length; i++) {
         for (let j=0; j < tmpData.length; j++) {
           if (arg[i].envelopeID === tmpData[j].envID) {
             tmpData[j] = Object.assign(tmpData[j], { currBudget: arg[i].txAmt });
+            if (arg[i].txAmt !== 0) {
+              haveValues = true;
+            }
           }
         }
       };
+
+      if (haveValues) {
+        setHaveCurrBudget(true);
+      } else {
+        setHaveCurrBudget(false);
+      }
     
       setBudgetData(tmpData as BudgetNodeData[]); 
       setLoadedCurrBudget(true);
-
-      
-      
 
       ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
     });
@@ -262,6 +272,17 @@ export const Envelopes: React.FC = () => {
       ipcRenderer.removeAllListeners(channels.LIST_CUR_BUDGET);
     };
   };
+
+  const forward_copy_budget = () => {
+    const prev_budget_values = budgetData.map((item) => {
+      return {envID: item.envID, value: item.prevBudget};
+    });
+
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.COPY_BUDGET, 
+      [Moment(new Date(year, month)).format('YYYY-MM-DD'),
+      prev_budget_values]);
+  }
 
   const get_totals = () => {
     let myTotalBudgetIncome = 0;
@@ -508,7 +529,20 @@ export const Envelopes: React.FC = () => {
                 <thead className="BudgetTableHeader">
                   <tr className="BudgetTableHeaderRow">
                     <th className="BudgetTableHeaderCell">{' \nEnvelope'}</th>
-                    <th className="BudgetTableHeaderCellCurr">{'Prev\nBudget'}</th>
+                    <th className="BudgetTableHeaderCellCurr">
+                      <div className="PrevBudgetHeaderContainer">
+                        <div className="PrevBudgetHeaderLabel">{'Prev\nBudget'}</div>
+                        {!haveCurrBudget &&
+                          <div
+                            onClick={() => {
+                              forward_copy_budget();
+                            }}
+                            className="forward-copy-budget">
+                            <FontAwesomeIcon icon={faChevronRight} />
+                          </div>
+                        }
+                      </div>
+                    </th>
                     <th className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</th>
                     <th className="BudgetTableHeaderCellCurr">{'Curr\nBalance'}</th>
                     <th className="BudgetTableHeaderCellCurr">{disp_date_label(month, year) + '\nBudget'}</th>
