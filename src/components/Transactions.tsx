@@ -41,7 +41,7 @@ import Box from '@mui/material/Box';
 
 export const Transactions: React.FC = () => {
   
-  const { in_envID, in_year, in_month } = useParams();
+  const { in_envID, in_force_date, in_year, in_month } = useParams();
   
   interface TransactionNodeData {
     txID: number;
@@ -116,6 +116,7 @@ export const Transactions: React.FC = () => {
   const [pagingTotalRecords, setPagingTotalRecords] = useState(0);
 
   /* Month Selector code -------------------------------------------*/
+  const [force_date, set_force_date] = useState(in_force_date?parseInt(in_force_date):0);
   const [year, setYear] = useState(in_year?parseInt(in_year):new Date().getFullYear());
   const [month, setMonth] = useState(in_month?parseInt(in_month):new Date().getMonth());
   const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
@@ -138,25 +139,18 @@ export const Transactions: React.FC = () => {
     setMonth(tmpDate.getMonth());
     setCurMonth(Moment(tmpDate).format('YYYY-MM-DD'));
 
-    if (source === 1) {
+    if (source === 1 || (source === 0 && force_date === 1)) {
       localStorage.setItem(
         'transaction-filter-startDate', 
         JSON.stringify({ filterStartDate: dayjs(new Date(child_year, child_month + childCurIndex))?.format('YYYY-MM-DD')}));
       localStorage.setItem(
         'transaction-filter-endDate', 
-        JSON.stringify({ filterStartDate: dayjs(new Date(child_year, child_month + childCurIndex+1))?.format('YYYY-MM-DD')}));
+        JSON.stringify({ filterEndDate: dayjs(new Date(child_year, child_month + childCurIndex+1))?.format('YYYY-MM-DD')}));
         
       setFilterStartDate(dayjs(new Date(child_year, child_month + childCurIndex)));
       setFilterEndDate(dayjs(new Date(child_year, child_month + childCurIndex+1)));
-    } else {
-      localStorage.setItem(
-        'transaction-filter-startDate', 
-        JSON.stringify({ filterStartDate: dayjs(new Date(child_year, child_month + childCurIndex))?.format('YYYY-MM-DD')}));
-      localStorage.setItem(
-        'transaction-filter-endDate', 
-        JSON.stringify({ filterStartDate: dayjs(new Date(child_year, child_month + childCurIndex+1))?.format('YYYY-MM-DD')}));
-      setFilterStartDate(dayjs(new Date(child_year, child_month + childCurIndex)));
-      setFilterEndDate(dayjs(new Date(child_year, child_month + childCurIndex+1)));
+
+      set_force_date(0);
     }
   }
   /* End Month Selector code ---------------------------------------*/
@@ -595,7 +589,7 @@ export const Transactions: React.FC = () => {
                         monthSelectorCallback(
                           { childStartMonth: newValue?.subtract(8,'month').toDate(), 
                             childCurIndex: 8, 
-                            source: 0, }
+                            source: 2, }
                         );
 
                         if (filterEndDate && newValue && filterEndDate.diff(newValue) <= 0 ) {

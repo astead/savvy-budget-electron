@@ -34,7 +34,7 @@ export const Header = ({currTab}) => {
     <div className="NavBar">
       <Link to="/" className={currTab === "Home"?"menuLink-selected":"menuLink"}>Home</Link>
       <Link to="/Charts/-2" className={currTab === "Charts"?"menuLink-selected":"menuLink"}>Charts</Link>
-      <Link to={"/Transactions/-3/"+year+"/"+month} className={currTab === "Transactions"?"menuLink-selected":"menuLink"}>Transactions</Link>
+      <Link to={"/Transactions/-3/0/"+year+"/"+month} className={currTab === "Transactions"?"menuLink-selected":"menuLink"}>Transactions</Link>
       <Link to="/Envelopes" className={currTab === "Envelopes"?"menuLink-selected":"menuLink"}>Envelopes</Link>
       <Link to="/Configure" className={currTab === "Configure"?"menuLink-selected":"menuLink"}>Configure</Link>
     </div>

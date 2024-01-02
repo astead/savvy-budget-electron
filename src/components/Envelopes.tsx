@@ -532,7 +532,7 @@ export const Envelopes: React.FC = () => {
                         <Link to={
                           "/Transactions" +
                           "/" + item.envID + 
-                          "/" + new Date(year, month-1).getFullYear() + 
+                          "/1/" + new Date(year, month-1).getFullYear() + 
                           "/" + new Date(year, month-1).getMonth()}>
                           {formatCurrency(item.prevActual)}
                         </Link>
@@ -553,7 +553,7 @@ export const Envelopes: React.FC = () => {
                           initialValue={item.currBudget}/>
                       </td>
                       <td className="BudgetTableCellCurr">
-                        <Link to={"/Transactions/" + item.envID + "/" + year + "/" + month}>
+                        <Link to={"/Transactions/" + item.envID + "/1/" + year + "/" + month}>
                           {formatCurrency(item.currActual)}
                         </Link>
                       </td>
@@ -603,7 +603,7 @@ export const Envelopes: React.FC = () => {
                 <div className="envelopeDataDiffItem">
                   <div>Missing:</div>
                   <div className="envelopeDataDiffItemCurr">
-                    <Link to={"/Transactions/-2/" + year + "/" + month}>
+                    <Link to={"/Transactions/-2/1/" + year + "/" + month}>
                       {formatWholeCurrency(curTotalActualUndefined)}
                     </Link>
                   </div>

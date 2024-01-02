@@ -41,7 +41,7 @@ export const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/Charts/:envID" element={<Charts />} />
-        <Route path="/Transactions/:in_envID/:in_year/:in_month" element={<Transactions />} />
+        <Route path="/Transactions/:in_envID/:in_force_date/:in_year/:in_month" element={<Transactions />} />
         <Route path="/Envelopes" element={<Envelopes />} />
         <Route path="/Configure" element={<Configure />} />
       </Routes>
