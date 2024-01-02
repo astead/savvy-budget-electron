@@ -958,7 +958,7 @@ ipcMain.on(
           });
         }
       }
-      if (filterAccID !== '-1') {
+      if (filterAccID !== '-1' && filterAccID !== 'All') {
         query = query.andWhere('account.account', filterAccID);
       }
       if (filterDesc?.length) {

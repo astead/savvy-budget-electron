@@ -299,8 +299,6 @@ export const Transactions: React.FC = () => {
     // Receive the data
     ipcRenderer.on(channels.LIST_ACCOUNT_NAMES, (arg) => {
       setFilterAccList([{
-        id: -1,
-        refNumber: '',
         account: "All", 
       }, ...(arg as AccountList[])]);
       setFilterAccListLoaded(true);
