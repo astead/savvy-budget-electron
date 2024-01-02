@@ -364,7 +364,7 @@ export const Transactions: React.FC = () => {
     ipcRenderer.send(channels.UPDATE_TX_ENV_LIST, [new_value, filtered_nodes]);
   }; 
   
-  const handleChange = ({id, new_value}) => {
+  const handleTxEnvChange = ({id, new_value}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_TX_ENV, [id, new_value]);
@@ -741,7 +741,7 @@ export const Transactions: React.FC = () => {
                         id={item.txID}
                         envID={item.envID}
                         data={envList}
-                        changeCallback={handleChange}
+                        changeCallback={handleTxEnvChange}
                         className="filterEnvelope"
                       />
                     </td>
