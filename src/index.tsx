@@ -9,7 +9,6 @@ import './includes/styles.css';
   - Improve CRUD reposting
   - DRY stylesheets
   - Consolidate Editable?
-  - Import old data
 */
 
 const root = ReactDOM.createRoot(
