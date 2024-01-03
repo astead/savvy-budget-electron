@@ -2,7 +2,12 @@
   "name": "savvy-budget",
   "version": "0.1.0",
   "private": true,
-  "main": "public/main.js",
+  "description":"Budgeting app",
+  "author":{
+    "name":"Alan Stead",
+    "email":"alan.stead@gmail.com"
+  },
+  "main": "public/electron.js",
   "homepage": "./",
   "dependencies": {
     "@babel/core": "^7.23.5",
@@ -25,8 +30,6 @@
     "csv": "^6.3.6",
     "daisyui": "^4.4.0",
     "dayjs": "^1.11.10",
-    "electron": "^27.1.0",
-    "electron-builder": "^24.6.4",
     "electron-is-dev": "^2.0.0",
     "eslint-plugin-babel": "^5.3.1",
     "eslint-plugin-react": "^7.33.2",
@@ -74,7 +77,9 @@
     "build": "npm run build-react && electron-builder",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "electron-dev": "electron ."
+    "electron-dev": "electron .",
+    "electron-pack": "build --em.main=build/electron.js",
+    "preelectron-pack": "npm build"
   },
   "eslintConfig": {
     "extends": [
@@ -100,12 +105,24 @@
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@types/react-edit-text": "^5.0.4",
-    "@types/yup": "^0.32.0"
+    "@types/yup": "^0.32.0",
+    "electron": "^27.1.0",
+    "electron-builder": "^24.6.4"
   },
   "browser": {
     "crypto": false,
     "fs": false,
     "path": false,
     "os": false
+  },
+  "build": {
+    "appId": "com.example.savvybudget",
+    "files": [
+      "build/**/*",
+      "node_modules/**/*"
+    ],
+    "directories":{
+      "buildResources": "assets"
+    }
   }
 }
