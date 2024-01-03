@@ -1000,31 +1000,29 @@ ipcMain.on(
   }
 );
 
-ipcMain.on(channels.ADD_TX, (event, data) => {
+ipcMain.on(channels.ADD_TX, async (event, data) => {
   console.log(channels.ADD_TX);
 
-  data.map((d) => {
-    const node = {
-      envelopeID: d[0],
-      txAmt: d[1],
-      txDate: d[2],
-      description: d[3],
-      refNumber: 0,
-      isBudget: 0,
-      isTransfer: 0,
-      isDuplicate: 0,
-      isSplit: 0,
-      accountID: 0,
-      isVisible: 1,
-    };
+  // Prepare the data node
+  const myNode = {
+    envelopeID: data.txEnvID,
+    txAmt: data.txAmt,
+    txDate: data.txDate,
+    description: data.txDesc,
+    refNumber: '',
+    isBudget: 0,
+    isTransfer: 0,
+    isDuplicate: 0,
+    isSplit: 0,
+    accountID: data.txAccID,
+    isVisible: 1,
+  };
 
-    knex('transaction')
-      .insert(node)
-      .then()
-      .catch((err) => {
-        console.log('Error: ' + err);
-      });
-  });
+  // Insert the node
+  await knex('transaction').insert(myNode);
+
+  // Update the envelope balance
+  await update_env_balance(data.txEnvID, data.txAmt);
 });
 
 ipcMain.on(channels.GET_ENV_LIST, (event, { includeInactive }) => {

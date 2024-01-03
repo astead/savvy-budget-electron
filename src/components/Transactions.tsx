@@ -8,7 +8,7 @@ import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
 import * as dayjs from 'dayjs'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopy, faEyeSlash, faFileImport, faChevronDown, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faEyeSlash, faFileImport, faChevronDown, faTrash, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from 'react-router';
 import { Dayjs } from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -71,6 +71,19 @@ export const Transactions: React.FC = () => {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
   }
   
+  // Add new Transaction values
+  const [newTxDate, setNewTxDate] = useState<Dayjs | null>(dayjs(new Date()));
+  const [newTxAmount, setNewTxAmount] = useState('');
+  const [newTxAmountTemp, setNewTxAmountTemp] = useState('');
+  const [newTxDesc, setNewTxDesc] = useState('');
+  const [newTxDescTemp, setNewTxDescTemp] = useState('');
+  const [newTxAccList, setNewTxAccList] = useState<AccountList[]>([]);
+  const [newTxAccID, setNewTxAccID] = useState(-1);
+  const [newTxEnvList, setNewTxEnvList] = useState<EnvelopeList[]>([]);
+  const [newTxEnvID, setNewTxEnvID] = useState(-1);
+  const [newTxEnvListLoaded, setNewTxEnvListLoaded] = useState(false);
+  const [newTxAccListLoaded, setNewTxAccListLoaded] = useState(false);
+
   // Filter by envelope
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
@@ -254,6 +267,9 @@ export const Transactions: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
+      setNewTxEnvList(arg);
+      setNewTxEnvListLoaded(true);
+
       setEnvList([{
         envID: -1,
         category: "Undefined",
@@ -288,6 +304,16 @@ export const Transactions: React.FC = () => {
   const load_account_list = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_ACCOUNTS);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_ACCOUNTS, (arg) => {
+      setNewTxAccList(arg);
+      setNewTxAccListLoaded(true);
+      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
+    });
+    
+    // Signal we want to get data
     ipcRenderer.send(channels.GET_ACCOUNT_NAMES);
 
     // Receive the data
@@ -303,6 +329,7 @@ export const Transactions: React.FC = () => {
     // Clean the listener after the component is dismounted
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_ACCOUNT_NAMES);
+      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
     };
   }
 
@@ -373,6 +400,17 @@ export const Transactions: React.FC = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.SET_VISIBILITY, [txID, isVisible]);
   };
+
+  function add_new_transaction() {
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.ADD_TX, {
+      txDate: newTxDate?.format('YYYY-MM-DD'),
+      txAmt: newTxAmount,
+      txEnvID: newTxEnvID,
+      txAccID: newTxAccID,
+      txDesc: newTxDesc
+    });
+  }
 
   const handleImport = async () => {
     const ipcRenderer = (window as any).ipcRenderer;
@@ -536,27 +574,103 @@ export const Transactions: React.FC = () => {
             id="filter-header"
             sx={{pl:1, pr:1, m:0, mt:-1}}
           >
-            Import and Export
+            Add / Import / Export
           </AccordionSummary>
           <AccordionDetails sx={{textAlign: 'left'}}>
-            <span>Import: </span>
-            <input
-                type="file"
-                name="file"
-                accept=".qfx,.csv,.txt"
-                className="import-file"
-                onChange={save_file_name}
-            />
-            <button 
-              className='import'
-              onClick={handleImport}>
-                <FontAwesomeIcon icon={faFileImport} />
-            </button>
-            {uploading && 
-              <Box sx={{ width: '100%' }}>
-                <LinearProgressWithLabel value={progress} />
-              </Box>
+            {newTxEnvListLoaded && newTxAccListLoaded &&
+            <>
+            <div>
+              <span className="bold-label">Add Transaction:</span><br/>
+              <table>
+                <tbody>
+                  <tr>
+                    <td>Date:</td>
+                    <td>Account:</td>
+                    <td>Description:</td>
+                    <td>Amount:</td>
+                    <td>Envelope:</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DatePicker
+                        value={newTxDate}
+                        onChange={(newValue) => setNewTxDate(newValue)}
+                        sx={{ width:150, pr:0 }}
+                        />
+                      </LocalizationProvider>
+                    </td>
+                    <td>
+                      <AccountDropDown 
+                          keyID={-1}
+                          id={newTxAccID}
+                          data={newTxAccList}
+                          changeCallback={({id, new_value, new_text}) => setNewTxAccID(new_value)}
+                          className="newAccount"
+                        />
+                    </td>
+                    <td>
+                      <input
+                          name="newTxDescTemp"
+                          defaultValue={newTxDescTemp}
+                          onChange={(e) => setNewTxDescTemp(e.target.value)}
+                          onBlur={() => setNewTxDesc(newTxDescTemp)}
+                          className="newDescription"
+                        />
+                    </td>
+                    <td>
+                      <input
+                          name="newTxAmountTemp"
+                          defaultValue={newTxAmountTemp}
+                          onChange={(e) => setNewTxAmountTemp(e.target.value)}
+                          onBlur={() => setNewTxAmount(newTxAmountTemp)}
+                          className="newAmount"
+                        />
+                    </td>
+                    <td>
+                      <CategoryDropDown 
+                          id={-1}
+                          envID={newTxEnvID}
+                          data={newTxEnvList}
+                          changeCallback={({id, new_value, new_text}) => setNewTxEnvID(new_value)}
+                          className="newEnvelope"
+                        />
+                    </td>
+                    <td>
+                      <div
+                        onClick={() => add_new_transaction()}
+                        className={"forward-copy-budget"}>
+                        <FontAwesomeIcon icon={faChevronRight} />
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <br/>
+            </>
             }
+            <div>
+              <span className="bold-label">Import Transactions:</span><br/>
+              <input
+                  type="file"
+                  name="file"
+                  accept=".qfx,.csv,.txt"
+                  className="import-file"
+                  onChange={save_file_name}
+              />
+              <button 
+                className='import'
+                onClick={handleImport}>
+                  <FontAwesomeIcon icon={faFileImport} />
+              </button>
+              {uploading && 
+                <Box sx={{ width: '100%' }}>
+                  <LinearProgressWithLabel value={progress} />
+                </Box>
+              }
+            </div>
           </AccordionDetails>
           </Accordion>
         {filterEnvListLoaded && filterAccListLoaded &&

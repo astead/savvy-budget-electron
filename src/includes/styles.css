@@ -790,9 +790,17 @@ div.envelopeDataContainer {
   width:242px;
 }
 
+.newAmount {
+  width:100px;
+}
+
 .filterAccount {
   width:250px;
   height:21px;
+}
+
+span.bold-label {
+  font-weight:bolder;
 }
 
 select.filterEnvelope {
