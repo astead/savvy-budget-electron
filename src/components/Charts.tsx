@@ -9,6 +9,7 @@ import { useParams } from 'react-router';
 
 /*
   TODO:
+  - month label seems off by 1 month
   - pie chart?
 */
 
