@@ -1969,7 +1969,7 @@ ipcMain.on(
 
     let query = knex('transaction')
       .select({
-        month: knex.raw(`strftime("%Y-%m", txDate)`),
+        month: knex.raw(`strftime("%Y/%m", txDate)`),
         isBudget: 'isBudget',
       })
       .sum({ totalAmt: 'txAmt' })
