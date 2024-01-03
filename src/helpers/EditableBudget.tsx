@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import 'react-edit-text/dist/index.css';
-import { channels } from '../shared/constants.js'
+import { channels } from '../shared/constants.js';
 
 export const EditableBudget = ({ initialID, initialDate, initialValue}) => {
   const [id, ] = useState(initialID);

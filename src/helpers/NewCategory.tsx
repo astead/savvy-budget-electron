@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPlus } from "@fortawesome/free-solid-svg-icons"
-import { channels } from '../shared/constants.js'
+import { channels } from '../shared/constants.js';
 
 export const NewCategory = () => {
   const [newCategory, setNewCategory] = useState('');

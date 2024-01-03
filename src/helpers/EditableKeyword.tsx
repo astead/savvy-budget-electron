@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { EditText } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
-import { channels } from '../shared/constants.js'
+import { channels } from '../shared/constants.js';
 
 export const EditableKeyword = ({ initialID, initialDescription}) => {
   const [id, ] = useState(initialID);

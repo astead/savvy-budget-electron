@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
-import { channels } from '../shared/constants.js'
+import { channels } from '../shared/constants.js';
 import { CategoryDropDown } from './CategoryDropDown.tsx';
 
 const style = {

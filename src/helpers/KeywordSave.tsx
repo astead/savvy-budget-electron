@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import 'react-edit-text/dist/index.css';
-import { channels } from '../shared/constants.js'
+import { channels } from '../shared/constants.js';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faBookmark } from "@fortawesome/free-solid-svg-icons"
 

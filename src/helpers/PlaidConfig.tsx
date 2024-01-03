@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { channels } from '../shared/constants.js'
+import { channels } from '../shared/constants.js';
 import Moment from 'moment';
 import Box from '@mui/material/Box';
 import LinearProgressWithLabel from '@mui/material/LinearProgress';
