@@ -26,8 +26,8 @@ function formatCurrency(currencyNumber:number) {
 
 export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, transferEnvList}) => {
   const [open, setOpen] = useState(false);
-  const [newAmt, setNewAmt] = useState(balanceAmt);
-  const [transferAmt, setTransferAmt] = useState(balanceAmt);
+  const [newAmt, setNewAmt] = useState(balanceAmt.toFixed(2));
+  const [transferAmt, setTransferAmt] = useState(balanceAmt.toFixed(2));
   const [transferEnvID, setTransferEnvID] = useState(envID);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -65,7 +65,7 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
           Adjust it: 
           <input
             name={'adjust-balance-'+envID}
-            defaultValue={balanceAmt}
+            defaultValue={balanceAmt.toFixed(2)}
             onChange={(e) => setNewAmt(e.target.value)}
             className="BudgetBalanceTransfer"
           />
@@ -79,7 +79,7 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
           Move 
           <input
             name={'adjust-balance-' + envID}
-            defaultValue={balanceAmt}
+            defaultValue={balanceAmt.toFixed(2)}
             onChange={(e) => setTransferAmt(e.target.value)}
             className="BudgetBalanceTransfer"
           />
