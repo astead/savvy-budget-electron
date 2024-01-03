@@ -1,8 +1,8 @@
 {
-  "name": "savvy-budget",
+  "name": "SavvyBudget",
   "version": "0.1.0",
   "private": true,
-  "description":"Budgeting app",
+  "description":"A simple budgeting app",
   "author":{
     "name":"Alan Stead",
     "email":"alan.stead@gmail.com"
@@ -123,6 +123,9 @@
     ],
     "directories":{
       "buildResources": "assets"
+    },
+    "win": {
+      "icon": "build/favicon.ico"
     }
   }
 }

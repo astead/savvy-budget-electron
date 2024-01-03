@@ -20,6 +20,9 @@ function createWindow() {
     width: 800,
     height: 600,
     title: 'Savvy Budget',
+    icon: isDev
+      ? path.join(app.getAppPath(), './public/favicon.ico') // Loading it from the public folder for dev
+      : path.join(app.getAppPath(), './build/favicon.ico'),
     //frame: false,
     webPreferences: {
       // The preload file where we will perform our app communication
