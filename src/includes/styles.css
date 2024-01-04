@@ -277,7 +277,7 @@ button.trash:hover {
   background-color: #EF4444;
 }
 
-.forward-copy-budget {
+div.right-button {
   width: 20px;
   height: 20px;
   border: 1px solid #1b1b18;
@@ -291,7 +291,7 @@ button.trash:hover {
   color: #000000;
 }
 
-.forward-copy-budget:hover {
+div.right-button:hover {
   filter:brightness(120%);
   background-color: limegreen;
 }

@@ -541,7 +541,7 @@ export const Envelopes: React.FC = () => {
                             onClick={() => {
                               forward_copy_budget();
                             }}
-                            className="forward-copy-budget">
+                            className="right-button">
                             <FontAwesomeIcon icon={faChevronRight} />
                           </div>
                         }

@@ -638,7 +638,7 @@ export const Transactions: React.FC = () => {
                     <td>
                       <div
                         onClick={() => add_new_transaction()}
-                        className={"forward-copy-budget"}>
+                        className="right-button">
                         <FontAwesomeIcon icon={faChevronRight} />
                       </div>
                     </td>
