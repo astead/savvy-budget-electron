@@ -622,7 +622,7 @@ export const Transactions: React.FC = () => {
                           defaultValue={newTxAmountTemp}
                           onChange={(e) => setNewTxAmountTemp(e.target.value)}
                           onBlur={() => setNewTxAmount(newTxAmountTemp)}
-                          className="small"
+                          className="Small"
                         />
                     </td>
                     <td>
@@ -796,10 +796,10 @@ export const Transactions: React.FC = () => {
           <table className="Table TxTable" cellSpacing={0} cellPadding={0}>
             <thead>
               <tr className="Table THR">
-                <th className="Table THR THRC THRCSmall">{'Date'}</th>
+                <th className="Table THR THRC Small">{'Date'}</th>
                 <th className="Table THR THRC THRCMed">{'Account'}</th>
                 <th className="Table THR THRC">{'Description'}</th>
-                <th className="Table THR THRC THRCSmall">{'Amount'}</th>
+                <th className="Table THR THRC Small">{'Amount'}</th>
                 <th className="Table THR THRC">{'Envelope'}</th>
                 <th className="Table THR THRC">{' KW '}</th>
                 <th className="Table THR THRC">
@@ -857,7 +857,7 @@ export const Transactions: React.FC = () => {
                         onClick={() => {
                           toggleDuplicate({txID: item.txID, isDuplicate: (item.isDuplicate?0:1)});
                         }}
-                        className={"ToggleDuplicate" + (item.isDuplicate?"-yes":"-no")}>
+                        className={"Toggle" + (item.isDuplicate?" Toggle-active":"")}>
                         <FontAwesomeIcon icon={faCopy} />
                       </div>
                     </td>
@@ -866,7 +866,7 @@ export const Transactions: React.FC = () => {
                         onClick={() => {
                           toggleVisibility({txID: item.txID, isVisible: (item.isVisible?0:1)});
                         }}
-                        className={"ToggleVisibility" + (item.isVisible?"-no":"-yes")}>
+                        className={"Toggle" + (!item.isVisible?" Toggle-active":"")}>
                         <FontAwesomeIcon icon={faEyeSlash} />
                       </div>
                     </td>

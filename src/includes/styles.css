@@ -386,10 +386,6 @@ th.THRC {
   text-align:center;
 }
 
-th.THRCSmall {
-  width: 100px;
-}
-
 th.THRCMed {
   width: 130px;
 }
@@ -449,8 +445,8 @@ td.TCInput {
   justify-content: right;
 }
 
-input.small {
-  width:100px;
+.Small {
+  width: 100px;
 }
 
 .filterSize {
@@ -467,70 +463,21 @@ input.small {
   height: 75%;
 }
 
-.SaveKeyword {
-  padding: 0;
-  margin: 0;
-  text-align: center;
+.Toggle {
   cursor: pointer;
+  color: black;
 }
 
-.SaveKeyword-saved {
-  padding: 0;
-  margin: 0;
-  text-align: center;
+.Toggle-active {
   color: lightgreen;
-  cursor: pointer;
 }
 
-.SaveKeyword:hover {
-  padding: 0;
-  margin: 0;
-  text-align: center;
+.Toggle:hover {
   color:limegreen;
 }
 
-.ToggleDuplicate-no {
-  padding: 0;
-  margin: 0;
-  text-align: center;
-  cursor: pointer;
-}
-
-.ToggleDuplicate-yes {
-  padding: 0;
-  margin: 0;
-  text-align: center;
+.Toggle-active:hover {
   color: lightgreen;
-  cursor: pointer;
-}
-
-.ToggleDuplicate-no:hover {
-  padding: 0;
-  margin: 0;
-  text-align: center;
-  color:limegreen;
-}
-
-.ToggleVisibility-no {
-  padding: 0;
-  margin: 0;
-  text-align: center;
-  cursor: pointer;
-}
-
-.ToggleVisibility-yes {
-  padding: 0;
-  margin: 0;
-  text-align: center;
-  color: lightgreen;
-  cursor: pointer;
-}
-
-.ToggleVisibility-no:hover {
-  padding: 0;
-  margin: 0;
-  text-align: center;
-  color:limegreen;
 }
 
 select.envelopeDropDown {

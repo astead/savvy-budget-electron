@@ -31,7 +31,7 @@ export const KeywordSave = ({txID, envID, description, keywordEnvID}) => {
   return (
     <div
       onClick={saveKeyword}
-      className={"SaveKeyword" + (my_keywordEnvID === my_envID && my_envID !== null ?"-saved":"")}>
+      className={"Toggle" + (my_keywordEnvID === my_envID && my_envID !== null ?" Toggle-active":"")}>
       <FontAwesomeIcon icon={faBookmark} />
     </div>
   );

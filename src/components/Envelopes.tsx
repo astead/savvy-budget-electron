@@ -533,7 +533,7 @@ export const Envelopes: React.FC = () => {
                 <thead>
                   <tr className="Table THR">
                     <th className="Table THR THRC">{' \nEnvelope'}</th>
-                    <th className="Table THR THRC THRCSmall">
+                    <th className="Table THR THRC Small">
                       <div className="PrevTHRC">
                         <div className="PrevHRCLabel">{'Prev\nBudget'}</div>
                         {!haveCurrBudget &&
@@ -547,11 +547,11 @@ export const Envelopes: React.FC = () => {
                         }
                       </div>
                     </th>
-                    <th className="Table THR THRC THRCSmall">{'Prev\nActual'}</th>
-                    <th className="Table THR THRC THRCSmall">{'Curr\nBalance'}</th>
-                    <th className="Table THR THRC THRCSmall">{disp_date_label(month, year) + '\nBudget'}</th>
-                    <th className="Table THR THRC THRCSmall">{'Curr\nActual'}</th>
-                    <th className="Table THR THRC THRCSmall">{'Monthly\nAvg'}</th>
+                    <th className="Table THR THRC Small">{'Prev\nActual'}</th>
+                    <th className="Table THR THRC Small">{'Curr\nBalance'}</th>
+                    <th className="Table THR THRC Small">{disp_date_label(month, year) + '\nBudget'}</th>
+                    <th className="Table THR THRC Small">{'Curr\nActual'}</th>
+                    <th className="Table THR THRC Small">{'Monthly\nAvg'}</th>
                   </tr>
                 </thead>
       
