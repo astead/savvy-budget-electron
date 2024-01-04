@@ -259,7 +259,7 @@ input.BalTransfer {
   margin-right: 5px;
 }
 
-button.trash {
+button {
   width: 30px;
   height: 30px;
   border: 1px solid #1b1b18;
@@ -268,13 +268,43 @@ button.trash {
   margin-right:.5rem;
   margin-left:.5rem;
   background-color: #F8FAFC;
+  color: #000000;
+}
+
+button:hover {
+  filter:brightness(120%);
+  background-color: limegreen;
+}
+
+button.trash {
+  background-color: #F8FAFC;
   color: #EF4444;
 }
 
 button.trash:hover {
-  filter:brightness(120%);
   color: #F8FAFC;
   background-color: #EF4444;
+}
+
+button.applyKeyword {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #1b1b18;
+  border-radius: 10%;
+  cursor: pointer;
+  margin-right:.5rem;
+  margin-left:.5rem;
+  background-color: #F8FAFC;
+  color: #000000;
+}
+
+button.applyKeyword:hover {
+  filter:brightness(120%);
+  background-color: limegreen;
+}
+
+button.textButton {
+  width: fit-content;
 }
 
 div.right-button {
@@ -296,35 +326,18 @@ div.right-button:hover {
   background-color: limegreen;
 }
 
-.PrevBudgetHeaderLabel {
+div.PrevBudgetHeaderLabel {
   margin:auto;
   width:100%;
 }
 
-.PrevBudgetHeaderContainer {
+div.PrevBudgetHeaderContainer {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   vertical-align: middle;
   width:100%;
   justify-content: center;
-}
-
-.applyKeyword {
-  width: 30px;
-  height: 30px;
-  border: 1px solid #1b1b18;
-  border-radius: 10%;
-  cursor: pointer;
-  margin-right:.5rem;
-  margin-left:.5rem;
-  background-color: #F8FAFC;
-  color: #000000;
-}
-
-.applyKeyword:hover {
-  filter:brightness(120%);
-  background-color: limegreen;
 }
 
 div.import-container {
@@ -356,41 +369,6 @@ input.import-file {
   padding:0;
   margin:0;
   width: 350px;
-}
-
-.import {
-  width: 30px;
-  height: 30px;
-  border: 1px solid #1b1b18;
-  border-radius: 10%;
-  cursor: pointer;
-  margin-right:.5rem;
-  margin-left:.5rem;
-  border-radius: 6px;
-  background-color: #F8FAFC;
-  color: black;
-}
-
-.import:hover {
-  filter:brightness(120%);
-  color: black;
-  background-color: limegreen;
-}
-
-.plusButton {
-
-    width: 30px;
-    height: 30px;
-    border: 1px solid #1b1b18;
-    border-radius: 10%;
-    cursor: pointer;
-    margin-right:.5rem;
-    margin-left:.5rem;
-  background-color: #F8FAFC;
-}
-
-.plusButton:hover {
-  background-color: limegreen;
 }
 
 div.envelopeDataContainer {

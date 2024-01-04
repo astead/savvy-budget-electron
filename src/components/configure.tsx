@@ -614,21 +614,19 @@ export const Configure = () => {
                   </td>
                   <td className="TransactionTableCell">
                   <button 
-                    className='trash'
+                    className="trash"
                     onClick={() => handleKeywordDelete(id)}>
                       <FontAwesomeIcon icon={faTrash} />
                   </button>
                   </td>
                   <td className="TransactionTableCell">
                     <button 
-                      className='applyKeyword'
                       onClick={() => handleKeywordSetAll(id, 0)}>
                         <FontAwesomeIcon icon={faReply} flip="horizontal" />
                     </button>
                   </td>
                   <td className="TransactionTableCell">
                     <button 
-                      className='applyKeyword'
                       onClick={() => handleKeywordSetAll(id, 1)}>
                         <FontAwesomeIcon icon={faReplyAll} flip="horizontal" />
                     </button>
@@ -739,6 +737,7 @@ export const Configure = () => {
       <br/><br/>
       <span>Create a new database file:</span>
       <button 
+        className="textButton"
         onClick={() => {
           const ipcRenderer = (window as any).ipcRenderer;
           ipcRenderer.send(channels.CREATE_DB);

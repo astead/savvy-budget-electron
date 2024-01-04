@@ -659,7 +659,6 @@ export const Transactions: React.FC = () => {
                   onChange={save_file_name}
               />
               <button 
-                className='import'
                 onClick={handleImport}>
                   <FontAwesomeIcon icon={faFileImport} />
               </button>

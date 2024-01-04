@@ -287,6 +287,7 @@ export const PlaidConfig = () => {
                 <td className="BudgetTableCell">{acc.lastTx && Moment(acc.lastTx).format('M/D/YYYY')}</td>
                 <td className="BudgetTableCell">
                   <button 
+                    className='textButton'
                     onClick={() => {
                       get_transactions(acc)
                     }} 

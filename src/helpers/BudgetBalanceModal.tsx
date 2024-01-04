@@ -70,7 +70,6 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
             className="Curr BalTransfer"
           />
           <button 
-            className='import'
             onClick={handleSaveNewValue}>
               <FontAwesomeIcon icon={faArrowRight} />
           </button>
@@ -92,7 +91,6 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
             className="envelopeDropDown"
           />
           <button 
-            className='import'
             onClick={handleSaveTransfer}>
               <FontAwesomeIcon icon={faArrowRight} />
           </button>
