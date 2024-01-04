@@ -652,7 +652,7 @@ export const Configure = () => {
             <th className="Table THR THRC">{'Account'}</th>
             <th className="Table THR THRC">{'Name'}</th>
             <th className="Table THR THRC">{'Last Transaction'}</th>
-            <th className="Table THR THRC">{' '}</th>
+            <th className="Table THR THRC">{'    '}</th>
           </tr>
         </thead>
 
@@ -674,7 +674,7 @@ export const Configure = () => {
                     <td className="Table TC Right">{lastTx && Moment(lastTx).format('M/D/YYYY')}</td>
                     <td className="Table TC">
                     <div 
-                      className={"ToggleVisibility" + (isActive?"-no":"-yes")}
+                      className={"Toggle" + (!isActive?" Toggle-active":"")}
                       onClick={() => handleAccountDelete(id, isActive)}>
                         <FontAwesomeIcon icon={faEyeSlash} />
                     </div>
