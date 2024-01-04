@@ -194,7 +194,7 @@ export const PlaidConfig = () => {
   const NewPlaid = () => {
     return (
       <PlaidLink 
-        className={"myButton"+(!token?"-disabled":"")}
+        className={"myButton"+(!token?" myButton-disabled":"")}
         style={{ cursor: 'pointer' }}
         token={token}
         onSuccess={onSuccess}

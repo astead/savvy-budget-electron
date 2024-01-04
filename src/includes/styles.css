@@ -8,54 +8,15 @@ body {
   margin:0px;
 }
 
-input[type="text"] {
-  font: inherit;
-}
-
-button, .myButton {
-  font: inherit;
-  border:2px;
-  border-bottom:2px;
-  border-top: 2ps;
-  border-left: 2px;
-  border-right: 2px;
-  width:fit-content;
-  padding-top:1px;
-  padding-bottom:1px;
-  padding-left:6px;
-  padding-right:6px;
-  border-radius: 3px;
-  cursor:pointer;
-}
-
-button:hover {
-  
-}
-
 .main-page-body-text {
   width: 600px;
   text-align: left;
   margin:auto;
 }
 
-.myButton-disabled {
+input[type="text"] {
   font: inherit;
-  border:2px;
-  border-bottom:2px;
-  border-top: 2ps;
-  border-left: 2px;
-  border-right: 2px;
-  width:fit-content;
-  padding-top:1px;
-  padding-bottom:1px;
-  padding-left:6px;
-  padding-right:6px;
-  border-radius: 3px;
-  cursor:pointer;
-  color: lightslategray;
-  background-color: gray;
 }
-
 
 h1 {
   margin: 0.5rem 0;
@@ -66,6 +27,44 @@ a {
   color: inherit;
 }
 
+.menuLink {
+  margin-left: 10px;
+  margin-right: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  background: #d2d2d2;
+}
+
+.menuLink:hover {
+  background: #989898;
+}
+
+.menuLink-selected {
+  background: white;
+  border: 1px solid black;
+}
+
+button, .myButton {
+  font: inherit;
+  border:2px;
+  border-bottom:2px;
+  border-top: 2px;
+  border-left: 2px;
+  border-right: 2px;
+  width:fit-content;
+  padding-top:1px;
+  padding-bottom:1px;
+  padding-left:6px;
+  padding-right:6px;
+  border-radius: 3px;
+  cursor:pointer;
+}
+
+.myButton-disabled {
+  color: lightslategray;
+  background-color: gray;
+}
+
 div.NavBar {
   background-color: #d2d2d2;
   display: flex;
@@ -73,27 +72,6 @@ div.NavBar {
   padding-left:10px;
   padding-right:10px;
   margin-bottom: 15px;
-}
-
-.menuLink {
-  margin-left: 10px;
-  margin-right: 10px;
-  padding-left: 10px;
-  padding-right: 10px;
-  background: #d2d2d2;
-  color: black;
-  text-decoration: none;
-}
-
-.menuLink-selected {
-  margin-left: 10px;
-  margin-right: 10px;
-  padding-left: 10px;
-  padding-right: 10px;
-  background: white;
-  color: black;
-  text-decoration: none;
-  border: 1px solid black;
 }
  
 div.App {
