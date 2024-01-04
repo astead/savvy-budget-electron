@@ -696,22 +696,6 @@ export const Configure = () => {
 
   let database_content = (
     <>
-      {!databaseFile && 
-        <>
-          <span>Select database file:</span>
-          <input
-              type="file"
-              name="file"
-              className="import-file"
-              onChange={(e) => {
-                if (e.target.files) {
-                  setLoaded(false);
-                  check_database_file(e.target.files[0].path);
-                }
-              }}          
-          />
-        </>
-      }
       {databaseFile &&
         <span>Database: {databaseFile}</span>
       }
@@ -733,47 +717,50 @@ export const Configure = () => {
           <span>Database version: {databaseVersion}</span><br/>
         </>
       }
+      {!databaseFile && 
+        <span>Select database file:</span>
+      }
       {databaseFile && 
         <>
           <br/><br/>
           <span>Select a different database file:</span>
-          <input
-              type="file"
-              name="file"
-              className="import-file"
-              onChange={(e) => {
-                if (e.target.files) {
-                  setLoaded(false);
-                  check_database_file(e.target.files[0].path);
-                }
-              }}          
-          />
-          <br/><br/>
-          <span>Create a new database file:</span>
-          <button 
-            onClick={() => {
-              const ipcRenderer = (window as any).ipcRenderer;
-              ipcRenderer.send(channels.CREATE_DB);
-
-              // Receive the new filename
-              ipcRenderer.on(channels.LIST_NEW_DB_FILENAME, (arg) => {
-                if (arg?.length > 0) {
-                  setLoaded(false);
-                  check_database_file(arg);
-                }
-
-                ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
-              });
-
-              // Clean the listener after the component is dismounted
-              return () => {
-                ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
-              };
-            }}>
-              Create New
-          </button>
         </>
       }
+      <input
+          type="file"
+          name="file"
+          className="import-file"
+          onChange={(e) => {
+            if (e.target.files) {
+              setLoaded(false);
+              check_database_file(e.target.files[0].path);
+            }
+          }}          
+      />
+      <br/><br/>
+      <span>Create a new database file:</span>
+      <button 
+        onClick={() => {
+          const ipcRenderer = (window as any).ipcRenderer;
+          ipcRenderer.send(channels.CREATE_DB);
+
+          // Receive the new filename
+          ipcRenderer.on(channels.LIST_NEW_DB_FILENAME, (arg) => {
+            if (arg?.length > 0) {
+              setLoaded(false);
+              check_database_file(arg);
+            }
+
+            ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
+          });
+
+          // Clean the listener after the component is dismounted
+          return () => {
+            ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
+          };
+        }}>
+          Create New
+      </button>
     </>
   );
   
