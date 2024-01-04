@@ -497,7 +497,7 @@ export const Configure = () => {
                     <article
                       className={
                         cat_name === 'Income'?'cat ci ci-income':
-                        cat_name === 'Uncategorized'?'cat ci ci-uncategorized':'category ci'}>
+                        cat_name === 'Uncategorized'?'cat ci ci-uncategorized':'cat ci'}>
                       <div className="cat">
                         {(cat_name === 'Income' || cat_name === 'Uncategorized')?
                           <div className="cat">{cat_name}</div>
