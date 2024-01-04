@@ -62,14 +62,14 @@ export const MonthSelector = ({ numMonths, startMonth, curIndex, parentCallback}
 
   return (
     <div className="months-container">
-      <div className="month-arrow" onClick={() => {handleMonthAdjust(-1);}}>
+      <div className="month-item month-arrow" onClick={() => {handleMonthAdjust(-1);}}>
         <FontAwesomeIcon icon={faChevronLeft} size="lg"/>
       </div>
       {arrayMonths?.length > 0 && arrayMonths.map((myMonth, index) => {
         return (
           <div 
             key={"month-"+index} 
-            className={"month-item"+(myCurIndex === index ? "-selected":"")}
+            className={"month-item"+(myCurIndex === index ? " month-item-selected":"")}
             onClick={() => {
               setMyCurIndex(index);
               parentCallback(
@@ -81,7 +81,7 @@ export const MonthSelector = ({ numMonths, startMonth, curIndex, parentCallback}
           </div>
         )
       })}
-      <div className="month-arrow" onClick={() => {handleMonthAdjust(1);}}>
+      <div className="month-item month-arrow" onClick={() => {handleMonthAdjust(1);}}>
         <FontAwesomeIcon icon={faChevronLeft} flip="horizontal" size="lg"/>
       </div>
     </div>

@@ -142,37 +142,22 @@ div.month-item {
 }
 
 div.month-item:hover {
-  font-size:.75rem;
-  margin-left:2px;
-  margin-right:2px;
-  padding: 4px;
-  padding-left: 7px;
-  padding-right: 7px;
-  text-align: center;
-  border: 1px solid black;
-  border-radius: 8px;
-  white-space: pre-wrap;
   filter:brightness(120%);
   background-color: rgb(162, 165, 162);
-  width: 30px;
-  height: 30px;
 }
 
 div.month-item-selected {
-  font-size:.75rem;
   font-weight:bolder;
-  margin-left:2px;
-  margin-right:2px;
-  padding: 4px;
-  padding-left: 7px;
-  padding-right: 7px;
-  text-align: center;
-  border: 1px solid black;
-  border-radius: 8px;
-  white-space: pre-wrap;
   background-color: rgb(140, 140, 140);
-  width: 30px;
-  height: 30px;
+}
+
+div.month-arrow {
+  padding-top: 9px;
+  padding-bottom: 0px;
+  width: 20px;}
+
+div.month-arrow:hover {
+  background-color: rgb(162, 165, 162);
 }
 
 article.category-container {
@@ -879,22 +864,4 @@ tr.TransactionTableRow {
 
 tr.TransactionTableRow-duplicate {
   background-color: rgb(205, 146, 88);
-}
-
-div.month-arrow {
-  margin-left:2px;
-  margin-right:2px;
-  padding-top: 9px;
-  padding-bottom: 0px;
-  padding-left: 7px;
-  padding-right: 7px;
-  text-align: center;
-  border: 1px solid black;
-  border-radius: 8px;
-  width: 20px;
-  height: 30px;
-}
-
-div.month-arrow:hover {
-  background-color: rgb(162, 165, 162);
 }
