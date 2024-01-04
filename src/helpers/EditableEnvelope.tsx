@@ -26,7 +26,7 @@ export const EditableEnvelope = ({ initialID, initialName}) => {
       value={name}
       onChange={(e) => handleChange(e, setName)}
       onBlur={handleEnvBlur}
-      className="envelope"
+      className="cat"
       inputClassName="" />
   );
 };

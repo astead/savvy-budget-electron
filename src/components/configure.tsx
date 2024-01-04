@@ -493,14 +493,14 @@ export const Configure = () => {
             <Droppable droppableId={catID.toString()} key={index}>
               {(provided) => (
                 <section  {...provided.droppableProps} ref={provided.innerRef}>
-                  <article className="category">
+                  <article className="cat">
                     <article
                       className={
-                        cat_name === 'Income'?'category ci ci-income':
-                        cat_name === 'Uncategorized'?'category ci ci-uncategorized':'category ci'}>
-                      <div className="category">
+                        cat_name === 'Income'?'cat ci ci-income':
+                        cat_name === 'Uncategorized'?'cat ci ci-uncategorized':'category ci'}>
+                      <div className="cat">
                         {(cat_name === 'Income' || cat_name === 'Uncategorized')?
-                          <div className="category">{cat_name}</div>
+                          <div className="cat">{cat_name}</div>
                           :
                           <EditableCategory
                             initialID={catID.toString()}
@@ -518,16 +518,16 @@ export const Configure = () => {
                       }
                     </article>
                     
-                    <article className="envelope-container">
+                    <article className="cat env">
                     {
                       items.map((env, index2) => {
                         return (
                           (env.envID) &&
                           <Draggable key={index2} draggableId={env.envID.toString()} index={index2}>
                             {(provided) => (
-                              <article className="envelope-item-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
-                                <article className="envelope-item">
-                                  <div className="envelope">
+                              <article className="cat env ei-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                                <article className="cat env ei-container ei">
+                                  <div className="cat">
                                     <EditableEnvelope
                                       initialID={env.envID.toString()}
                                       initialName={env.envelope} />
