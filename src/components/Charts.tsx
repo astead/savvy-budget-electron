@@ -215,7 +215,7 @@ export const Charts: React.FC = () => {
               envID={filterEnvID}
               data={filterEnvList}
               changeCallback={handleFilterEnvChange}
-              className="envelopeDropDown"
+              className=""
             />
           </div>
         }
@@ -227,7 +227,7 @@ export const Charts: React.FC = () => {
               time_id={filterTimeFrameID}
               data={filterTimeFrame}
               changeCallback={handleFilterTimeFrameChange}
-              className="envelopeDropDown"
+              className=""
             />
           </div>
         }

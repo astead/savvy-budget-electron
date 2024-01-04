@@ -842,7 +842,7 @@ export const Transactions: React.FC = () => {
                         envID={item.envID}
                         data={envList}
                         changeCallback={handleTxEnvChange}
-                        className="filterEnvelope"
+                        className={item.envID === -1 ? "envelopeDropDown-undefined":""}
                       />
                     </td>
                     <td className="Table TC">

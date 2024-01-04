@@ -609,7 +609,7 @@ export const Configure = () => {
                       envID={envelopeID}
                       data={envList}
                       changeCallback={handleEnvelopeChange}
-                      className="envelopeDropDown"
+                      className={envelopeID === -1 ? "envelopeDropDown-undefined":""}
                     />
                   </td>
                   <td className="Table TC">

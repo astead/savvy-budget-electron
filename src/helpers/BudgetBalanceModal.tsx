@@ -88,7 +88,7 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
             envID={envID}
             data={transferEnvList}
             changeCallback={handleFilterEnvChange}
-            className="envelopeDropDown"
+            className=""
           />
           <button 
             onClick={handleSaveTransfer}>
