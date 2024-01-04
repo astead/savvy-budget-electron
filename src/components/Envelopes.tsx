@@ -530,12 +530,12 @@ export const Envelopes: React.FC = () => {
             <div>
               <table className="BudgetTable" cellSpacing={0} cellPadding={0}>
               
-                <thead className="BudgetTableHeader">
-                  <tr className="BudgetTableHeaderRow">
-                    <th className="BudgetTableHeaderCell">{' \nEnvelope'}</th>
-                    <th className="BudgetTableHeaderCellCurr">
-                      <div className="PrevBudgetHeaderContainer">
-                        <div className="PrevBudgetHeaderLabel">{'Prev\nBudget'}</div>
+                <thead>
+                  <tr className="BudgetTable BTHR">
+                    <th className="BudgetTable BTHR BTHRC">{' \nEnvelope'}</th>
+                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">
+                      <div className="PrevBTHRC">
+                        <div className="PrevBHRCLabel">{'Prev\nBudget'}</div>
                         {!haveCurrBudget &&
                           <div
                             onClick={() => {
@@ -547,26 +547,26 @@ export const Envelopes: React.FC = () => {
                         }
                       </div>
                     </th>
-                    <th className="BudgetTableHeaderCellCurr">{'Prev\nActual'}</th>
-                    <th className="BudgetTableHeaderCellCurr">{'Curr\nBalance'}</th>
-                    <th className="BudgetTableHeaderCellCurr">{disp_date_label(month, year) + '\nBudget'}</th>
-                    <th className="BudgetTableHeaderCellCurr">{'Curr\nActual'}</th>
-                    <th className="BudgetTableHeaderCellCurr">{'Monthly\nAvg'}</th>
+                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">{'Prev\nActual'}</th>
+                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">{'Curr\nBalance'}</th>
+                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">{disp_date_label(month, year) + '\nBudget'}</th>
+                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">{'Curr\nActual'}</th>
+                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">{'Monthly\nAvg'}</th>
                   </tr>
                 </thead>
       
-                <tbody className="BudgetTableBody">
+                <tbody>
                   {budgetData.map((item, index, myArray) => (
                     <React.Fragment key={index}>
                     { (index === 0 || (index > 0 && item.category !== myArray[index - 1].category)) && (
-                      <tr key={'header-'+item.envID} className="BudgetTableGroupHeaderRow">
-                        <td colSpan={7} className="BudgetTableGroupHeader">{item.category}</td>
+                      <tr key={'header-'+item.envID} className="BTGHR">
+                        <td colSpan={7} className="BTGHR BTGHC">{item.category}</td>
                       </tr>
                     )}
-                    <tr key={item.envID} className="BudgetTableRow">
-                      <td className="BudgetTableCell">{item.envelope}</td>
-                      <td className="BudgetTableCellCurr">{formatCurrency(item.prevBudget)}</td>
-                      <td className="BudgetTableCellCurr">
+                    <tr key={item.envID}>
+                      <td className="BTC BTCLeft">{item.envelope}</td>
+                      <td className="BTC BTCRight">{formatCurrency(item.prevBudget)}</td>
+                      <td className="BTC BTCRight">
                         <Link to={
                           "/Transactions" +
                           "/" + item.envID + 
@@ -575,7 +575,7 @@ export const Envelopes: React.FC = () => {
                           {formatCurrency(item.prevActual)}
                         </Link>
                       </td>
-                      <td className="BudgetTableCellCurr">
+                      <td className="BTC BTCRight BTCInput">
                         <BudgetBalanceModal 
                           balanceAmt={item.currBalance}
                           category={item.category}
@@ -585,18 +585,18 @@ export const Envelopes: React.FC = () => {
                           callback={handleBudgetChangeTransfer}
                         />
                       </td>
-                      <td className="BudgetTableCellInput">
+                      <td className="BTC BTCRight">
                         <EditableBudget 
                           initialID={item.envID}
                           initialDate={curMonth}
                           initialValue={item.currBudget}/>
                       </td>
-                      <td className="BudgetTableCellCurr">
+                      <td className="BTC BTCRight">
                         <Link to={"/Transactions/" + item.envID + "/1/" + year + "/" + month}>
                           {formatCurrency(item.currActual)}
                         </Link>
                       </td>
-                      <td className="BudgetTableCellCurr">
+                      <td className="BTC BTCRight">
                         <Link to={"/Charts/" + item.envID}>
                           {formatCurrency(item.monthlyAvg)}
                         </Link>

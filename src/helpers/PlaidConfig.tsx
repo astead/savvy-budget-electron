@@ -282,7 +282,7 @@ export const PlaidConfig = () => {
           <React.Fragment key={index}>
             { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
               <React.Fragment>
-              <tr className="BudgetTableGroupHeaderRow">
+              <tr className="BTGHR">
                 <td className="BudgetTableCell">{acc.institution}</td>
                 <td className="BudgetTableCell">{acc.lastTx && Moment(acc.lastTx).format('M/D/YYYY')}</td>
                 <td className="BudgetTableCell">

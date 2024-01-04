@@ -309,20 +309,6 @@ div.right-button:hover {
   background-color: limegreen;
 }
 
-div.PrevBudgetHeaderLabel {
-  margin:auto;
-  width:100%;
-}
-
-div.PrevBudgetHeaderContainer {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  vertical-align: middle;
-  width:100%;
-  justify-content: center;
-}
-
 div.import-container {
   border-radius: 0px;
   border: 1px solid black;
@@ -404,68 +390,64 @@ div.envelopeDataContainer {
   border:1px solid black;
 }
 
-.BudgetTableHeaderRow {
+.BTHR {
   background-color: #b4b4b4;
-  padding: 0;
-  margin: 0;
 }
 
-.BudgetTableHeaderCell {
-  background-color: #b4b4b4;
-  border: 1px solid black;
+th.BTHRC {
   white-space: pre-wrap;
   height:100%;
-  padding: 0;
-  margin: 0;
   padding-left:2px;
 }
 
-.BudgetTableHeaderCellCurr {
-  background-color: #b4b4b4;
-  border: 1px solid black;
+th.BTHRCCurr {
   text-align:center;
-  white-space: pre-wrap;
-  height:100%;
   width: 100px;
-  padding: 0;
-  margin: 0;
 }
 
-.BudgetTableCellInput {
+div.PrevBTHRC {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  vertical-align: middle;
+  width:100%;
+  justify-content: center;
+}
+
+div.PrevBHRCLabel {
+  margin:auto;
+  width:100%;
+}
+
+td.BTC {
   border: 1px solid black;
-  text-align:right;
   padding: 0;
   margin: 0;
 }
 
-.BudgetTableCellCurr {
-  border: 1px solid black;
-  text-align:right;
-  padding: 0;
-  margin: 0;
-  padding-right:2px;
-}
-
-.BudgetTableCell {
-  border: 1px solid black; 
-  padding: 0;
-  margin: 0;
+td.BTCLeft {
   padding-left:2px;
   text-align:left; 
 }
 
-.BudgetTableGroupHeaderRow {
+td.BTCRight {
+  text-align:right;
+  padding-right:2px;
+}
+
+td.BTCInput {
+  padding-right:0px;
+}
+
+.BTGHR {
   background-color: #a6a6a6;
   padding: 0;
   margin: 0;
   row-gap: 0;
 }
 
-.BudgetTableGroupHeader {
-  background-color: #a6a6a6;
+.BTGHC {
   border: 1px solid black; 
-  padding: 0;
-  margin: 0;
   padding-left:2px;
   text-align: left;
 }
