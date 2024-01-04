@@ -908,13 +908,11 @@ export const Transactions: React.FC = () => {
                 </td>
                 <td className="TransactionTableCellCurr" colSpan={3}></td>
                 <td className="TransactionTableCellInput">
-                  <div
-                    onClick={() => {
-                      delete_checked_transactions();
-                    }}
-                    className="trash-div">
-                    <FontAwesomeIcon icon={faTrash} />
-                  </div>
+                  <button 
+                    className='trash'
+                    onClick={() => delete_checked_transactions()}>
+                      <FontAwesomeIcon icon={faTrash} />
+                  </button>
                 </td>
               </tr>
             </tfoot>

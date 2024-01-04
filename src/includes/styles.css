@@ -259,39 +259,7 @@ input.BalTransfer {
   margin-right: 5px;
 }
 
-.trash-block {
-  width: 30px;
-  height: 30px;
-  border: 1px solid #1b1b18;
-  border-radius: 10%;
-  cursor: pointer;
-  margin-right:.5rem;
-  margin-left:.5rem;
-  background-color: #F8FAFC;
-  color: #8f8f8f;
-}
-
-.trash-div {
-  width: 30px;
-  height: 30px;
-  border: 1px solid #1b1b18;
-  border-radius: 10%;
-  cursor: pointer;
-  margin:0;
-  padding:0;
-  text-align:center;
-  vertical-align: middle;
-  background-color: #F8FAFC;
-  color: #EF4444;
-}
-
-.trash-div:hover {
-  filter:brightness(120%);
-  color: #F8FAFC;
-  background-color: #EF4444;
-}
-
-.trash {
+button.trash {
   width: 30px;
   height: 30px;
   border: 1px solid #1b1b18;
@@ -303,7 +271,7 @@ input.BalTransfer {
   color: #EF4444;
 }
 
-.trash:hover {
+button.trash:hover {
   filter:brightness(120%);
   color: #F8FAFC;
   background-color: #EF4444;

@@ -510,7 +510,7 @@ export const Configure = () => {
                       <NewEnvelope id={catID} />
                       {(cat_name !== 'Income' && cat_name !== 'Uncategorized')?
                         <button 
-                          className={(cat_name === 'Income' || cat_name === 'Uncategorized')?'trash-block':'trash'}
+                          className="trash"
                           onClick={() => handleCategoryDelete( catID, cat_name )}>
                             <FontAwesomeIcon icon={faTrash} />
                         </button>
