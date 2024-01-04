@@ -25,7 +25,7 @@ export const EditableBudget = ({ initialID, initialDate, initialValue}) => {
       value={value}
       onChange={(e) => handleChange(e, setValue)}
       onBlur={handleEnvBlur}
-      className="inputCurrency"
+      className="Curr"
     />
   );
 };

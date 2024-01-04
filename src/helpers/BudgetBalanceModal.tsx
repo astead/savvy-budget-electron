@@ -67,7 +67,7 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
             name={'adjust-balance-'+envID}
             defaultValue={balanceAmt.toFixed(2)}
             onChange={(e) => setNewAmt(e.target.value)}
-            className="BudgetBalanceTransfer"
+            className="Curr BalTransfer"
           />
           <button 
             className='import'
@@ -81,7 +81,7 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
             name={'adjust-balance-' + envID}
             defaultValue={balanceAmt.toFixed(2)}
             onChange={(e) => setTransferAmt(e.target.value)}
-            className="BudgetBalanceTransfer"
+            className="Curr BalTransfer"
           />
           to&nbsp;
           <CategoryDropDown 
