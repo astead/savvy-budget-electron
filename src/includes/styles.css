@@ -16,6 +16,11 @@ body {
 
 input[type="text"] {
   font: inherit;
+  width: 100%;
+  border-radius: 5px;
+  border: 0.5px solid #18181B;
+  padding:0;
+  margin:0;
 }
 
 h1 {
@@ -236,28 +241,6 @@ article.ei {
 
 span.clickable {
   cursor: pointer;
-}
-
-form {
-  padding: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid #18181B;
-  margin-bottom: 1rem;
-}
-
-form label {
-  position: absolute;
-  left: -10000px;
-}
-
-input[type="text"] {
-  width: 100%;
-  border-radius: 5px;
-  border: 0.5px solid #18181B;
-  padding:0;
-  margin:0;
 }
 
 input.inputCurrency {
