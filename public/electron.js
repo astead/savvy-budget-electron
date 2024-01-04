@@ -2034,10 +2034,12 @@ ipcMain.on(
 
 ipcMain.on(channels.GET_DB_VER, (event) => {
   console.log(channels.GET_DB_VER);
-  knex('version')
-    .select('version')
-    .then((data) => {
-      event.sender.send(channels.LIST_DB_VER, data);
-    })
-    .catch((err) => console.log(err));
+  if (knex) {
+    knex('version')
+      .select('version')
+      .then((data) => {
+        event.sender.send(channels.LIST_DB_VER, data);
+      })
+      .catch((err) => console.log(err));
+  }
 });
