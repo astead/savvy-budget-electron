@@ -57,7 +57,7 @@ button, .myButton {
   padding-left:6px;
   padding-right:6px;
   border-radius: 3px;
-  cursor:pointer;
+  cursor: pointer;
 }
 
 .myButton-disabled {
@@ -91,7 +91,6 @@ div.mainContent {
   padding-left: 20px;
   margin:auto;
 }
-
 
 div.new-category-container{
   padding: 0;
@@ -175,7 +174,6 @@ div.month-item-selected {
   width: 30px;
   height: 30px;
 }
-
 
 article.category-container {
   padding: 0;
@@ -276,6 +274,10 @@ article.envelope-item {
   background-color: #c9c9c9;
   border:1px solid #18181B;
   border-radius: 5px;
+}
+
+span.clickable {
+  cursor: pointer;
 }
 
 div.envelope{

@@ -52,7 +52,7 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
 
   return (
     <>
-      <span onClick={handleOpen}>{formatCurrency(balanceAmt)}</span>
+      <span onClick={handleOpen} className="clickable">{formatCurrency(balanceAmt)}</span>
       <Modal
         open={open}
         onClose={handleClose}
