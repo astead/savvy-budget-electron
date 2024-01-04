@@ -493,12 +493,11 @@ export const Configure = () => {
             <Droppable droppableId={catID.toString()} key={index}>
               {(provided) => (
                 <section  {...provided.droppableProps} ref={provided.innerRef}>
-                  <article className="category-container">
+                  <article className="category">
                     <article
                       className={
-                        cat_name === 'Income'?'category-item-income':
-                        cat_name === 'Uncategorized'?'category-item-uncategorized':
-                        'category-item'}>
+                        cat_name === 'Income'?'category ci ci-income':
+                        cat_name === 'Uncategorized'?'category ci ci-uncategorized':'category ci'}>
                       <div className="category">
                         {(cat_name === 'Income' || cat_name === 'Uncategorized')?
                           <div className="category">{cat_name}</div>

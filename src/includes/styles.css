@@ -160,54 +160,35 @@ div.month-arrow:hover {
   background-color: rgb(162, 165, 162);
 }
 
-article.category-container {
+article.category {
   padding: 0;
   margin: .5rem;
   display: flex;
   flex-direction: column;
-  
   align-items: center;
   background-color: #ffffff;
   border: 1px solid #18181B;
   width:90%;
-
 }
 
-article.category-item{
-  padding: 0;
+article.ci{
   margin: 0;
-  display: flex;
   width: 100%;
+  flex-direction: row;
   vertical-align: middle;
-  align-items: center;
   background-color: #909090;
-  border-bottom:1px solid #18181B;
 }
 
-article.category-item-income{
-  padding: 0;
-  margin: 0;
+article.ci-income{
   padding-top: 2px;
   padding-bottom: 2px;
-  display: flex;
-  width: 100%;
-  vertical-align: middle;
-  align-items: center;
   background-color: #70ac7c;
-  border-bottom:1px solid #18181B;
 }
 
-article.category-item-uncategorized{
-  padding: 0;
-  margin: 0;
+article.ci-uncategorized{
   padding-top: 2px;
   padding-bottom: 2px;
-  display: flex;
-  width: 100%;
-  vertical-align: middle;
-  align-items: center;
   background-color: #676767;
-  border-bottom:1px solid #18181B;
 }
 
 div.category{
