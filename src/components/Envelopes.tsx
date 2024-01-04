@@ -284,6 +284,10 @@ export const Envelopes: React.FC = () => {
       prev_budget_values]);
   }
 
+  const handleBudgetChangeTransfer = () => {
+    load_CurrBalance();
+  }
+
   const get_totals = () => {
     let myTotalBudgetIncome = 0;
     let myTotalBudgetSpending = 0;
@@ -578,6 +582,7 @@ export const Envelopes: React.FC = () => {
                           envelope={item.envelope}
                           envID={item.envID}
                           transferEnvList={transferEnvList}
+                          callback={handleBudgetChangeTransfer}
                         />
                       </td>
                       <td className="BudgetTableCellInput">

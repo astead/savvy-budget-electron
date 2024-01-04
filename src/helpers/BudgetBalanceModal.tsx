@@ -22,7 +22,7 @@ function formatCurrency(currencyNumber:number) {
   return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
 };
 
-export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, transferEnvList}) => {
+export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, transferEnvList, callback}) => {
   const [open, setOpen] = useState(false);
   const [newAmt, setNewAmt] = useState(balanceAmt.toFixed(2));
   const [transferAmt, setTransferAmt] = useState(balanceAmt.toFixed(2));
@@ -35,6 +35,7 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_BALANCE, [envID, newAmt]);
     setOpen(false);
+    callback();
   };
 
   const handleSaveTransfer = () => {
@@ -42,6 +43,7 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.MOVE_BALANCE, [transferAmt, envID, transferEnvID]);
     setOpen(false);
+    callback();
   };
 
   const handleFilterEnvChange = ({id, new_value, new_text}) => {
