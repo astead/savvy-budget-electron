@@ -24,9 +24,9 @@ export const EditableKeyword = ({ initialID, initialDescription}) => {
       value={description}
       onChange={(e) => handleChange(e, setDescription)}
       onBlur={handleEnvBlur}
-
-      className="envelope"
-      inputClassName="" />
+      style={{padding: '0px', margin: '0px', minHeight: '1rem'}}
+      className="editableText"
+      inputClassName="normalInput" />
   );
 };
 

@@ -24,9 +24,9 @@ export const EditableAccount = ({ initialID, initialName}) => {
       value={name}
       onChange={(e) => handleChange(e, setName)}
       onBlur={handleEnvBlur}
-
-      className="envelope"
-      inputClassName="" />
+      style={{padding: '0px', margin: '0px', minHeight: '1rem'}}
+      className="editableText"
+      inputClassName="normalInput" />
   );
 };
 

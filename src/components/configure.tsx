@@ -791,13 +791,18 @@ export const Configure = () => {
               onChange={handleTabChange}
               aria-label="basic tabs example"
               variant="fullWidth"
-              textColor="primary"
-              indicatorColor="primary"  sx={{ padding: 0, margin: 0, height: 30, minHeight:30, width: 800}}>
-              <Tab label="Categories" {...a11yProps(0)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
-              <Tab label="Key Words" {...a11yProps(1)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
-              <Tab label="Accounts" {...a11yProps(2)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
-              <Tab label="Database" {...a11yProps(3)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
-              <Tab label="PLAID" {...a11yProps(4)} sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
+              textColor="inherit"
+              TabIndicatorProps={{
+                style: {
+                  backgroundColor: "black"
+                }
+              }}
+              sx={{ padding: 0, margin: 0, height: 30, minHeight:30, width: 800}}>
+              <Tab label="Categories" {...a11yProps(0)} className="TabButton" sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
+              <Tab label="Key Words" {...a11yProps(1)} className="TabButton" sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
+              <Tab label="Accounts" {...a11yProps(2)} className="TabButton" sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
+              <Tab label="Database" {...a11yProps(3)} className="TabButton" sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
+              <Tab label="PLAID" {...a11yProps(4)} className="TabButton" sx={{ padding: 0, margin: 0, height: 30, minHeight:30 }} />
             </Tabs>
           </Box>
           <CustomTabPanel tabValue={tabValue} index={0}>

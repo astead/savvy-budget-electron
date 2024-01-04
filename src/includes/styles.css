@@ -14,13 +14,20 @@ body {
   margin:auto;
 }
 
-input[type="text"] {
+input[type="text"], .normalInput {
   font: inherit;
   width: 100%;
   border-radius: 5px;
   border: 0.5px solid #18181B;
   padding:0;
   margin:0;
+}
+
+.editableText {
+  margin: 0;
+  padding: 0;
+  line-height: normal;
+  vertical-align: middle;
 }
 
 h1 {
@@ -275,6 +282,14 @@ button.textButton {
   width: fit-content;
   padding-left: 4px;
   padding-right: 4px;
+}
+
+button.TabButton {
+
+}
+
+button.TabButton:hover {
+  background: #989898;
 }
 
 div.import-container {
