@@ -244,7 +244,7 @@ span.clickable {
 }
 
 input.Curr {
-  text-align:right;
+  text-align: right;
   border-radius: 0px;
   width: 100px;
   height: 100%;
@@ -288,25 +288,6 @@ button.trash:hover {
 
 button.textButton {
   width: fit-content;
-}
-
-div.right-button {
-  width: 20px;
-  height: 20px;
-  border: 1px solid #1b1b18;
-  border-radius: 10%;
-  cursor: pointer;
-  margin: auto;
-  margin-left: 5px;
-  margin-right: 2px;
-  padding: 2px;
-  background-color: #F8FAFC;
-  color: #000000;
-}
-
-div.right-button:hover {
-  filter:brightness(120%);
-  background-color: limegreen;
 }
 
 div.import-container {
@@ -377,9 +358,9 @@ div.envelopeDataDiffItem {
 }
 
 div.envelopeDataDiffItemCurr {
-  padding-left:10px;
-  text-align:right;
-  width:100%;
+  padding-left: 10px;
+  text-align: right;
+  width: 100%;
 }
 
 .Table {
@@ -440,12 +421,12 @@ td.TC {
   padding-right:2px;
 }
 
-td.TCLeft {
+.Left {
   text-align:left; 
 }
 
-td.TCRight {
-  text-align:right;
+.Right {
+  text-align: right;
 }
 
 td.TCInput {
@@ -468,38 +449,17 @@ td.TCInput {
   justify-content: right;
 }
 
-.txFilterLabelCell {
-  text-align: right;
-}
-
-.txFilterCell {
-  text-align: left;
-}
-
-.filterDescription {
-  width:242px;
-}
-
-.filterAmount {
-  width:242px;
-}
-
-.newAmount {
+input.small {
   width:100px;
 }
 
-.filterAccount {
-  width:250px;
-  height:21px;
-}
-
-span.bold-label {
-  font-weight:bolder;
-}
-
-select.filterEnvelope {
+.filterSize {
   width: 250px;
-  height:21px;
+  height: 21px;
+}
+
+.bold {
+  font-weight:bolder;
 }
 
 .chartContainer {

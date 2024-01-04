@@ -578,7 +578,7 @@ export const Transactions: React.FC = () => {
             {newTxEnvListLoaded && newTxAccListLoaded &&
             <>
             <div>
-              <span className="bold-label">Add Transaction:</span><br/>
+              <span className="bold">Add Transaction:</span><br/>
               <table>
                 <tbody>
                   <tr>
@@ -605,7 +605,7 @@ export const Transactions: React.FC = () => {
                           id={newTxAccID}
                           data={newTxAccList}
                           changeCallback={({id, new_value, new_text}) => setNewTxAccID(new_value)}
-                          className="newAccount"
+                          className=""
                         />
                     </td>
                     <td>
@@ -614,7 +614,6 @@ export const Transactions: React.FC = () => {
                           defaultValue={newTxDescTemp}
                           onChange={(e) => setNewTxDescTemp(e.target.value)}
                           onBlur={() => setNewTxDesc(newTxDescTemp)}
-                          className="newDescription"
                         />
                     </td>
                     <td>
@@ -623,7 +622,7 @@ export const Transactions: React.FC = () => {
                           defaultValue={newTxAmountTemp}
                           onChange={(e) => setNewTxAmountTemp(e.target.value)}
                           onBlur={() => setNewTxAmount(newTxAmountTemp)}
-                          className="newAmount"
+                          className="small"
                         />
                     </td>
                     <td>
@@ -632,15 +631,13 @@ export const Transactions: React.FC = () => {
                           envID={newTxEnvID}
                           data={newTxEnvList}
                           changeCallback={({id, new_value, new_text}) => setNewTxEnvID(new_value)}
-                          className="newEnvelope"
+                          className=""
                         />
                     </td>
                     <td>
-                      <div
-                        onClick={() => add_new_transaction()}
-                        className="right-button">
+                      <button onClick={() => add_new_transaction()}>
                         <FontAwesomeIcon icon={faChevronRight} />
-                      </div>
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -650,7 +647,7 @@ export const Transactions: React.FC = () => {
             </>
             }
             <div>
-              <span className="bold-label">Import Transactions:</span><br/>
+              <span className="bold">Import Transactions:</span><br/>
               <input
                   type="file"
                   name="file"
@@ -683,10 +680,10 @@ export const Transactions: React.FC = () => {
           <AccordionDetails>
             <table><tbody>
               <tr>
-                <td className="txFilterLabelCell">
+                <td className="Right">
                   <span>Start Date: </span>
                 </td>
-                <td className="txFilterCell">
+                <td className="Left">
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
                       value={filterStartDate}
@@ -712,10 +709,10 @@ export const Transactions: React.FC = () => {
                   </LocalizationProvider>
                 </td>
                 <td width="50"></td>
-                <td className="txFilterLabelCell">
+                <td className="Right">
                   <span>Description: </span>
                 </td>
-                <td className="txFilterCell">
+                <td className="Left">
                   <input
                     name="filterDescTemp"
                     defaultValue={filterDescTemp}
@@ -723,15 +720,15 @@ export const Transactions: React.FC = () => {
                       setFilterDescTemp(e.target.value);
                     }}
                     onBlur={handleFilterDescChange}
-                    className="filterDescription"
+                    className="filterSize"
                   />
                 </td>
               </tr>
               <tr>
-                <td className="txFilterLabelCell">
+                <td className="Right">
                   <span>End Date: </span>
                 </td>
-                <td className="txFilterCell">
+                <td className="Left">
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
                       value={filterEndDate}
@@ -746,10 +743,10 @@ export const Transactions: React.FC = () => {
                   </LocalizationProvider>
                 </td>
                 <td></td>
-                <td className="txFilterLabelCell">
+                <td className="Right">
                   <span>Amount: </span>
                 </td>
-                <td className="txFilterCell">
+                <td className="Left">
                   <input
                       name="filterAmountTemp"
                       defaultValue={filterAmountTemp}
@@ -757,35 +754,35 @@ export const Transactions: React.FC = () => {
                         setFilterAmountTemp(e.target.value);
                       }}
                       onBlur={handleFilterAmountChange}
-                      className="filterAmount"
+                      className="filterSize"
                     />
                 </td>
               </tr>
               <tr>
-                <td className="txFilterLabelCell">
+                <td className="Right">
                   <span>Envelope: </span>
                 </td>
-                <td className="txFilterCell">
+                <td className="Left">
                   <CategoryDropDown 
                     id={-1}
                     envID={filterEnvID}
                     data={filterEnvList}
                     changeCallback={handleFilterEnvChange}
-                    className="filterEnvelope"
+                    className="filterSize"
                   />
                 </td>
               </tr>
               <tr>
-                <td className="txFilterLabelCell">
+                <td className="Right">
                   <span>Account: </span>
                 </td>
-                <td className="txFilterCell">
+                <td className="Left">
                   <AccountDropDown 
                     keyID={-1}
                     id={filterAccID}
                     data={filterAccList}
                     changeCallback={handleFilterAccChange}
-                    className="filterAccount"
+                    className="filterSize"
                   />
                 </td>
               </tr>
@@ -836,9 +833,9 @@ export const Transactions: React.FC = () => {
                   index >= ((pagingCurPage-1) * pagingPerPage) &&
                   <tr key={index} className={(item.isDuplicate === 1 ? "TR-duplicate":"")}>
                     <td className="Table TC">{Moment(item.txDate).format('M/D/YYYY')}</td>
-                    <td className="Table TC TCLeft">{item.account}</td>
-                    <td className="Table TC TCLeft">{item.description}</td>
-                    <td className="Table TC TCRight">{formatCurrency(item.txAmt)}</td>
+                    <td className="Table TC Left">{item.account}</td>
+                    <td className="Table TC Left">{item.description}</td>
+                    <td className="Table TC Right">{formatCurrency(item.txAmt)}</td>
                     <td className="Table TC TCInput">
                       <CategoryDropDown 
                         id={item.txID}
@@ -886,10 +883,10 @@ export const Transactions: React.FC = () => {
             </tbody>
             <tfoot>
               <tr className="Table THR">
-                <td className="Table THR THRC TC TCRight" colSpan={3}>
+                <td className="Table THR THRC TC Right" colSpan={3}>
                   (Only filtered data, but including all pages) Total:
                 </td>
-                <td className="Table THR THRC TC TCRight">{
+                <td className="Table THR THRC TC Right">{
                   formatCurrency(
                     txData.reduce((total, curItem, curIndex) => {
                       return total + curItem.txAmt;

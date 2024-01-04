@@ -598,7 +598,7 @@ export const Configure = () => {
               return (
                 <tr key={index} className="Table">
                   
-                  <td className="Table TC TCLeft">
+                  <td className="Table TC Left">
                     <EditableKeyword
                       initialID={id.toString()}
                       initialDescription={description} />
@@ -665,13 +665,13 @@ export const Configure = () => {
               
                   <tr key={index} className="Table">
                     
-                    <td className="Table TC TCLeft">{refNumber}</td>
-                    <td className="Table TC TCLeft">
+                    <td className="Table TC Left">{refNumber}</td>
+                    <td className="Table TC Left">
                       <EditableAccount
                         initialID={id.toString()}
                         initialName={account} />
                     </td>
-                    <td className="Table TC TCRight">{lastTx && Moment(lastTx).format('M/D/YYYY')}</td>
+                    <td className="Table TC Right">{lastTx && Moment(lastTx).format('M/D/YYYY')}</td>
                     <td className="Table TC">
                     <div 
                       className={"ToggleVisibility" + (isActive?"-no":"-yes")}
