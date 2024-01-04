@@ -286,23 +286,6 @@ button.trash:hover {
   background-color: #EF4444;
 }
 
-button.applyKeyword {
-  width: 30px;
-  height: 30px;
-  border: 1px solid #1b1b18;
-  border-radius: 10%;
-  cursor: pointer;
-  margin-right:.5rem;
-  margin-left:.5rem;
-  background-color: #F8FAFC;
-  color: #000000;
-}
-
-button.applyKeyword:hover {
-  filter:brightness(120%);
-  background-color: limegreen;
-}
-
 button.textButton {
   width: fit-content;
 }
