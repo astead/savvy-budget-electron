@@ -528,14 +528,14 @@ export const Envelopes: React.FC = () => {
         {loaded &&
           <div className="envelopeDataContainer">
             <div>
-              <table className="BudgetTable" cellSpacing={0} cellPadding={0}>
+              <table className="Table" cellSpacing={0} cellPadding={0}>
               
                 <thead>
-                  <tr className="BudgetTable BTHR">
-                    <th className="BudgetTable BTHR BTHRC">{' \nEnvelope'}</th>
-                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">
-                      <div className="PrevBTHRC">
-                        <div className="PrevBHRCLabel">{'Prev\nBudget'}</div>
+                  <tr className="Table THR">
+                    <th className="Table THR THRC">{' \nEnvelope'}</th>
+                    <th className="Table THR THRC THRCSmall">
+                      <div className="PrevTHRC">
+                        <div className="PrevHRCLabel">{'Prev\nBudget'}</div>
                         {!haveCurrBudget &&
                           <div
                             onClick={() => {
@@ -547,11 +547,11 @@ export const Envelopes: React.FC = () => {
                         }
                       </div>
                     </th>
-                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">{'Prev\nActual'}</th>
-                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">{'Curr\nBalance'}</th>
-                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">{disp_date_label(month, year) + '\nBudget'}</th>
-                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">{'Curr\nActual'}</th>
-                    <th className="BudgetTable BTHR BTHRC BTHRCCurr">{'Monthly\nAvg'}</th>
+                    <th className="Table THR THRC THRCSmall">{'Prev\nActual'}</th>
+                    <th className="Table THR THRC THRCSmall">{'Curr\nBalance'}</th>
+                    <th className="Table THR THRC THRCSmall">{disp_date_label(month, year) + '\nBudget'}</th>
+                    <th className="Table THR THRC THRCSmall">{'Curr\nActual'}</th>
+                    <th className="Table THR THRC THRCSmall">{'Monthly\nAvg'}</th>
                   </tr>
                 </thead>
       
@@ -559,14 +559,14 @@ export const Envelopes: React.FC = () => {
                   {budgetData.map((item, index, myArray) => (
                     <React.Fragment key={index}>
                     { (index === 0 || (index > 0 && item.category !== myArray[index - 1].category)) && (
-                      <tr key={'header-'+item.envID} className="BTGHR">
-                        <td colSpan={7} className="BTGHR BTGHC">{item.category}</td>
+                      <tr key={'header-'+item.envID} className="Table TGHR">
+                        <td colSpan={7} className="Table TGHR TC TCLeft">{item.category}</td>
                       </tr>
                     )}
                     <tr key={item.envID}>
-                      <td className="BTC BTCLeft">{item.envelope}</td>
-                      <td className="BTC BTCRight">{formatCurrency(item.prevBudget)}</td>
-                      <td className="BTC BTCRight">
+                      <td className="Table TC TCLeft">{item.envelope}</td>
+                      <td className="Table TC TCRight">{formatCurrency(item.prevBudget)}</td>
+                      <td className="Table TC TCRight">
                         <Link to={
                           "/Transactions" +
                           "/" + item.envID + 
@@ -575,7 +575,7 @@ export const Envelopes: React.FC = () => {
                           {formatCurrency(item.prevActual)}
                         </Link>
                       </td>
-                      <td className="BTC BTCRight BTCInput">
+                      <td className="Table BTC TCRight TCInput">
                         <BudgetBalanceModal 
                           balanceAmt={item.currBalance}
                           category={item.category}
@@ -585,18 +585,18 @@ export const Envelopes: React.FC = () => {
                           callback={handleBudgetChangeTransfer}
                         />
                       </td>
-                      <td className="BTC BTCRight">
+                      <td className="Table TC TCRight">
                         <EditableBudget 
                           initialID={item.envID}
                           initialDate={curMonth}
                           initialValue={item.currBudget}/>
                       </td>
-                      <td className="BTC BTCRight">
+                      <td className="Table TC TCRight">
                         <Link to={"/Transactions/" + item.envID + "/1/" + year + "/" + month}>
                           {formatCurrency(item.currActual)}
                         </Link>
                       </td>
-                      <td className="BTC BTCRight">
+                      <td className="Table TC TCRight">
                         <Link to={"/Charts/" + item.envID}>
                           {formatCurrency(item.monthlyAvg)}
                         </Link>

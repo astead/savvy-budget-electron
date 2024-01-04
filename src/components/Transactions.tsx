@@ -796,24 +796,24 @@ export const Transactions: React.FC = () => {
         <br/>
         {txData?.length > 0 && envListLoaded &&
           <>
-          <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
-            <thead className="TransactionTableHeader">
-              <tr className="TransactionTableHeaderRow">
-                <th className="TransactionTableHeaderCellDate">{'Date'}</th>
-                <th className="TransactionTableHeaderCellAccount">{'Account'}</th>
-                <th className="TransactionTableHeaderCell">{'Description'}</th>
-                <th className="TransactionTableHeaderCellCurr">{'Amount'}</th>
-                <th className="TransactionTableHeaderCell">{'Envelope'}</th>
-                <th className="TransactionTableHeaderCellCenter">{' KW '}</th>
-                <th className="TransactionTableHeaderCellCenter">
+          <table className="Table TxTable" cellSpacing={0} cellPadding={0}>
+            <thead>
+              <tr className="Table THR">
+                <th className="Table THR THRC THRCSmall">{'Date'}</th>
+                <th className="Table THR THRC THRCMed">{'Account'}</th>
+                <th className="Table THR THRC">{'Description'}</th>
+                <th className="Table THR THRC THRCSmall">{'Amount'}</th>
+                <th className="Table THR THRC">{'Envelope'}</th>
+                <th className="Table THR THRC">{' KW '}</th>
+                <th className="Table THR THRC">
                   <div onClick={() => {
                       look_for_dups();
                     }}>
                     {' Dup '}
                   </div>
                 </th>
-                <th className="TransactionTableHeaderCellCenter">{' Vis '}</th>
-                <th className="TransactionTableHeaderCellCenter">
+                <th className="Table THR THRC">{' Vis '}</th>
+                <th className="Table THR THRC">
                   <input type="checkbox" onChange={(e) => {
                     for(let iter=((pagingCurPage-1) * pagingPerPage); 
                       iter < (pagingCurPage * pagingPerPage); iter++) {
@@ -828,18 +828,18 @@ export const Transactions: React.FC = () => {
               </tr>
             </thead>
   
-            <tbody className="TransactionTableBody">
+            <tbody>
               {
               //for (const [index, item] of txData.entries()) {
                 txData.map((item, index) => (
                   index < (pagingCurPage * pagingPerPage) &&
                   index >= ((pagingCurPage-1) * pagingPerPage) &&
-                  <tr key={index} className={"TransactionTableRow"+(item.isDuplicate === 1 ? "-duplicate":"")}>
-                    <td className="TransactionTableCellDate">{Moment(item.txDate).format('M/D/YYYY')}</td>
-                    <td className="TransactionTableCellAccount">{item.account}</td>
-                    <td className="TransactionTableCell">{item.description}</td>
-                    <td className="TransactionTableCellCurr">{formatCurrency(item.txAmt)}</td>
-                    <td className="TransactionTableCellCenter">
+                  <tr key={index} className={(item.isDuplicate === 1 ? "TR-duplicate":"")}>
+                    <td className="Table TC">{Moment(item.txDate).format('M/D/YYYY')}</td>
+                    <td className="Table TC TCLeft">{item.account}</td>
+                    <td className="Table TC TCLeft">{item.description}</td>
+                    <td className="Table TC TCRight">{formatCurrency(item.txAmt)}</td>
+                    <td className="Table TC TCInput">
                       <CategoryDropDown 
                         id={item.txID}
                         envID={item.envID}
@@ -848,14 +848,14 @@ export const Transactions: React.FC = () => {
                         className="filterEnvelope"
                       />
                     </td>
-                    <td className="TransactionTableCell">
+                    <td className="Table TC">
                         <KeywordSave
                           txID={item.txID}
                           envID={item.envID}
                           description={item.description}
                           keywordEnvID={item.keywordEnvID} />
                     </td>
-                    <td className="TransactionTableCell">
+                    <td className="Table TC">
                       <div
                         onClick={() => {
                           toggleDuplicate({txID: item.txID, isDuplicate: (item.isDuplicate?0:1)});
@@ -864,7 +864,7 @@ export const Transactions: React.FC = () => {
                         <FontAwesomeIcon icon={faCopy} />
                       </div>
                     </td>
-                    <td className="TransactionTableCell">
+                    <td className="Table TC">
                       <div
                         onClick={() => {
                           toggleVisibility({txID: item.txID, isVisible: (item.isVisible?0:1)});
@@ -873,7 +873,7 @@ export const Transactions: React.FC = () => {
                         <FontAwesomeIcon icon={faEyeSlash} />
                       </div>
                     </td>
-                    <td className="TransactionTableCellCenter">
+                    <td className="Table TC">
                       <input type="checkbox" id={item.txID.toString()} onChange={(e) => {
                         isChecked[index].isChecked = e.target.checked;
                         setIsChecked([...isChecked]);
@@ -885,18 +885,18 @@ export const Transactions: React.FC = () => {
               }
             </tbody>
             <tfoot>
-              <tr className="TransactionTableHeaderRow">
-                <td className="TransactionTableCellCurr" colSpan={3}>
+              <tr className="Table THR">
+                <td className="Table THR THRC TC TCRight" colSpan={3}>
                   (Only filtered data, but including all pages) Total:
                 </td>
-                <td className="TransactionTableCellCurr">{
+                <td className="Table THR THRC TC TCRight">{
                   formatCurrency(
                     txData.reduce((total, curItem, curIndex) => {
                       return total + curItem.txAmt;
                     }, 0)
                   )
                 }</td>
-                <td className="TransactionTableCellCurr">
+                <td className="Table THR TCInput">
                   <CategoryDropDown
                         id={-1}
                         envID={-1}
@@ -905,8 +905,8 @@ export const Transactions: React.FC = () => {
                         className="filterEnvelope"
                       />
                 </td>
-                <td className="TransactionTableCellCurr" colSpan={3}></td>
-                <td className="TransactionTableCellInput">
+                <td className="Table THR THRC" colSpan={3}></td>
+                <td className="Table THR THRC">
                   <button 
                     className='trash'
                     onClick={() => delete_checked_transactions()}>

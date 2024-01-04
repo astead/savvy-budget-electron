@@ -559,11 +559,11 @@ export const Configure = () => {
   if (keywordData && envListLoaded) {
     keyword_content = (
       
-      <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
+      <table className="Table" cellSpacing={0} cellPadding={0}>
         <>
-        <thead className="TransactionTableHeader">
-          <tr className="TransactionTableHeaderRow">
-            <th className="TransactionTableHeaderCellSort" onClick={() => {
+        <thead>
+          <tr className="Table THR">
+            <th className="Table THR THRC THRCClickable" onClick={() => {
               set_keyword_sort('0', (sortKeyword[0] === '0')?((sortKeyword[1] === '0')?('1'):('0')):('0'));
             }}>
               {'Keyword'}
@@ -574,7 +574,7 @@ export const Configure = () => {
                  <FontAwesomeIcon icon={faChevronDown} className="sortIcon" />
               }
             </th>
-            <th className="TransactionTableHeaderCellSort" onClick={() => {
+            <th className="Table THR THRC THRCClickable" onClick={() => {
               set_keyword_sort('1', (sortKeyword[0] === '1')?((sortKeyword[1] === '0')?('1'):('0')):('0'));
             }}>
               {'Envelope'}
@@ -585,25 +585,25 @@ export const Configure = () => {
                  <FontAwesomeIcon icon={faChevronDown} className="sortIcon" />
               }
             </th>
-            <th className="TransactionTableHeaderCell">{' '}</th>
-            <th className="TransactionTableHeaderCell">{'Set'}</th>
-            <th className="TransactionTableHeaderCell">{'Force'}</th>
+            <th className="Table THR THRC">{' '}</th>
+            <th className="Table THR THRC">{'Set'}</th>
+            <th className="Table THR THRC">{'Force'}</th>
           </tr>
         </thead>
 
-        <tbody className="TransactionTableBody">
+        <tbody>
           {
             keywordData.map((kw, index) => {
               const { id, envelopeID, description } = kw;
               return (
-                <tr key={index} className="TransactionTableRow">
+                <tr key={index} className="Table">
                   
-                  <td className="TransactionTableCell">
+                  <td className="Table TC TCLeft">
                     <EditableKeyword
                       initialID={id.toString()}
                       initialDescription={description} />
                   </td>
-                  <td className="TransactionTableCell">
+                  <td className="Table TC">
                     <CategoryDropDown 
                       id={id}
                       envID={envelopeID}
@@ -612,20 +612,20 @@ export const Configure = () => {
                       className="envelopeDropDown"
                     />
                   </td>
-                  <td className="TransactionTableCell">
+                  <td className="Table TC">
                   <button 
                     className="trash"
                     onClick={() => handleKeywordDelete(id)}>
                       <FontAwesomeIcon icon={faTrash} />
                   </button>
                   </td>
-                  <td className="TransactionTableCell">
+                  <td className="Table TC">
                     <button 
                       onClick={() => handleKeywordSetAll(id, 0)}>
                         <FontAwesomeIcon icon={faReply} flip="horizontal" />
                     </button>
                   </td>
-                  <td className="TransactionTableCell">
+                  <td className="Table TC">
                     <button 
                       onClick={() => handleKeywordSetAll(id, 1)}>
                         <FontAwesomeIcon icon={faReplyAll} flip="horizontal" />
@@ -645,34 +645,34 @@ export const Configure = () => {
   if (accountData) {
     account_content = (
       
-      <table className="TransactionTable" cellSpacing={0} cellPadding={0}>
+      <table className="Table" cellSpacing={0} cellPadding={0}>
         <>
-        <thead className="TransactionTableHeader">
-          <tr className="TransactionTableHeaderRow">
-            <th className="TransactionTableHeaderCell">{'Account'}</th>
-            <th className="TransactionTableHeaderCell">{'Name'}</th>
-            <th className="TransactionTableHeaderCell">{'Last Transaction'}</th>
-            <th className="TransactionTableHeaderCell">{' '}</th>
+        <thead>
+          <tr className="Table THR">
+            <th className="Table THR THRC">{'Account'}</th>
+            <th className="Table THR THRC">{'Name'}</th>
+            <th className="Table THR THRC">{'Last Transaction'}</th>
+            <th className="Table THR THRC">{' '}</th>
           </tr>
         </thead>
 
-        <tbody className="TransactionTableBody">
+        <tbody>
           {
             accountData.map((acc, index) => {
               const { id, refNumber, account, isActive, lastTx } = acc;
               
                 return (
               
-                  <tr key={index} className="TransactionTableRow">
+                  <tr key={index} className="Table">
                     
-                    <td className="TransactionTableCell">{refNumber}</td>
-                    <td className="TransactionTableCell">
+                    <td className="Table TC TCLeft">{refNumber}</td>
+                    <td className="Table TC TCLeft">
                       <EditableAccount
                         initialID={id.toString()}
                         initialName={account} />
                     </td>
-                    <td className="TransactionTableCell">{lastTx && Moment(lastTx).format('M/D/YYYY')}</td>
-                    <td className="TransactionTableCell">
+                    <td className="Table TC TCRight">{lastTx && Moment(lastTx).format('M/D/YYYY')}</td>
+                    <td className="Table TC">
                     <div 
                       className={"ToggleVisibility" + (isActive?"-no":"-yes")}
                       onClick={() => handleAccountDelete(id, isActive)}>

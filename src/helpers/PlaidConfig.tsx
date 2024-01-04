@@ -269,12 +269,12 @@ export const PlaidConfig = () => {
   <>
     <div><NewPlaid /></div>
     <div>
-      <table className="BudgetTable" cellSpacing={1} cellPadding={1}>
+      <table className="Table" cellSpacing={1} cellPadding={1}>
         <thead>
-          <tr className="TransactionTableHeaderRow">
-            <th className="BudgetTableHeaderCell">{'Bank'}</th>
-            <th className="BudgetTableHeaderCell">{'Last Transaction'}</th>
-            <th className="BudgetTableHeaderCell">{' '}</th>
+          <tr className="Table THR">
+            <th className="Table THR THRC">{'Bank'}</th>
+            <th className="Table THR THRC">{'Last Transaction'}</th>
+            <th className="Table THR THRC">{' '}</th>
           </tr>
         </thead>
         <tbody>
@@ -282,10 +282,10 @@ export const PlaidConfig = () => {
           <React.Fragment key={index}>
             { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
               <React.Fragment>
-              <tr className="BTGHR">
-                <td className="BudgetTableCell">{acc.institution}</td>
-                <td className="BudgetTableCell">{acc.lastTx && Moment(acc.lastTx).format('M/D/YYYY')}</td>
-                <td className="BudgetTableCell">
+              <tr className="Table TGHR">
+                <td className="Table THRC">{acc.institution}</td>
+                <td className="Table THRC">{acc.lastTx && Moment(acc.lastTx).format('M/D/YYYY')}</td>
+                <td className="Table THRC">
                   <button 
                     className='textButton'
                     onClick={() => {
