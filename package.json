@@ -2,18 +2,26 @@
   "name": "SavvyBudget",
   "version": "0.1.0",
   "private": true,
-  "description":"A simple budgeting app",
-  "author":{
-    "name":"Alan Stead",
-    "email":"alan.stead@gmail.com"
+  "description": "A simple budgeting app",
+  "author": {
+    "name": "Alan Stead",
+    "email": "alan.stead@gmail.com"
   },
   "main": "public/electron.js",
   "homepage": "./",
   "dependencies": {
+    "@babel/preset-env": "^7.23.6",
+    "@babel/preset-react": "^7.23.3",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@types/react-edit-text": "^5.0.4",
+    "@types/yup": "^0.32.0",
+
     "@babel/core": "^7.23.5",
     "@electron/rebuild": "^3.4.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@mui/material": "^5.15.1",
@@ -24,7 +32,6 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "concurrently": "^8.2.2",
     "crypto": "npm:crypto-browserify",
     "crypto-browserify": "^3.12.0",
     "csv": "^6.3.6",
@@ -62,24 +69,27 @@
     "tls": "^0.0.1",
     "url": "^0.11.3",
     "util": "^0.12.5",
-    "wait-on": "^7.2.0",
     "web-vitals": "^2.1.4",
     "yup": "^1.3.2"
   },
   "scripts": {
     "start-react": "react-scripts start",
     "build-react": "react-scripts build",
+    "build-electron": "electron-builder",
     "start-electron": "nodemon --watch ./public/* --exec \"electron .\"",
-    "dev": "concurrently \"npm run start-react\" \"wait-on tcp:127.0.0.1:3000 && npm run start-electron\" ",
-    "postinstall": "electron-builder install-app-deps",
-    "pack-app": "npm run build-react && electron-builder --dir",
-    "pack-build": "electron-builder --dir",
-    "build": "npm run build-react && electron-builder",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "dev": "concurrently \"yarn run start-react\" \"wait-on tcp:127.0.0.1:3000 && yarn run start-electron\" ",
+    "build": "yarn run build-react & yarn run copy-shared & yarn run build-electron",
+    "copy-shared": "mkdir build\\src & robocopy src\\shared build\\src\\shared /S & robocopy electron build\\electron /S || exit 0",
     "electron-dev": "electron .",
     "electron-pack": "build --em.main=build/electron.js",
-    "preelectron-pack": "npm build"
+    "preelectron-pack": "yarn build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "postinstall": "electron-builder install-app-deps",
+    "pack-app": "yarn run build-react && electron-builder --dir",
+    "pack-build": "electron-builder --dir",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder build"
   },
   "eslintConfig": {
     "extends": [
@@ -100,14 +110,10 @@
     ]
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.23.6",
-    "@babel/preset-react": "^7.23.3",
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
-    "@types/react-edit-text": "^5.0.4",
-    "@types/yup": "^0.32.0",
+    "concurrently": "^8.2.2",
     "electron": "^27.1.0",
-    "electron-builder": "^24.6.4"
+    "electron-builder": "^24.6.4",
+    "wait-on": "^7.2.0"
   },
   "browser": {
     "crypto": false,
@@ -116,12 +122,13 @@
     "os": false
   },
   "build": {
-    "appId": "com.example.savvybudget",
+    "appId": "com.savvybudget",
     "files": [
       "build/**/*",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "src/shared/**/*"
     ],
-    "directories":{
+    "directories": {
       "buildResources": "assets"
     },
     "win": {

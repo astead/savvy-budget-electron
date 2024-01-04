@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import './includes/styles.css';
 import { channels } from './shared/constants.js';
 import { HomePage } from './components/homePage.tsx';
@@ -36,7 +36,6 @@ export const App: React.FC = () => {
   }, []);
 
   return (
-
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />

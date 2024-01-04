@@ -14,11 +14,13 @@ const { Knex } = require('knex');
   - use transactions for anything requiring multiple DB calls.
 */
 
+let win;
+
 function createWindow() {
   // Create the browser window.
-  const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+  win = new BrowserWindow({
+    width: 1024,
+    height: 768,
     title: 'Savvy Budget',
     icon: isDev
       ? path.join(app.getAppPath(), './public/favicon.ico') // Loading it from the public folder for dev
@@ -45,7 +47,17 @@ function createWindow() {
       : `file://${path.join(__dirname, '../build/index.html')}` // Loading build file if in production
   );
 
-  win.webContents.openDevTools();
+  // Replace YOUR_WINDOW and modify the line that loads the URL
+  // (the same way you load URL when the window is created)
+  win.webContents.on('did-fail-load', () => {
+    if (process.env.NODE_ENV === 'production') {
+      win.loadURL('app://./index.html');
+    }
+  });
+
+  if (isDev) {
+    win.webContents.openDevTools();
+  }
 }
 
 // ((OPTIONAL)) Setting the location for the userdata folder created by an Electron app. It default to the AppData folder if you don't set it.

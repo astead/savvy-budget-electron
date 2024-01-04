@@ -11,6 +11,8 @@
 
 # production
 /build
+/dist
+electron-builder.yml
 
 # misc
 .DS_Store
@@ -26,10 +28,7 @@ yarn-error.log*
 yarn.lock
 package-lock.json
 
-Dec-2023-budget-snapshot.png
-Mint_transactions-Dec-2023-snapshot.xlsx
-Mint-import.csv
-out.csv
 /public/db/*.db
 /public/db/db.sqlite
 /public/db/*.csv
+Bank_Files/
