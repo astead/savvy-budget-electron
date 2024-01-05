@@ -257,6 +257,7 @@ export const Transactions: React.FC = () => {
     // Signal we want to del data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.DEL_TX_LIST, {del_tx_list: filtered_nodes});
+    load_transactions();
   }
 
   const load_envelope_list = () => {
