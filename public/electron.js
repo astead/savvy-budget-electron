@@ -1807,6 +1807,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
     }
     console.log('');
   }
+  event.sender.send(channels.UPLOAD_PROGRESS, 100);
 });
 
 async function basic_insert_transaction_node(

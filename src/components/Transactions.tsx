@@ -205,9 +205,9 @@ export const Transactions: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
-      
-      setTxData(arg as TransactionNodeData[]);
-      const numtx = arg?.length;
+      const newData = [...(arg as TransactionNodeData[])];
+      setTxData(newData);
+      const numtx = newData?.length;
       if (numtx > 0) {
         setPagingTotalRecords(numtx);
         setPagingNumPages(Math.ceil(numtx / pagingPerPage));
@@ -216,7 +216,7 @@ export const Transactions: React.FC = () => {
         setPagingNumPages(1);
       }
 
-      set_checkbox_array(arg);
+      set_checkbox_array(newData);
       
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     });
@@ -469,6 +469,7 @@ export const Transactions: React.FC = () => {
               account_string = "Mint";
             }
           }
+          setProgress(0);
           setUploading(true);
           ipcRenderer.send(channels.IMPORT_CSV, [account_string, ofxString]);
           
@@ -478,6 +479,7 @@ export const Transactions: React.FC = () => {
             if (data >= 100) {
               ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
               setUploading(false);
+              load_transactions();
             }
           });
           
