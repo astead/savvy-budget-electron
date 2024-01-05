@@ -82,6 +82,7 @@ export const Transactions: React.FC = () => {
   const [newTxEnvID, setNewTxEnvID] = useState(-1);
   const [newTxEnvListLoaded, setNewTxEnvListLoaded] = useState(false);
   const [newTxAccListLoaded, setNewTxAccListLoaded] = useState(false);
+  const [newError, setNewError] = useState("");
 
   // Filter by envelope
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
@@ -404,6 +405,22 @@ export const Transactions: React.FC = () => {
   };
 
   function add_new_transaction() {
+    let errorMsg = "";
+    if (newTxAmount?.length === 0) {
+      errorMsg += "You must enter an amount.  ";
+    } else {
+      if (isNaN(parseFloat(newTxAmount))) {
+        errorMsg += "You must enter a valid amount. ";
+      }
+    }
+    if (newTxDesc?.length === 0) {
+      errorMsg += "You must enter a description. ";
+    }
+    if (errorMsg?.length > 0) {
+      setNewError(errorMsg);
+      return;
+    }
+    
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.ADD_TX, {
       txDate: newTxDate?.format('YYYY-MM-DD'),
@@ -617,7 +634,10 @@ export const Transactions: React.FC = () => {
                           name="newTxDescTemp"
                           defaultValue={newTxDescTemp}
                           onChange={(e) => setNewTxDescTemp(e.target.value)}
-                          onBlur={() => setNewTxDesc(newTxDescTemp)}
+                          onBlur={() => {
+                            setNewTxDesc(newTxDescTemp);
+                            setNewError("");
+                          }}
                         />
                     </td>
                     <td>
@@ -625,7 +645,10 @@ export const Transactions: React.FC = () => {
                           name="newTxAmountTemp"
                           defaultValue={newTxAmountTemp}
                           onChange={(e) => setNewTxAmountTemp(e.target.value)}
-                          onBlur={() => setNewTxAmount(newTxAmountTemp)}
+                          onBlur={() => {
+                            setNewTxAmount(newTxAmountTemp);
+                            setNewError("");
+                          }}
                           className="Small"
                         />
                     </td>
@@ -646,6 +669,9 @@ export const Transactions: React.FC = () => {
                   </tr>
                 </tbody>
               </table>
+              {newError?.length > 0 &&
+                <span className="Red">Error: {newError}</span>
+              }
             </div>
             <br/>
             </>
