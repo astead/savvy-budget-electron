@@ -35,6 +35,15 @@ function formatCurrency(currencyNumber:number) {
 };
 
 export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, envID, envList, callback}) => {
+  const [myTxID, ] = useState(txID);
+  const [myTxDate, ] = useState(txDate);
+  const [myTxAmt, ] = useState(txAmt);
+  const [myTxDesc, ] = useState(txDesc);
+  const [myCat, ] = useState(cat);
+  const [myEnv, ] = useState(env);
+  const [mEnvID, ] = useState(envID);
+  const [myEnvList, ] = useState(envList);
+  
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -51,7 +60,7 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
 
       setOpen(false);
       callback();
-      
+
     } else {
       setError("Total split value of " +
         formatCurrency(splitData.reduce((a, item) => a + item.txAmt, 0)) +

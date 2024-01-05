@@ -399,14 +399,14 @@ ipcMain.on(channels.DEL_TX_LIST, (event, { del_tx_list }) => {
   }
 });
 
-ipcMain.on(channels.SPLIT_TX, (event, { txID, split_tx_list }) => {
+ipcMain.on(channels.SPLIT_TX, async (event, { txID, split_tx_list }) => {
   console.log(channels.SPLIT_TX);
   if (knex) {
     // Lets use a transaction for this
-    knex
-      .transaction(async function (trx) {
+    await knex
+      .transaction(async (trx) => {
         // Get some info on the original
-        await knex
+        await trx
           .select(
             'id',
             'envelopeID',
@@ -418,30 +418,27 @@ ipcMain.on(channels.SPLIT_TX, (event, { txID, split_tx_list }) => {
             'isDuplicate'
           )
           .from('transaction')
-          .transacting(trx)
           .where({ id: txID })
           .then(async (data) => {
             if (data?.length) {
               // Delete the original
-              await knex('transaction')
+              await trx('transaction')
                 .delete()
                 .where({ id: txID })
-                .transacting(trx)
                 .then(async () => {
                   // Update the original budget
-                  await knex
+                  await trx
                     .raw(
-                      `UPDATE 'envelope' SET balance = balance + ` +
-                        -1 * data[0].txAmt +
+                      `UPDATE 'envelope' SET balance = balance - ` +
+                        data[0].txAmt +
                         ` WHERE id = ` +
                         data[0].envelopeID
                     )
-                    .transacting(trx)
                     .then(async () => {
                       // Loop through each new split
-                      await split_tx_list.forEach(async (item) => {
+                      for (let item of split_tx_list) {
                         // Insert the new transaction
-                        await knex('transaction')
+                        await trx('transaction')
                           .insert({
                             envelopeID: item.txEnvID,
                             txAmt: item.txAmt,
@@ -457,28 +454,22 @@ ipcMain.on(channels.SPLIT_TX, (event, { txID, split_tx_list }) => {
                             accountID: data[0].accountID,
                             isVisible: data[0].isVisible,
                           })
-                          .transacting(trx)
                           .then(async () => {
                             // Adjust that envelope balance
-                            await knex
-                              .raw(
-                                `UPDATE 'envelope' SET balance = balance + ` +
-                                  item.txAmt +
-                                  ` WHERE id = ` +
-                                  item.txEnvID
-                              )
-                              .transacting(trx)
-                              .then();
+                            await trx.raw(
+                              `UPDATE 'envelope' SET balance = balance + ` +
+                                item.txAmt +
+                                ` WHERE id = ` +
+                                item.txEnvID
+                            );
                           });
-                      });
-                    })
-                    .then(trx.commit);
+                      }
+                    });
                 });
             }
           })
-          .catch(trx.rollback);
+          .then(trx.commit);
       })
-      .then()
       .catch(function (error) {
         console.error(error);
       });
