@@ -34,14 +34,15 @@ function formatCurrency(currencyNumber:number) {
   return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
 };
 
-export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, envID, envList, callback}) => {
+export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, envID, isSplit, envList, callback}) => {
   const [myTxID, ] = useState(txID);
   const [myTxDate, ] = useState(txDate);
   const [myTxAmt, ] = useState(txAmt);
   const [myTxDesc, ] = useState(txDesc);
   const [myCat, ] = useState(cat);
   const [myEnv, ] = useState(env);
-  const [mEnvID, ] = useState(envID);
+  const [mmEnvID, ] = useState(envID);
+  const [myIsSplit, ] = useState(isSplit);
   const [myEnvList, ] = useState(envList);
   
   const [open, setOpen] = useState(false);
@@ -144,7 +145,10 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
 
   return (
     <>
-      <span onClick={handleOpen} className="clickable"><FontAwesomeIcon icon={faShareNodes} /></span>
+      <span onClick={handleOpen}
+        className={"Toggle" + (isSplit ?" Toggle-active":"")}>
+          <FontAwesomeIcon icon={faShareNodes} />
+      </span>
       <Modal
         open={open}
         onClose={handleClose}

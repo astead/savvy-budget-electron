@@ -1030,7 +1030,8 @@ ipcMain.on(
           'transaction.description as description',
           'keyword.envelopeID as keywordEnvID',
           'transaction.isDuplicate as isDuplicate',
-          'transaction.isVisible as isVisible'
+          'transaction.isVisible as isVisible',
+          'transaction.isSplit as isSplit'
         )
         .from('transaction')
         .leftJoin('envelope', function () {

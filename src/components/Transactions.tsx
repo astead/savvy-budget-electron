@@ -56,6 +56,7 @@ export const Transactions: React.FC = () => {
     keywordEnvID: number;
     isDuplicate: number;
     isVisible: number;
+    isSplit: number;
   }
   interface EnvelopeList {
     envID: number; 
@@ -382,12 +383,14 @@ export const Transactions: React.FC = () => {
     // Signal we want to del data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_TX_ENV_LIST, [new_value, filtered_nodes]);
+    load_transactions();
   }; 
   
   const handleTxEnvChange = ({id, new_value}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_TX_ENV, [id, new_value]);
+    load_transactions();
   };
 
   const toggleDuplicate = ({txID, isDuplicate}) => {
@@ -420,7 +423,7 @@ export const Transactions: React.FC = () => {
       setNewError(errorMsg);
       return;
     }
-    
+
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.ADD_TX, {
       txDate: newTxDate?.format('YYYY-MM-DD'),
@@ -885,6 +888,7 @@ export const Transactions: React.FC = () => {
                           cat={item.category}
                           env={item.envelope}
                           envID={item.envID}
+                          isSplit={item.isSplit}
                           envList={envList}
                           callback={() => {
                             // Reload the data
