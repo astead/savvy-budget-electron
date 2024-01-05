@@ -18,7 +18,7 @@ export const Charts: React.FC = () => {
   const { envID } = useParams();
 
   interface EnvelopeList {
-    envID: number; 
+    envID: string; 
     category: string;
     envelope: string; 
   }
@@ -87,23 +87,46 @@ export const Charts: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
-      setFilterEnvList([{
-        envID: -4,
+      let groupedItems = [{
+        envID: "env-3",
         category: "All",
         envelope: "", 
       },{
-        envID: -3,
-        category: "All Income",
-        envelope: "", 
-      },{
-        envID: -2,
+        envID: "env-2",
         category: "All Spending",
         envelope: "", 
       },{
-        envID: -1,
+        envID: "env-1",
         category: "Undefined",
         envelope: "", 
-      }, ...(arg as EnvelopeList[])]);
+      }] as EnvelopeList[];
+
+      let tmpItems = arg.map((item, index, itemArr) => {
+        let node = {
+          envID: "env"+item.envID,
+          category: item.category,
+          envelope: item.envelope, 
+        };
+        return node;
+      });
+
+      if (tmpItems.length > 0) {
+        let cat = "";
+        for (let i = 0; i < tmpItems.length; i++) {
+          if (cat !== tmpItems[i].category) {
+            cat = tmpItems[i].category;
+            const node = {
+              envID: "cat"+cat,
+              category: "All " + tmpItems[i].category,
+              envelope: "", 
+            };
+            tmpItems.splice(i, 0, node);
+          }
+        }
+      }
+
+      setFilterEnvList([...groupedItems, ...tmpItems]);
+
       setFilterEnvListLoaded(true);
       setFilterEnvelopeName("All");
       setFilterEnvID(envID);

@@ -2059,6 +2059,9 @@ ipcMain.on(
 
     const find_date = Moment(new Date()).format('YYYY-MM-DD');
 
+    const filterType = filterEnvID.substr(0, 3);
+    const envID = filterEnvID.substr(3);
+
     let query = knex('transaction')
       .select({
         month: knex.raw(`strftime("%Y/%m", txDate)`),
@@ -2075,22 +2078,11 @@ ipcMain.on(
       .groupBy('month', 'isBudget')
       .orderBy('month');
 
-    if (parseInt(filterEnvID) > -2) {
-      query = query.where('envelopeID', filterEnvID);
+    if (filterType === 'env' && parseInt(envID) > -2) {
+      query = query.where('envelopeID', envID);
     }
 
-    if (parseInt(filterEnvID) === -3) {
-      query = query
-        .leftJoin('envelope', function () {
-          this.on('envelope.id', '=', 'transaction.envelopeID');
-        })
-        .leftJoin('category', function () {
-          this.on('category.id', '=', 'envelope.categoryID');
-        })
-        .andWhere({ category: 'Income' });
-    }
-
-    if (parseInt(filterEnvID) === -2) {
+    if (filterType === 'env' && parseInt(envID) === -2) {
       query = query
         .leftJoin('envelope', function () {
           this.on('envelope.id', '=', 'transaction.envelopeID');
@@ -2099,6 +2091,17 @@ ipcMain.on(
           this.on('category.id', '=', 'envelope.categoryID');
         })
         .andWhereNot({ category: 'Income' });
+    }
+
+    if (filterType === 'cat') {
+      query = query
+        .leftJoin('envelope', function () {
+          this.on('envelope.id', '=', 'transaction.envelopeID');
+        })
+        .leftJoin('category', function () {
+          this.on('category.id', '=', 'envelope.categoryID');
+        })
+        .andWhere({ category: envID });
     }
 
     query
