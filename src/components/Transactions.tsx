@@ -393,12 +393,14 @@ export const Transactions: React.FC = () => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.SET_DUPLICATE, [txID, isDuplicate]);
+    load_transactions();
   };
 
   const toggleVisibility = ({txID, isVisible}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.SET_VISIBILITY, [txID, isVisible]);
+    load_transactions();
   };
 
   function add_new_transaction() {
