@@ -292,6 +292,10 @@ button.TabButton:hover {
   background: #989898;
 }
 
+.Red {
+  color: red;
+}
+
 div.import-container {
   border-radius: 0px;
   border: 1px solid black;
@@ -449,6 +453,10 @@ td.TCInput {
 
 .Small {
   width: 100px;
+}
+
+.Smallest {
+  width:min-content;
 }
 
 .filterSize {

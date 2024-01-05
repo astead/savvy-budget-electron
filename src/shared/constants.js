@@ -24,6 +24,9 @@ module.exports = {
     LIST_TX_DATA: 'list_tx_data',
     DEL_TX_LIST: 'del_tx_list',
     UPDATE_TX_ENV_LIST: 'update_tx_env_list',
+    ADD_TX: 'add_transaction',
+    UPDATE_TX_ENV: 'update_tx_envelope',
+    SPLIT_TX: 'split_tx',
 
     REN_CATEGORY: 'ren_category',
     DEL_CATEGORY: 'del_category',
@@ -37,9 +40,6 @@ module.exports = {
     UPDATE_BALANCE: 'update_balance',
     MOVE_BALANCE: 'move_balance',
     COPY_BUDGET: 'copy_budget',
-
-    ADD_TX: 'add_transaction',
-    UPDATE_TX_ENV: 'update_tx_envelope',
 
     SAVE_KEYWORD: 'save_keyword',
 

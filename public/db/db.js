@@ -148,7 +148,7 @@ ipcMain.on(channels.CREATE_DB, async (event) => {
       table.text('description');
       table.text('refNumber');
       table.integer('isBudget');
-      table.integer('isTransfer');
+      table.integer('origTxID');
       table.integer('isDuplicate');
       table.integer('isSplit');
       table.integer('accountID');
@@ -183,7 +183,7 @@ ipcMain.on(channels.CREATE_DB, async (event) => {
     });
 
     // Set the version to 1
-    db('version').insert({ version: 2 }).then();
+    db('version').insert({ version: 3 }).then();
 
     // Add the Income Category
     db('category').insert({ category: 'Uncategorized' }).then();

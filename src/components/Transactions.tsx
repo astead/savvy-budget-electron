@@ -8,12 +8,13 @@ import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
 import * as dayjs from 'dayjs'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopy, faEyeSlash, faFileImport, faChevronDown, faTrash, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faEyeSlash, faFileImport, faChevronDown, faTrash, faChevronRight, faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from 'react-router';
 import { Dayjs } from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import SplitTransactionModal from '../helpers/SplitTransactionModal.tsx';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Pagination from '@mui/material/Pagination';
@@ -801,6 +802,7 @@ export const Transactions: React.FC = () => {
                 <th className="Table THR THRC">{'Description'}</th>
                 <th className="Table THR THRC Small">{'Amount'}</th>
                 <th className="Table THR THRC">{'Envelope'}</th>
+                <th className="Table THR THRC">{'Split'}</th>
                 <th className="Table THR THRC">{' KW '}</th>
                 <th className="Table THR THRC">
                   <div onClick={() => {
@@ -844,6 +846,22 @@ export const Transactions: React.FC = () => {
                         changeCallback={handleTxEnvChange}
                         className={item.envID === -1 ? "envelopeDropDown-undefined":""}
                       />
+                    </td>
+                    <td className="Table TC">
+                      <SplitTransactionModal 
+                          txID={item.txID}
+                          txDate={item.txDate}
+                          txAmt={item.txAmt}
+                          txDesc={item.description}
+                          cat={item.category}
+                          env={item.envelope}
+                          envID={item.envID}
+                          envList={envList}
+                          callback={() => {
+                            // Reload the data
+                            load_transactions();
+                          }}
+                        />
                     </td>
                     <td className="Table TC">
                         <KeywordSave
@@ -902,7 +920,7 @@ export const Transactions: React.FC = () => {
                         className="filterEnvelope"
                       />
                 </td>
-                <td className="Table THR THRC" colSpan={3}></td>
+                <td className="Table THR THRC" colSpan={4}></td>
                 <td className="Table THR THRC">
                   <button 
                     className='trash'

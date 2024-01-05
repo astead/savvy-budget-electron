@@ -399,6 +399,92 @@ ipcMain.on(channels.DEL_TX_LIST, (event, { del_tx_list }) => {
   }
 });
 
+ipcMain.on(channels.SPLIT_TX, (event, { txID, split_tx_list }) => {
+  console.log(channels.SPLIT_TX);
+  if (knex) {
+    // Lets use a transaction for this
+    knex
+      .transaction(async function (trx) {
+        // Get some info on the original
+        await knex
+          .select(
+            'id',
+            'envelopeID',
+            'txAmt',
+            'accountID',
+            'refNumber',
+            'origTxID',
+            'isVisible',
+            'isDuplicate'
+          )
+          .from('transaction')
+          .transacting(trx)
+          .where({ id: txID })
+          .then(async (data) => {
+            if (data?.length) {
+              // Delete the original
+              await knex('transaction')
+                .delete()
+                .where({ id: txID })
+                .transacting(trx)
+                .then(async () => {
+                  // Update the original budget
+                  await knex
+                    .raw(
+                      `UPDATE 'envelope' SET balance = balance + ` +
+                        -1 * data[0].txAmt +
+                        ` WHERE id = ` +
+                        data[0].envelopeID
+                    )
+                    .transacting(trx)
+                    .then(async () => {
+                      // Loop through each new split
+                      await split_tx_list.forEach(async (item) => {
+                        // Insert the new transaction
+                        await knex('transaction')
+                          .insert({
+                            envelopeID: item.txEnvID,
+                            txAmt: item.txAmt,
+                            txDate: item.txDate,
+                            description: item.txDesc,
+                            refNumber: data[0].refNumber,
+                            isBudget: 0,
+                            origTxID: data[0].origTxID
+                              ? data[0].origTxID
+                              : txID,
+                            isDuplicate: data[0].isDuplicate,
+                            isSplit: 1,
+                            accountID: data[0].accountID,
+                            isVisible: data[0].isVisible,
+                          })
+                          .transacting(trx)
+                          .then(async () => {
+                            // Adjust that envelope balance
+                            await knex
+                              .raw(
+                                `UPDATE 'envelope' SET balance = balance + ` +
+                                  item.txAmt +
+                                  ` WHERE id = ` +
+                                  item.txEnvID
+                              )
+                              .transacting(trx)
+                              .then();
+                          });
+                      });
+                    })
+                    .then(trx.commit);
+                });
+            }
+          })
+          .catch(trx.rollback);
+      })
+      .then()
+      .catch(function (error) {
+        console.error(error);
+      });
+  }
+});
+
 ipcMain.on(channels.PLAID_GET_KEYS, (event) => {
   console.log(channels.PLAID_GET_KEYS);
   if (knex) {
@@ -1026,7 +1112,7 @@ ipcMain.on(channels.ADD_TX, async (event, data) => {
     description: data.txDesc,
     refNumber: '',
     isBudget: 0,
-    isTransfer: 0,
+    origTxID: 0,
     isDuplicate: 0,
     isSplit: 0,
     accountID: data.txAccID,
@@ -1749,7 +1835,7 @@ async function basic_insert_transaction_node(
     description: description,
     refNumber: refNumber,
     isBudget: 0,
-    isTransfer: 0,
+    origTxID: 0,
     isDuplicate: 0,
     isSplit: 0,
     accountID: accountID,
@@ -1836,7 +1922,7 @@ async function insert_transaction_node(
     description: description,
     refNumber: refNumber,
     isBudget: 0,
-    isTransfer: 0,
+    origTxID: 0,
     isDuplicate: isDuplicate,
     isSplit: 0,
     accountID: accountID,
