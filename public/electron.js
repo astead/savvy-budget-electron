@@ -388,15 +388,19 @@ ipcMain.on(
   }
 );
 
-ipcMain.on(channels.DEL_TX_LIST, (event, { del_tx_list }) => {
+ipcMain.on(channels.DEL_TX_LIST, async (event, { del_tx_list }) => {
   console.log(channels.DEL_TX_LIST);
   if (knex) {
-    del_tx_list.forEach(async (t) => {
+    console.log(del_tx_list);
+    for (let t of del_tx_list) {
       if (t.isChecked) {
+        console.log('deleting: ' + t.txID);
         await remove_transaction(t.txID);
       }
-    });
+    }
   }
+  console.log('Sending we are done.');
+  event.sender.send(channels.DONE_DEL_TX_LIST);
 });
 
 ipcMain.on(channels.SPLIT_TX, async (event, { txID, split_tx_list }) => {

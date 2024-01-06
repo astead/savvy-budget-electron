@@ -23,6 +23,7 @@ module.exports = {
     GET_TX_DATA: 'get_tx_date',
     LIST_TX_DATA: 'list_tx_data',
     DEL_TX_LIST: 'del_tx_list',
+    DONE_DEL_TX_LIST: 'done_del_tx_list',
     UPDATE_TX_ENV_LIST: 'update_tx_env_list',
     ADD_TX: 'add_transaction',
     UPDATE_TX_ENV: 'update_tx_envelope',
