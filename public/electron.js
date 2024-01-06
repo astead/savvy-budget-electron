@@ -628,22 +628,22 @@ ipcMain.on(channels.SET_DB_PATH, (event, dbPath) => {
   }
 });
 
-ipcMain.on(channels.ADD_ENVELOPE, (event, { categoryID }) => {
+ipcMain.on(channels.ADD_ENVELOPE, async (event, { categoryID }) => {
   console.log(channels.ADD_ENVELOPE, categoryID);
 
-  knex('envelope')
+  await knex('envelope')
     .insert({
       categoryID: categoryID,
       envelope: 'New Envelope',
       balance: 0,
       isActive: 1,
     })
-    .then(() => {
-      console.log('Added envelope ');
-    })
+    .then()
     .catch((err) => {
       console.log('Error: ' + err);
     });
+
+  event.sender.send(channels.DONE_ADD_ENVELOPE);
 });
 
 ipcMain.on(channels.ADD_CATEGORY, (event, name) => {
@@ -678,18 +678,18 @@ ipcMain.on(channels.DEL_CATEGORY, (event, id) => {
     .catch((err) => console.log('Error: ' + err));
 });
 
-ipcMain.on(channels.DEL_ENVELOPE, (event, id) => {
+ipcMain.on(channels.DEL_ENVELOPE, async (event, id) => {
   console.log(channels.DEL_ENVELOPE, id);
 
-  knex('envelope')
+  await knex('envelope')
     .where({ id: id })
     .update({ isActive: 0 })
-    .then(() => {
-      console.log('Deleted envelope: ' + id);
-    })
+    .then()
     .catch((err) => {
       console.log('Error: ' + err);
     });
+
+  event.sender.send(channels.DONE_DEL_ENVELOPE);
 });
 
 ipcMain.on(channels.REN_CATEGORY, (event, { id, name }) => {

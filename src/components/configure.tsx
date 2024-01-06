@@ -254,10 +254,25 @@ export const Configure = () => {
     ipcRenderer.send(channels.DEL_CATEGORY, id);
   };
 
+  const handleNewEnvelope = () => {
+    load_cats_and_envs();
+  };
+
   const handleEnvelopeDelete = (id) => {
     // Request we delete the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.DEL_ENVELOPE, id);
+    
+    // Wait till we are done
+    ipcRenderer.on(channels.DONE_DEL_ENVELOPE, () => {
+      load_cats_and_envs();
+      ipcRenderer.removeAllListeners(channels.DONE_DEL_ENVELOPE);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_DEL_ENVELOPE);
+    };
   };
 
   const handleKeywordDelete = (id) => {
@@ -353,7 +368,7 @@ export const Configure = () => {
       const groupedData = categoryGroupBy(arg, 'catID', 'category');
       const sortedData = Object.values(groupedData).sort(compareCategory);
 
-      setCatData(sortedData);
+      setCatData([...sortedData]);
       setLoaded(true);
 
       ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
@@ -507,7 +522,7 @@ export const Configure = () => {
                             initialName={cat_name} />
                         }
                       </div>
-                      <NewEnvelope id={catID} />
+                      <NewEnvelope id={catID} callback={handleNewEnvelope} />
                       {(cat_name !== 'Income' && cat_name !== 'Uncategorized')?
                         <button 
                           className="trash"
