@@ -597,7 +597,7 @@ export const Envelopes: React.FC = () => {
                         </Link>
                       </td>
                       <td className="Table TC Right">
-                        <Link to={"/Charts/" + item.envID}>
+                        <Link to={"/Charts/env" + item.envID}>
                           {formatCurrency(item.monthlyAvg)}
                         </Link>
                       </td>
