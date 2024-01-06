@@ -1851,7 +1851,7 @@ async function basic_insert_transaction_node(
 }
 
 async function remove_transaction(txID) {
-  knex
+  await knex
     .select('id', 'envelopeID', 'txAmt')
     .from('transaction')
     .where({ id: txID })
