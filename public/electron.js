@@ -380,11 +380,13 @@ ipcMain.on(
 
 ipcMain.on(
   channels.UPDATE_TX_ENV_LIST,
-  (event, [new_value, filtered_nodes]) => {
+  async (event, [new_value, filtered_nodes]) => {
     console.log(channels.UPDATE_TX_ENV_LIST);
-    filtered_nodes.forEach(async (t) => {
-      update_tx_env(t.txID, new_value);
-    });
+    for (let t of filtered_nodes) {
+      await update_tx_env(t.txID, new_value);
+    }
+
+    event.sender.send(channels.DONE_UPDATE_TX_ENV_LIST);
   }
 );
 
@@ -1150,15 +1152,15 @@ ipcMain.on(channels.GET_ENV_LIST, (event, { includeInactive }) => {
   }
 });
 
-function update_tx_env(txID, envID) {
-  knex
+async function update_tx_env(txID, envID) {
+  await knex
     .select('id', 'txAmt', 'envelopeID')
     .from('transaction')
     .where({ id: txID })
-    .then((rows) => {
+    .then(async (rows) => {
       if (rows?.length) {
         if (rows[0].envelopeID > 0) {
-          knex
+          await knex
             .raw(
               `update 'envelope' set balance = balance - ` +
                 rows[0].txAmt +
@@ -1171,7 +1173,7 @@ function update_tx_env(txID, envID) {
             });
         }
 
-        knex
+        await knex
           .raw(
             `update 'envelope' set balance = balance + ` +
               rows[0].txAmt +
@@ -1188,7 +1190,7 @@ function update_tx_env(txID, envID) {
       console.log('Error: ' + err);
     });
 
-  knex('transaction')
+  await knex('transaction')
     .where({ id: txID })
     .update({ envelopeID: envID })
     .then(() => {
@@ -1199,9 +1201,10 @@ function update_tx_env(txID, envID) {
     });
 }
 
-ipcMain.on(channels.UPDATE_TX_ENV, (event, [txID, envID]) => {
+ipcMain.on(channels.UPDATE_TX_ENV, async (event, [txID, envID]) => {
   console.log(channels.UPDATE_TX_ENV, txID, envID);
-  update_tx_env(txID, envID);
+  await update_tx_env(txID, envID);
+  event.sender.send(channels.DONE_UPDATE_TX_ENV);
 });
 
 ipcMain.on(channels.SAVE_KEYWORD, (event, [envID, description]) => {
@@ -1229,14 +1232,14 @@ ipcMain.on(channels.SAVE_KEYWORD, (event, [envID, description]) => {
     });
 });
 
-function adjust_balance(txID, add_or_remove) {
-  knex
+async function adjust_balance(txID, add_or_remove) {
+  await knex
     .select('envelopeID', 'txAmt')
     .from('transaction')
     .where({ id: txID })
-    .then((data) => {
+    .then(async (data) => {
       if (data?.length) {
-        update_env_balance(
+        await update_env_balance(
           data[0].envelopeID,
           add_or_remove === 'add' ? data[0].txAmt : -1 * data[0].txAmt
         );
@@ -1244,10 +1247,10 @@ function adjust_balance(txID, add_or_remove) {
     });
 }
 
-ipcMain.on(channels.SET_DUPLICATE, (event, [txID, isDuplicate]) => {
+ipcMain.on(channels.SET_DUPLICATE, async (event, [txID, isDuplicate]) => {
   console.log(channels.SET_DUPLICATE, txID, isDuplicate);
 
-  knex('transaction')
+  await knex('transaction')
     .update({ isDuplicate: isDuplicate })
     .where({ id: txID })
     .catch((err) => {
@@ -1255,13 +1258,15 @@ ipcMain.on(channels.SET_DUPLICATE, (event, [txID, isDuplicate]) => {
     });
 
   // Need to adjust envelope balance
-  adjust_balance(txID, isDuplicate ? 'rem' : 'add');
+  await adjust_balance(txID, isDuplicate ? 'rem' : 'add');
+
+  event.sender.send(channels.DONE_SET_DUPLICATE);
 });
 
-ipcMain.on(channels.SET_VISIBILITY, (event, [txID, isVisible]) => {
+ipcMain.on(channels.SET_VISIBILITY, async (event, [txID, isVisible]) => {
   console.log(channels.SET_VISIBILITY, txID, isVisible);
 
-  knex('transaction')
+  await knex('transaction')
     .update({ isVisible: isVisible })
     .where({ id: txID })
     .catch((err) => {
@@ -1269,7 +1274,9 @@ ipcMain.on(channels.SET_VISIBILITY, (event, [txID, isVisible]) => {
     });
 
   // Need to adjust envelope balance
-  adjust_balance(txID, isVisible ? 'add' : 'rem');
+  await adjust_balance(txID, isVisible ? 'add' : 'rem');
+
+  event.sender.send(channels.DONE_SET_VISIBILITY);
 });
 
 async function lookup_account(account) {

@@ -104,7 +104,6 @@ export const TransactionTable = ({data, envList, callback}) => {
     ipcRenderer.on(channels.DONE_DEL_TX_LIST, () => {
       callback();      
       ipcRenderer.removeAllListeners(channels.DONE_DEL_TX_LIST);
-      console.log("Everything should be getting cleared");
     });
     
     // Clean the listener after the component is dismounted
@@ -119,28 +118,68 @@ export const TransactionTable = ({data, envList, callback}) => {
     // Signal we want to del data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_TX_ENV_LIST, [new_value, filtered_nodes]);
-    callback();
+    
+    // Wait till we are done
+    ipcRenderer.on(channels.DONE_DEL_TX_LIST, () => {
+      callback();      
+      ipcRenderer.removeAllListeners(channels.DONE_DEL_TX_LIST);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_DEL_TX_LIST);
+    };
   }; 
   
   const handleTxEnvChange = ({id, new_value}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_TX_ENV, [id, new_value]);
-    callback();
+    
+    // Wait till we are done
+    ipcRenderer.on(channels.DONE_UPDATE_TX_ENV, () => {
+      callback();      
+      ipcRenderer.removeAllListeners(channels.DONE_UPDATE_TX_ENV);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_UPDATE_TX_ENV);
+    };
   };
 
   const toggleDuplicate = ({txID, isDuplicate}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.SET_DUPLICATE, [txID, isDuplicate]);
-    callback();
+    
+    // Wait till we are done
+    ipcRenderer.on(channels.DONE_SET_DUPLICATE, () => {
+      callback();      
+      ipcRenderer.removeAllListeners(channels.DONE_SET_DUPLICATE);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_SET_DUPLICATE);
+    };
   };
 
   const toggleVisibility = ({txID, isVisible}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.SET_VISIBILITY, [txID, isVisible]);
-    callback();
+    
+    // Wait till we are done
+    ipcRenderer.on(channels.DONE_SET_VISIBILITY, () => {
+      callback();      
+      ipcRenderer.removeAllListeners(channels.DONE_SET_VISIBILITY);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_SET_VISIBILITY);
+    };
   };
 
   useEffect(() => {

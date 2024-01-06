@@ -25,8 +25,10 @@ module.exports = {
     DEL_TX_LIST: 'del_tx_list',
     DONE_DEL_TX_LIST: 'done_del_tx_list',
     UPDATE_TX_ENV_LIST: 'update_tx_env_list',
+    DONE_UPDATE_TX_ENV_LIST: 'done_update_tx_env_list',
     ADD_TX: 'add_transaction',
     UPDATE_TX_ENV: 'update_tx_envelope',
+    DONE_UPDATE_TX_ENV: 'done_update_tx_envelope',
     SPLIT_TX: 'split_tx',
 
     REN_CATEGORY: 'ren_category',
@@ -45,8 +47,10 @@ module.exports = {
     SAVE_KEYWORD: 'save_keyword',
 
     SET_DUPLICATE: 'set_duplicate',
+    DONE_SET_DUPLICATE: 'done_set_duplicate',
 
     SET_VISIBILITY: 'set_visibility',
+    DONE_SET_VISIBILITY: 'done_set_visibility',
 
     IMPORT_OFX: 'import_ofx',
     IMPORT_CSV: 'import_csv',
