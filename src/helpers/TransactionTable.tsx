@@ -102,6 +102,7 @@ export const TransactionTable = ({data, envList, callback}) => {
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_DEL_TX_LIST, () => {
+      setIsAllChecked(false);
       callback();      
       ipcRenderer.removeAllListeners(channels.DONE_DEL_TX_LIST);
     });
@@ -121,6 +122,7 @@ export const TransactionTable = ({data, envList, callback}) => {
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_DEL_TX_LIST, () => {
+      setIsAllChecked(false);
       callback();      
       ipcRenderer.removeAllListeners(channels.DONE_DEL_TX_LIST);
     });
@@ -193,7 +195,6 @@ export const TransactionTable = ({data, envList, callback}) => {
   }, [pagingPerPage]);
   
   useEffect(() => {
-    console.log("we got new data.");
     const numtx = data?.length;
     if (numtx > 0) {
       setPagingTotalRecords(numtx);
@@ -207,7 +208,6 @@ export const TransactionTable = ({data, envList, callback}) => {
   }, [data]);
 
   useEffect(() => {
-    console.log("Got new txData.");
     forceUpdate();
   }, [txData]);
 

@@ -152,8 +152,6 @@ export const Transactions: React.FC = () => {
   }  
 
   const load_transactions = () => {
-    console.log("loading new transactions.");
-    
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_TX_DATA, 
