@@ -606,6 +606,7 @@ export const Envelopes: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+              <br/><br/>
             </div>
             <div className="envelopeDataDiff">
               <div className="envelopeDataDiffFixed">
