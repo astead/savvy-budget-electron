@@ -734,23 +734,25 @@ ipcMain.on(channels.MOV_ENVELOPE, (event, [id, newCatID]) => {
     });
 });
 
-ipcMain.on(channels.COPY_BUDGET, (event, [newtxDate, budget_values]) => {
+ipcMain.on(channels.COPY_BUDGET, async (event, [newtxDate, budget_values]) => {
   console.log(channels.COPY_BUDGET, newtxDate, budget_values);
-  budget_values.forEach((item) => {
-    set_or_update_budget_item(item.envID, newtxDate, item.value);
-  });
+  for (let item of budget_values) {
+    await set_or_update_budget_item(item.envID, newtxDate, item.value);
+  }
+  event.sender.send(channels.DONE_COPY_BUDGET);
 });
 
 ipcMain.on(
   channels.UPDATE_BUDGET,
-  (event, [newEnvelopeID, newtxDate, newtxAmt]) => {
+  async (event, [newEnvelopeID, newtxDate, newtxAmt]) => {
     console.log(channels.UPDATE_BUDGET, newEnvelopeID, newtxDate, newtxAmt);
-    set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt);
+    await set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt);
+    event.sender.send(channels.DONE_UPDATE_BUDGET);
   }
 );
 
-function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
-  return knex('transaction')
+async function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
+  return await knex('transaction')
     .select('id', 'txAmt')
     .where('envelopeID', newEnvelopeID)
     .andWhere('txDate', newtxDate)
@@ -758,7 +760,7 @@ function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
     .then(async function (rows) {
       if (rows.length === 0) {
         // no matching records found
-        return knex('transaction')
+        return await knex('transaction')
           .insert({
             envelopeID: newEnvelopeID,
             txDate: newtxDate,
@@ -787,8 +789,8 @@ function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
               ` WHERE id = ` +
               newEnvelopeID
           )
-          .then(() => {
-            knex('transaction')
+          .then(async () => {
+            await knex('transaction')
               .update({ txAmt: newtxAmt })
               .where('id', rows[0].id)
               .then(() => {

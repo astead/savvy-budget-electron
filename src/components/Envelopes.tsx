@@ -282,10 +282,26 @@ export const Envelopes: React.FC = () => {
     ipcRenderer.send(channels.COPY_BUDGET, 
       [Moment(new Date(year, month)).format('YYYY-MM-DD'),
       prev_budget_values]);
+    
+    // Wait till we are done
+    ipcRenderer.on(channels.DONE_COPY_BUDGET, () => {
+      
+      ipcRenderer.removeAllListeners(channels.DONE_COPY_BUDGET);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_COPY_BUDGET);
+    };
   }
 
-  const handleBudgetChangeTransfer = () => {
+  const handleBalanceChangeTransfer = () => {
     load_CurrBalance();
+  }
+
+  const handleBudgetItemChange = (index, value) => {
+    budgetData[index].currBudget = parseFloat(value);
+    get_totals();
   }
 
   const get_totals = () => {
@@ -582,14 +598,16 @@ export const Envelopes: React.FC = () => {
                           envelope={item.envelope}
                           envID={item.envID}
                           transferEnvList={transferEnvList}
-                          callback={handleBudgetChangeTransfer}
+                          callback={handleBalanceChangeTransfer}
                         />
                       </td>
                       <td className="Table TC Right">
                         <EditableBudget 
-                          initialID={item.envID}
-                          initialDate={curMonth}
-                          initialValue={item.currBudget}/>
+                          index={index}
+                          id={item.envID}
+                          date={curMonth}
+                          value={item.currBudget}
+                          callback={handleBudgetItemChange}/>
                       </td>
                       <td className="Table TC Right">
                         <Link to={"/Transactions/" + item.envID + "/1/" + year + "/" + month}>

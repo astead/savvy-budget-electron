@@ -40,9 +40,11 @@ module.exports = {
     MOV_ENVELOPE: 'move_envelope',
 
     UPDATE_BUDGET: 'update_budget',
+    DONE_UPDATE_BUDGET: 'done_update_budget',
     UPDATE_BALANCE: 'update_balance',
     MOVE_BALANCE: 'move_balance',
     COPY_BUDGET: 'copy_budget',
+    DONE_COPY_BUDGET: 'done_copy_budget',
 
     SAVE_KEYWORD: 'save_keyword',
 
