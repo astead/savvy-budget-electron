@@ -33,7 +33,9 @@ module.exports = {
 
     REN_CATEGORY: 'ren_category',
     DEL_CATEGORY: 'del_category',
+    DONE_DEL_CATEGORY: 'done_del_category',
     ADD_CATEGORY: 'add_category',
+    DONE_ADD_CATEGORY: 'done_add_category',
     ADD_ENVELOPE: 'add_envelope',
     DONE_ADD_ENVELOPE: 'done_add_envelope',
     REN_ENVELOPE: 'ren_envelope',

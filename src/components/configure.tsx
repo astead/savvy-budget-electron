@@ -252,6 +252,21 @@ export const Configure = () => {
     // Request we delete the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.DEL_CATEGORY, id);
+    
+    // Wait till we are done
+    ipcRenderer.on(channels.DONE_DEL_CATEGORY, () => {
+      load_cats_and_envs();
+      ipcRenderer.removeAllListeners(channels.DONE_DEL_CATEGORY);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_DEL_CATEGORY);
+    };
+  };
+
+  const handleNewCategory = () => {
+    load_cats_and_envs();
   };
 
   const handleNewEnvelope = () => {
@@ -499,7 +514,7 @@ export const Configure = () => {
   if (catData) {
     category_content = (
       <>
-      <NewCategory/>
+      <NewCategory callback={handleNewCategory} />
       <DragDropContext onDragEnd={handleOnDragEnd}>
         {catData.map((category, index) => {
           const { catID, cat:cat_name, items } = category;

@@ -646,36 +646,38 @@ ipcMain.on(channels.ADD_ENVELOPE, async (event, { categoryID }) => {
   event.sender.send(channels.DONE_ADD_ENVELOPE);
 });
 
-ipcMain.on(channels.ADD_CATEGORY, (event, name) => {
+ipcMain.on(channels.ADD_CATEGORY, async (event, name) => {
   console.log(channels.ADD_CATEGORY, name);
 
-  knex('category')
+  await knex('category')
     .insert({ category: name })
-    .then(() => {
-      console.log('Added category: ' + name);
-    })
+    .then()
     .catch((err) => {
       console.log('Error: ' + err);
     });
+
+  event.sender.send(channels.DONE_ADD_CATEGORY);
 });
 
-ipcMain.on(channels.DEL_CATEGORY, (event, id) => {
+ipcMain.on(channels.DEL_CATEGORY, async (event, id) => {
   console.log(channels.DEL_CATEGORY, id);
 
   // Move any sub-envelopes to Uncategorized
-  const uncategorizedID = lookup_uncategorized();
+  const uncategorizedID = await lookup_uncategorized();
 
-  knex('envelope')
+  await knex('envelope')
     .where('categoryID', id)
     .update('categoryID', uncategorizedID)
-    .then(() => {
-      knex('category')
+    .then(async () => {
+      await knex('category')
         .where({ id: id })
         .del()
-        .then(() => console.log('Deleted category: ' + id))
+        .then()
         .catch((err) => console.log('Error: ' + err));
     })
     .catch((err) => console.log('Error: ' + err));
+
+  event.sender.send(channels.DONE_DEL_CATEGORY);
 });
 
 ipcMain.on(channels.DEL_ENVELOPE, async (event, id) => {
