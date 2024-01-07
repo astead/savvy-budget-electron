@@ -1009,6 +1009,7 @@ ipcMain.on(
     [
       filterStartDate,
       filterEndDate,
+      filterCatID,
       filterEnvID,
       filterAccID,
       filterDesc,
@@ -1019,6 +1020,7 @@ ipcMain.on(
       channels.GET_TX_DATA,
       filterStartDate,
       filterEndDate,
+      filterCatID,
       filterEnvID,
       filterAccID,
       filterDesc,
@@ -1070,6 +1072,9 @@ ipcMain.on(
             );
           });
         }
+      }
+      if (filterCatID > -1) {
+        query = query.andWhere('envelope.categoryID', filterCatID);
       }
       if (filterAccID !== '-1' && filterAccID !== 'All') {
         query = query.andWhere('account.account', filterAccID);

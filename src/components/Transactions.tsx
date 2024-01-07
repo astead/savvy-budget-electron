@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
 import { MonthSelector } from '../helpers/MonthSelector.tsx';
+import { DropDown } from '../helpers/DropDown.tsx';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 import { AccountDropDown } from '../helpers/AccountDropDown.tsx';
 import Moment from 'moment';
@@ -36,11 +37,17 @@ export const Transactions: React.FC = () => {
   
   const { in_envID, in_force_date, in_year, in_month } = useParams();
   
-  interface EnvelopeList {
-    envID: number; 
+  interface CategoryList {
+    catID: number;
     category: string;
-    envelope: string; 
   }
+
+  interface EnvelopeList {
+    envID: number;
+    category: string;
+    envelope: string;
+  }
+
   interface AccountList {
     account: string;
   }
@@ -59,11 +66,15 @@ export const Transactions: React.FC = () => {
   const [newTxAccListLoaded, setNewTxAccListLoaded] = useState(false);
   const [newError, setNewError] = useState("");
 
+  // Filter by category
+  const [filterCatList, setFilterCatList] = useState<any[]>([]);
+  const [filterCatListLoaded, setFilterCatListLoaded] = useState(false);
+  const [filterCatID, setFilterCatID] = useState(in_envID);
+
   // Filter by envelope
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
   const [filterEnvID, setFilterEnvID] = useState(in_envID);
-  //const [filterEnvelopeName, setFilterEnvelopeName] = useState(null);
 
   // Filter by account
   const [filterAccList, setFilterAccList] = useState<AccountList[]>([]);
@@ -151,12 +162,13 @@ export const Transactions: React.FC = () => {
     );
   }  
 
-  const load_transactions = () => {
+  function load_transactions() {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_TX_DATA, 
       [ filterStartDate?.format('YYYY-MM-DD'),
         filterEndDate?.format('YYYY-MM-DD'),
+        filterCatID,
         filterEnvID,
         filterAccID,
         filterDesc,
@@ -179,18 +191,38 @@ export const Transactions: React.FC = () => {
   const load_envelope_list = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_ENV_LIST, {includeInactive: 1});
+    ipcRenderer.send(channels.GET_CAT_ENV);
 
     // Receive the data
-    ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
-      setNewTxEnvList(arg);
+    ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
+      
+      const tmpFilterEnvList = arg.map((item) => {
+        return { envID: item.envID, category: item.category, envelope: item.envelope };
+      });
+      
+      const tmpFilterCatList = arg.reduce((acc, item) => {
+        // Check if the category id already exists in the accumulator array
+        const existingCategory = acc.find(category => category.id === item.catID);
+      
+        // If not, add the category to the accumulator
+        if (!existingCategory) {
+          acc.push({
+            id: item.catID,
+            text: item.category,
+          });
+        }
+      
+        return acc;
+      }, []);
+
+      setNewTxEnvList(tmpFilterEnvList);
       setNewTxEnvListLoaded(true);
 
       setEnvList([{
         envID: -1,
         category: "Undefined",
         envelope: "", 
-      }, ...(arg as EnvelopeList[])]);
+      }, ...(tmpFilterEnvList as EnvelopeList[])]);
       setEnvListLoaded(true);
 
       setFilterEnvList([{
@@ -205,15 +237,22 @@ export const Transactions: React.FC = () => {
         envID: -1,
         category: "Undefined",
         envelope: "", 
-      }, ...(arg as EnvelopeList[])]);
+      }, ...(tmpFilterEnvList as EnvelopeList[])]);
       setFilterEnvListLoaded(true);
 
-      ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
+      setFilterCatList([
+        {
+          id: -1,
+          text: "All",
+        },...(tmpFilterCatList as CategoryList[])]);
+      setFilterCatListLoaded(true);
+
+      ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
     });
     
     // Clean the listener after the component is dismounted
     return () => {
-      ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
+      ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
     };
   }
 
@@ -258,13 +297,20 @@ export const Transactions: React.FC = () => {
     return i;
   }
 
+  const handleFilterCatChange = ({id, new_value, new_text}) => {
+    localStorage.setItem(
+      'transaction-filter-catID', 
+      JSON.stringify({ filterCatID: new_value})
+    );
+    setFilterCatID(new_value);
+  };
+
   const handleFilterEnvChange = ({id, new_value, new_text}) => {
     localStorage.setItem(
       'transaction-filter-envID', 
       JSON.stringify({ filterEnvID: new_value})
     );
     setFilterEnvID(new_value);
-    //setFilterEnvelopeName(new_text);
   };
 
   const handleFilterAccChange = ({id, new_value, new_text}) => {
@@ -273,7 +319,6 @@ export const Transactions: React.FC = () => {
       JSON.stringify({ filterAccID: new_value})
     );
     setFilterAccID(new_value);
-    //setFilterAccName(new_text);
   };
 
   const handleFilterDescChange = () => {
@@ -389,7 +434,7 @@ export const Transactions: React.FC = () => {
     if (gotMonthData) {
       load_transactions();
     }
-  }, [curMonth, filterEnvID, gotMonthData, filterAccID, 
+  }, [curMonth, filterCatID, filterEnvID, gotMonthData, filterAccID, 
       filterDesc, filterStartDate, filterEndDate, filterAmount]);
 
   useEffect(() => {
@@ -406,6 +451,14 @@ export const Transactions: React.FC = () => {
       const my_filter_endDate = JSON.parse(my_filter_endDate_str);
       if (my_filter_endDate) {
         setFilterEndDate(dayjs(my_filter_endDate.filterEndDate));
+      }
+    }
+
+    const my_filter_catID_str = localStorage.getItem('transaction-filter-catID');
+    if (my_filter_catID_str?.length) {
+      const my_filter_catID = JSON.parse(my_filter_catID_str);
+      if (my_filter_catID) {
+        setFilterCatID(my_filter_catID.filterCatID);
       }
     }
 
@@ -577,7 +630,7 @@ export const Transactions: React.FC = () => {
             </div>
           </AccordionDetails>
           </Accordion>
-        {filterEnvListLoaded && filterAccListLoaded &&
+        {filterEnvListLoaded && filterAccListLoaded && filterCatListLoaded &&
           <Accordion>
           <AccordionSummary
             expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
@@ -669,6 +722,19 @@ export const Transactions: React.FC = () => {
                 </td>
               </tr>
               <tr>
+                <td className="Right">
+                  <span>Category: </span>
+                </td>
+                <td className="Left">
+                  <DropDown 
+                    id={-1}
+                    selectedID={filterCatID}
+                    optionData={filterCatList}
+                    changeCallback={handleFilterCatChange}
+                    className="filterSize"
+                  />
+                </td>
+                <td></td>
                 <td className="Right">
                   <span>Envelope: </span>
                 </td>
