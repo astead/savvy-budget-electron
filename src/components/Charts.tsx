@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 import { TimeFrameDropDown } from '../helpers/TimeFrameDropDown.tsx';
-import { LineChart } from '@mui/x-charts/LineChart';
 import { useParams } from 'react-router';
-
+import Chart from "react-apexcharts";
 
 /*
   TODO:
-  - month label seems off by 1 month
   - pie chart?
 */
 
@@ -27,6 +26,8 @@ export const Charts: React.FC = () => {
     [key: string]: string | number | Date;
   }
 
+  const navigate = useNavigate();
+
   const [filterTimeFrame, setFilterTimeFrame] = useState<any[]>([]);
   const [filterTimeFrameLoaded, setFilterTimeFrameLoaded] = useState(false);
   const [filterTimeFrameID, setFilterTimeFrameID] = useState(1);
@@ -39,6 +40,9 @@ export const Charts: React.FC = () => {
   const [haveChartData, setHaveChartData] = useState(false);
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [avgValue, setAvgValue] = useState(0);
+
+  const [chartOptions, setChartOptions] = useState(null as any);
+  const [chartSeriesData, setChartSeriesData] = useState(null as any);
 
   const handleFilterEnvChange = ({id, new_value, new_text}) => {
     setHaveChartData(false);
@@ -83,10 +87,10 @@ export const Charts: React.FC = () => {
     
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_ENV_LIST, {includeInactive: 1});
+    ipcRenderer.send(channels.GET_CAT_ENV, {includeInactive: 1});
 
     // Receive the data
-    ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
+    ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
       let groupedItems = [{
         envID: "env-3",
         category: "All",
@@ -101,7 +105,7 @@ export const Charts: React.FC = () => {
         envelope: "", 
       }] as EnvelopeList[];
 
-      let tmpItems = arg.map((item, index, itemArr) => {
+      let tmpItems = arg.map((item) => {
         let node = {
           envID: "env"+item.envID,
           category: item.category,
@@ -111,10 +115,10 @@ export const Charts: React.FC = () => {
       });
 
       if (tmpItems.length > 0) {
-        let cat = "";
+        let cat = -1;
         for (let i = 0; i < tmpItems.length; i++) {
-          if (cat !== tmpItems[i].category) {
-            cat = tmpItems[i].category;
+          if (cat !== tmpItems[i].catID) {
+            cat = tmpItems[i].catID;
             const node = {
               envID: "cat"+cat,
               category: "All " + tmpItems[i].category,
@@ -194,16 +198,81 @@ export const Charts: React.FC = () => {
         return acc;
       }, []);
 
+      let averageValue = 0 as number;
       if (myChartData?.length) {
+        averageValue = totalValue / myChartData?.length;
         setAvgValue(totalValue / myChartData?.length);
       }
       
       setChartData(myChartData as ChartData[]);
-      setHaveChartData(true);
       
+      const xData = myChartData.map((item) => item.month);
+      setChartOptions({
+        xaxis: {
+          categories: xData,
+          labels: {
+            formatter: function (value) {
+              if (value) {
+                return  new Date(value)
+                .toLocaleDateString('en-EN', {
+                  month: 'short',
+                  year: '2-digit',
+                })
+              }
+            }
+          },
+        },
+        yaxis: {
+          labels: {
+            formatter: function (value) {
+              if (value) {
+                return value.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
+              }
+            }
+          },
+        },
+        stroke: {
+          curve: 'smooth',
+        },
+        markers: { size: [ 4, 4, 0] },
+        chart: { events:{ markerClick: handleClick } }
+      });
+      const yActual = myChartData.map((item) => item.actualTotals);
+      const yBudget = myChartData.map((item) => item.budgetTotals);
+      const yAverage = myChartData.map(() => averageValue);
+      setChartSeriesData([
+        { name: 'Actual', data: yActual, color: '#000000', markers: { size: 1 } },
+        { name: 'Budget', data: yBudget, color: '#1a4297', markers: { size: 1 } },
+        { name: 'Average', data: yAverage, color: '#c5c83a' },
+      ]);
+      setHaveChartData(true);
+
       ipcRenderer.removeAllListeners(channels.LIST_ENV_CHART_DATA);
     });
   };
+
+  const handleClick = (event, chartContext, { seriesIndex, dataPointIndex, config}) => {
+    if (seriesIndex === 0) {
+      if (chartData[dataPointIndex]?.month) {
+        const targetMonth = new Date(chartData[dataPointIndex]?.month);
+        let envID = -1;
+        let catID = -1;
+        if (filterEnvID) {
+          if (filterEnvID.startsWith('env')) {
+            envID = parseInt(filterEnvID.substring(3));
+          } else if (filterEnvID.startsWith('cat')) {
+            catID = parseInt(filterEnvID.substring(3));
+          }
+          
+          navigate("/Transactions" +
+            "/" + envID + 
+            "/1/" + targetMonth.getFullYear() + 
+            "/" + targetMonth.getMonth());
+          
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     if (chartData?.length > 0) {
@@ -256,47 +325,12 @@ export const Charts: React.FC = () => {
         }
         {haveChartData && filterEnvelopeName &&
           <div className="chartContainer">
-          <LineChart
-            dataset={chartData}
-            xAxis={[
-              { dataKey: 'month', 
-                tickSize: 1, 
-                tickMinStep: 1, 
-                scaleType: 'time', 
-                tickLabelStyle: {
-                  angle: 270,
-                  textAnchor: 'end',
-                },
-                valueFormatter: (date: Date) =>
-                  date.toLocaleDateString('en-EN', {
-                    month: 'short',
-                    year: '2-digit',
-                  }),
-              }
-            ]}
-            yAxis={[
-              { position:'left',
-              }
-            ]}
-            series={[
-              { 
-                dataKey: 'actualTotals', 
-                label: filterEnvelopeName,
-                color: 'black',
-              },
-              { 
-                dataKey: 'budgetTotals', 
-                label: 'Budget'
-              },
-              { 
-                data: chartData.map(d => avgValue) as number[], 
-                label: 'Avg',
-                showMark: false,
-              },         
-            ]}
-            width={800}
-            height={500}
-          />
+            <Chart
+              options={chartOptions}
+              series={chartSeriesData}
+              type="line"
+              width="800"
+            />
           </div>
         }
 
