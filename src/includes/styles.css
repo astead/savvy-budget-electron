@@ -414,8 +414,16 @@ div.PrevHRCLabel {
   width:100%;
 }
 
+tr.TR:hover {
+  background-color: rgb(222, 222, 222);
+}
+
 tr.TR-duplicate {
   background-color: rgb(205, 146, 88);
+}
+
+tr.TR-duplicate:hover {
+  background-color: rgb(171, 123, 74);
 }
 
 td.TC {

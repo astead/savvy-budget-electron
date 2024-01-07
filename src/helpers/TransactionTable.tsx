@@ -247,7 +247,7 @@ export const TransactionTable = ({data, envList, callback}) => {
           txData.map((item, index) => (
             index < (pagingCurPage * pagingPerPage) &&
             index >= ((pagingCurPage-1) * pagingPerPage) &&
-            <tr key={"tx-" + item.txID} className={(item.isDuplicate === 1 ? "TR-duplicate":"")}>
+            <tr key={"tx-" + item.txID} className={(item.isDuplicate === 1 ? "TR-duplicate":"TR")}>
               <td className="Table TC">{Moment(item.txDate).format('M/D/YYYY')}</td>
               <td className="Table TC Left">{item.account}</td>
               <td className="Table TC Left">{item.description}</td>
