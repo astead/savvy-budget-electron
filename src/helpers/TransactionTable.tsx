@@ -17,7 +17,6 @@ import Pagination from '@mui/material/Pagination';
   - popup window to add notes, tags, etc and edit item
     https://mui.com/material-ui/react-modal/
   - somehow highlight if we could set a keyword
-  - auto select all possible duplicates
 */
 
 interface TransactionNodeData {
@@ -92,7 +91,6 @@ export const TransactionTable = ({data, envList, callback}) => {
   }
 
   const delete_checked_transactions = () => {
-
     let filtered_nodes = isChecked.filter((item) => item.isChecked);
     // Signal we want to del data
     const ipcRenderer = (window as any).ipcRenderer;
@@ -109,7 +107,6 @@ export const TransactionTable = ({data, envList, callback}) => {
     return () => {
       ipcRenderer.removeAllListeners(channels.DONE_DEL_TX_LIST);
     };
-    
   } 
   
   const handleChangeAll = ({id, new_value}) => {
@@ -250,7 +247,7 @@ export const TransactionTable = ({data, envList, callback}) => {
           txData.map((item, index) => (
             index < (pagingCurPage * pagingPerPage) &&
             index >= ((pagingCurPage-1) * pagingPerPage) &&
-            <tr key={index} className={(item.isDuplicate === 1 ? "TR-duplicate":"")}>
+            <tr key={"tx-" + item.txID} className={(item.isDuplicate === 1 ? "TR-duplicate":"")}>
               <td className="Table TC">{Moment(item.txDate).format('M/D/YYYY')}</td>
               <td className="Table TC Left">{item.account}</td>
               <td className="Table TC Left">{item.description}</td>
