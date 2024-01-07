@@ -52,8 +52,6 @@ export const TransactionTable = ({data, envList, callback}) => {
   const [pagingNumPages, setPagingNumPages] = useState(1);
   const [pagingTotalRecords, setPagingTotalRecords] = useState(0);
 
-
-  
   function formatCurrency(currencyNumber:number) {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD'});
   }

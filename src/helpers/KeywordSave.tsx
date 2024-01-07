@@ -14,6 +14,10 @@ export const KeywordSave = ({txID, envID, description, keywordEnvID}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.SAVE_KEYWORD, [my_envID, my_description]);
+
+    // Rather than wait for the DB and re-query
+    // let's just set this to our own env ID
+    setKeywordEnvID(my_envID);
   };
 
   useEffect(() => {

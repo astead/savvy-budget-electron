@@ -2037,12 +2037,15 @@ ipcMain.on(channels.SET_ALL_KEYWORD, (event, { id, force }) => {
     .catch((err) => console.log(err));
 });
 
-ipcMain.on(channels.DEL_KEYWORD, (event, { id }) => {
+ipcMain.on(channels.DEL_KEYWORD, async (event, { id }) => {
   console.log(channels.DEL_KEYWORD, { id });
-  knex('keyword')
+
+  await knex('keyword')
     .delete()
     .where({ id: id })
     .catch((err) => console.log(err));
+
+  event.sender.send(channels.DONE_DEL_KEYWORD);
 });
 
 ipcMain.on(channels.UPDATE_KEYWORD, (event, { id, new_value }) => {
