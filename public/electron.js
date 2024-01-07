@@ -2064,12 +2064,14 @@ ipcMain.on(channels.UPDATE_ACCOUNT, (event, { id, new_value }) => {
     .catch((err) => console.log(err));
 });
 
-ipcMain.on(channels.DEL_ACCOUNT, (event, { id, value }) => {
+ipcMain.on(channels.DEL_ACCOUNT, async (event, { id, value }) => {
   console.log(channels.DEL_ACCOUNT, { id, value });
-  knex('account')
+  await knex('account')
     .update({ isActive: value })
     .where({ id: id })
     .catch((err) => console.log(err));
+
+  event.sender.send(channels.DONE_DEL_ACCOUNT);
 });
 
 ipcMain.on(

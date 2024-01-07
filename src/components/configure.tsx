@@ -3,17 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faTrash, faEyeSlash } from "@fortawesome/free-solid-svg-icons"
+import { faTrash } from "@fortawesome/free-solid-svg-icons"
 import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
-import Moment from 'moment';
 import NewCategory from '../helpers/NewCategory.tsx';
 import EditableCategory from '../helpers/EditableCategory.tsx';
 import EditableEnvelope from '../helpers/EditableEnvelope.tsx';
-import EditableAccount from '../helpers/EditableAccount.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
 import { channels } from '../shared/constants.js';
 import { ConfigKeyword } from './ConfigKeyword.tsx';
+import { ConfigAccount } from './ConfigAccount.tsx';
 
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -68,7 +67,6 @@ export const Configure = () => {
   }
   
   const [catData, setCatData] = useState<any[]>([]);
-  const [accountData, setAccountData] = useState<any[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [tabValue, setTabValue] = useState(0);
 
@@ -188,12 +186,6 @@ export const Configure = () => {
     };
   };
 
-  const handleAccountDelete = (id, isActive) => {
-    // Request we delete the account in the DB
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.DEL_ACCOUNT, {id, value: (isActive===0?1:0)});
-  };
-
   const handleOnDragEnd = (result) => {
     if (!result?.destination) return;
     
@@ -275,23 +267,6 @@ export const Configure = () => {
     };
   }
 
-  const load_accounts = () => {
-    // Signal we want to get data
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_ACCOUNTS);
-
-    // Receive the data
-    ipcRenderer.on(channels.LIST_ACCOUNTS, (arg) => {
-      setAccountData(arg);
-      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
-    });
-
-    // Clean the listener after the component is dismounted
-    return () => {
-      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
-    };
-  }
-
   useEffect(() => {
     if (!loaded) {
 
@@ -323,7 +298,6 @@ export const Configure = () => {
       }
 
       load_cats_and_envs();
-      load_accounts();
     }
   }, [databaseFile]);
 
@@ -402,56 +376,7 @@ export const Configure = () => {
     )
   }
 
-  let account_content;
-  if (accountData) {
-    account_content = (
-      
-      <table className="Table" cellSpacing={0} cellPadding={0}>
-        <>
-        <thead>
-          <tr className="Table THR">
-            <th className="Table THR THRC">{'Account'}</th>
-            <th className="Table THR THRC">{'Name'}</th>
-            <th className="Table THR THRC">{'Last Transaction'}</th>
-            <th className="Table THR THRC">{'    '}</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {
-            accountData.map((acc, index) => {
-              const { id, refNumber, account, isActive, lastTx } = acc;
-              
-                return (
-              
-                  <tr key={index} className="Table">
-                    
-                    <td className="Table TC Left">{refNumber}</td>
-                    <td className="Table TC Left">
-                      <EditableAccount
-                        initialID={id.toString()}
-                        initialName={account} />
-                    </td>
-                    <td className="Table TC Right">{lastTx && Moment(lastTx).format('M/D/YYYY')}</td>
-                    <td className="Table TC">
-                    <div 
-                      className={"Toggle" + (!isActive?" Toggle-active":"")}
-                      onClick={() => handleAccountDelete(id, isActive)}>
-                        <FontAwesomeIcon icon={faEyeSlash} />
-                    </div>
-                    </td>
-                  </tr>
-
-                );
-            }
-          )}
-      
-        </tbody>
-        </>
-      </table>
-    )
-  }
-
+  
   let database_content = (
     <>
       {databaseFile &&
@@ -523,16 +448,6 @@ export const Configure = () => {
     </>
   );
   
-  
-  
-  
-
-  let plaid_config = (
-      <PlaidConfig />
-  );
-  
- 
-
   return (
     <div className="App">
       <header className="App-header">
@@ -573,13 +488,13 @@ export const Configure = () => {
             <ConfigKeyword />
           </CustomTabPanel>
           <CustomTabPanel tabValue={tabValue} index={2}>
-            {account_content}
+            <ConfigAccount />
           </CustomTabPanel>
           <CustomTabPanel tabValue={tabValue} index={3}>
             {database_content}
           </CustomTabPanel>
           <CustomTabPanel tabValue={tabValue} index={4}>
-            {plaid_config}
+            <PlaidConfig />
           </CustomTabPanel>
       </div>
     </div>

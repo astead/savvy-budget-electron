@@ -76,6 +76,7 @@ module.exports = {
     LIST_ACCOUNT_NAMES: 'list_account_names',
     UPDATE_ACCOUNT: 'update_account',
     DEL_ACCOUNT: 'del_account',
+    DONE_DEL_ACCOUNT: 'done_del_account',
 
     GET_ENV_CHART_DATA: 'get_env_chart_data',
     LIST_ENV_CHART_DATA: 'list_env_chart_data',
