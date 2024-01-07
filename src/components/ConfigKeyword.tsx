@@ -32,7 +32,7 @@ export const ConfigKeyword = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
-      setEnvList(arg as EnvelopeList[]);
+      setEnvList([...arg]);
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
 
