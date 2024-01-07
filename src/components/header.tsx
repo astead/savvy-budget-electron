@@ -33,8 +33,8 @@ export const Header = ({currTab}) => {
   return (
     <div className="NavBar">
       <Link to="/" className={currTab === "Home"?"menuLink menuLink-selected":"menuLink"}>Home</Link>
-      <Link to="/Charts/-2" className={currTab === "Charts"?"menuLink menuLink-selected":"menuLink"}>Charts</Link>
-      <Link to={"/Transactions/-3/0/"+year+"/"+month} className={currTab === "Transactions"?"menuLink menuLink-selected":"menuLink"}>Transactions</Link>
+      <Link to="/Charts/env-2" className={currTab === "Charts"?"menuLink menuLink-selected":"menuLink"}>Charts</Link>
+      <Link to={"/Transactions/-1/-3/0/"+year+"/"+month} className={currTab === "Transactions"?"menuLink menuLink-selected":"menuLink"}>Transactions</Link>
       <Link to="/Envelopes" className={currTab === "Envelopes"?"menuLink menuLink-selected":"menuLink"}>Envelopes</Link>
       <Link to="/Configure" className={currTab === "Configure"?"menuLink menuLink-selected":"menuLink"}>Configure</Link>
     </div>

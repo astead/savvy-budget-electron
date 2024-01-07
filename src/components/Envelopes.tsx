@@ -585,7 +585,7 @@ export const Envelopes: React.FC = () => {
                       <td className="Table TC Right">
                         <Link to={
                           "/Transactions" +
-                          "/" + item.envID + 
+                          "/-1/" + item.envID + 
                           "/1/" + new Date(year, month-1).getFullYear() + 
                           "/" + new Date(year, month-1).getMonth()}>
                           {formatCurrency(item.prevActual)}

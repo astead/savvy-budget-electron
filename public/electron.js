@@ -2128,7 +2128,7 @@ ipcMain.on(
         .leftJoin('category', function () {
           this.on('category.id', '=', 'envelope.categoryID');
         })
-        .andWhere({ category: envID });
+        .andWhere({ categoryID: envID });
     }
 
     query

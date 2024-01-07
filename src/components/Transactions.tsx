@@ -35,7 +35,8 @@ import { TransactionTable } from '../helpers/TransactionTable.tsx';
 
 export const Transactions: React.FC = () => {
   
-  const { in_envID, in_force_date, in_year, in_month } = useParams();
+  const { in_catID, in_envID, in_force_date, in_year, in_month } = useParams();
+  console.log(in_month+ "/"+ in_year);
   
   interface CategoryList {
     catID: number;
@@ -69,7 +70,7 @@ export const Transactions: React.FC = () => {
   // Filter by category
   const [filterCatList, setFilterCatList] = useState<any[]>([]);
   const [filterCatListLoaded, setFilterCatListLoaded] = useState(false);
-  const [filterCatID, setFilterCatID] = useState(in_envID);
+  const [filterCatID, setFilterCatID] = useState(in_catID);
 
   // Filter by envelope
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
@@ -458,7 +459,9 @@ export const Transactions: React.FC = () => {
     if (my_filter_catID_str?.length) {
       const my_filter_catID = JSON.parse(my_filter_catID_str);
       if (my_filter_catID) {
-        setFilterCatID(my_filter_catID.filterCatID);
+        if (in_catID === "-1" && my_filter_catID.filterCatID) {
+          setFilterCatID(my_filter_catID.filterCatID);
+        }
       }
     }
 

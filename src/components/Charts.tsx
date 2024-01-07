@@ -14,7 +14,7 @@ import Chart from "react-apexcharts";
 
 export const Charts: React.FC = () => {
   
-  const { envID } = useParams();
+  const { in_envID } = useParams();
 
   interface EnvelopeList {
     envID: string; 
@@ -27,6 +27,7 @@ export const Charts: React.FC = () => {
   }
 
   const navigate = useNavigate();
+  const [navigateTo, setNavigateTo] = useState("");
 
   const [filterTimeFrame, setFilterTimeFrame] = useState<any[]>([]);
   const [filterTimeFrameLoaded, setFilterTimeFrameLoaded] = useState(false);
@@ -34,13 +35,11 @@ export const Charts: React.FC = () => {
 
   const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
-  const [filterEnvID, setFilterEnvID] = useState(envID);
+  const [filterEnvID, setFilterEnvID] = useState(in_envID);
   const [filterEnvelopeName, setFilterEnvelopeName] = useState(null as any);
 
   const [haveChartData, setHaveChartData] = useState(false);
   const [chartData, setChartData] = useState<ChartData[]>([]);
-  const [avgValue, setAvgValue] = useState(0);
-
   const [chartOptions, setChartOptions] = useState(null as any);
   const [chartSeriesData, setChartSeriesData] = useState(null as any);
 
@@ -108,6 +107,7 @@ export const Charts: React.FC = () => {
       let tmpItems = arg.map((item) => {
         let node = {
           envID: "env"+item.envID,
+          catID: "cat"+item.catID,
           category: item.category,
           envelope: item.envelope, 
         };
@@ -115,12 +115,12 @@ export const Charts: React.FC = () => {
       });
 
       if (tmpItems.length > 0) {
-        let cat = -1;
+        let cat = '';
         for (let i = 0; i < tmpItems.length; i++) {
-          if (cat !== tmpItems[i].catID) {
-            cat = tmpItems[i].catID;
+          if (cat !== tmpItems[i].category) {
+            cat = tmpItems[i].category;
             const node = {
-              envID: "cat"+cat,
+              envID: tmpItems[i].catID,
               category: "All " + tmpItems[i].category,
               envelope: "", 
             };
@@ -133,7 +133,7 @@ export const Charts: React.FC = () => {
 
       setFilterEnvListLoaded(true);
       setFilterEnvelopeName("All");
-      setFilterEnvID(envID);
+      setFilterEnvID(in_envID);
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
   };
@@ -201,7 +201,6 @@ export const Charts: React.FC = () => {
       let averageValue = 0 as number;
       if (myChartData?.length) {
         averageValue = totalValue / myChartData?.length;
-        setAvgValue(totalValue / myChartData?.length);
       }
       
       setChartData(myChartData as ChartData[]);
@@ -233,9 +232,10 @@ export const Charts: React.FC = () => {
         },
         stroke: {
           curve: 'smooth',
+          width: [4, 4, 2],
         },
         markers: { size: [ 4, 4, 0] },
-        chart: { events:{ markerClick: handleClick } }
+        chart: { events:{ markerClick: handleClick } },
       });
       const yActual = myChartData.map((item) => item.actualTotals);
       const yBudget = myChartData.map((item) => item.budgetTotals);
@@ -251,11 +251,12 @@ export const Charts: React.FC = () => {
     });
   };
 
-  const handleClick = (event, chartContext, { seriesIndex, dataPointIndex, config}) => {
+  function handleClick(event, chartContext, { seriesIndex, dataPointIndex, config}) {
     if (seriesIndex === 0) {
       if (chartData[dataPointIndex]?.month) {
-        const targetMonth = new Date(chartData[dataPointIndex]?.month);
-        let envID = -1;
+        const targetMonth = chartData[dataPointIndex]?.month as Date;
+        
+        let envID = -3;
         let catID = -1;
         if (filterEnvID) {
           if (filterEnvID.startsWith('env')) {
@@ -263,15 +264,26 @@ export const Charts: React.FC = () => {
           } else if (filterEnvID.startsWith('cat')) {
             catID = parseInt(filterEnvID.substring(3));
           }
+
+          setChartData([]);
+          setChartOptions(null);
+          setChartSeriesData(null);
           
-          navigate("/Transactions" +
-            "/" + envID + 
+          setNavigateTo("/Transactions" +
+            "/" + catID + "/" + envID + 
             "/1/" + targetMonth.getFullYear() + 
-            "/" + targetMonth.getMonth());
+            "/" + targetMonth.toLocaleDateString('en-EN', {month: 'numeric'}));
           
+        } else {
+          console.log("don't have filterEnvID: ");
         }
+      } else {
+        console.log("don't have month data for that data point, chartData: " + chartData  );
       }
+    } else {
+      console.log("clicked on wrong series.");
     }
+
   }
 
   useEffect(() => {
@@ -287,6 +299,12 @@ export const Charts: React.FC = () => {
       load_chart();
     }
   }, [filterEnvID, filterEnvelopeName, filterTimeFrameID]);
+  
+  useEffect(() => {
+    if (!haveChartData && navigateTo) {
+      navigate(navigateTo);
+    }
+  }, [haveChartData, navigateTo]);
 
   useEffect(() => {
     load_envelope_list();
