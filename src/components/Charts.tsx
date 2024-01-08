@@ -235,7 +235,38 @@ export const Charts: React.FC = () => {
           width: [4, 4, 2],
         },
         markers: { size: [ 4, 4, 0] },
-        chart: { events:{ markerClick: handleClick } },
+        chart: { events:{ markerClick: (event, chartContext, { seriesIndex, dataPointIndex, config}) => {
+          if (seriesIndex === 0) {
+            if (xData[dataPointIndex]) {
+              const targetMonth = xData[dataPointIndex] as Date;
+              
+              let envID = -3;
+              let catID = -1;
+              if (filterEnvID) {
+                if (filterEnvID.startsWith('env')) {
+                  envID = parseInt(filterEnvID.substring(3));
+                  if (envID === -2) {
+                    envID = -3;
+                  }
+                } else if (filterEnvID.startsWith('cat')) {
+                  catID = parseInt(filterEnvID.substring(3));
+                }
+                
+                setNavigateTo("/Transactions" +
+                  "/" + catID + "/" + envID + 
+                  "/1/" + targetMonth.getFullYear() + 
+                  "/" + targetMonth.toLocaleDateString('en-EN', {month: 'numeric'}));
+                
+              } else {
+                console.log("don't have filterEnvID: ");
+              }
+            } else {
+              console.log("don't have month data for that data point, chartData: " + chartData  );
+            }
+          } else {
+            console.log("clicked on wrong series.");
+          } } },
+        },
       });
       const yActual = myChartData.map((item) => item.actualTotals);
       const yBudget = myChartData.map((item) => item.budgetTotals);
@@ -245,46 +276,12 @@ export const Charts: React.FC = () => {
         { name: 'Budget', data: yBudget, color: '#1a4297', markers: { size: 1 } },
         { name: 'Average', data: yAverage, color: '#c5c83a' },
       ]);
+
       setHaveChartData(true);
 
       ipcRenderer.removeAllListeners(channels.LIST_ENV_CHART_DATA);
     });
   };
-
-  function handleClick(event, chartContext, { seriesIndex, dataPointIndex, config}) {
-    if (seriesIndex === 0) {
-      if (chartData[dataPointIndex]?.month) {
-        const targetMonth = chartData[dataPointIndex]?.month as Date;
-        
-        let envID = -3;
-        let catID = -1;
-        if (filterEnvID) {
-          if (filterEnvID.startsWith('env')) {
-            envID = parseInt(filterEnvID.substring(3));
-          } else if (filterEnvID.startsWith('cat')) {
-            catID = parseInt(filterEnvID.substring(3));
-          }
-
-          setChartData([]);
-          setChartOptions(null);
-          setChartSeriesData(null);
-          
-          setNavigateTo("/Transactions" +
-            "/" + catID + "/" + envID + 
-            "/1/" + targetMonth.getFullYear() + 
-            "/" + targetMonth.toLocaleDateString('en-EN', {month: 'numeric'}));
-          
-        } else {
-          console.log("don't have filterEnvID: ");
-        }
-      } else {
-        console.log("don't have month data for that data point, chartData: " + chartData  );
-      }
-    } else {
-      console.log("clicked on wrong series.");
-    }
-
-  }
 
   useEffect(() => {
     if (chartData?.length > 0) {
@@ -301,10 +298,10 @@ export const Charts: React.FC = () => {
   }, [filterEnvID, filterEnvelopeName, filterTimeFrameID]);
   
   useEffect(() => {
-    if (!haveChartData && navigateTo) {
+    if (navigateTo && navigate) {
       navigate(navigateTo);
     }
-  }, [haveChartData, navigateTo]);
+  }, [navigateTo, navigate]);
 
   useEffect(() => {
     load_envelope_list();

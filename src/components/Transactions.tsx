@@ -36,7 +36,6 @@ import { TransactionTable } from '../helpers/TransactionTable.tsx';
 export const Transactions: React.FC = () => {
   
   const { in_catID, in_envID, in_force_date, in_year, in_month } = useParams();
-  console.log(in_month+ "/"+ in_year);
   
   interface CategoryList {
     catID: number;
