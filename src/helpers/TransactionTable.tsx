@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useState } from 'react';
 import { channels } from '../shared/constants.js';
-import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
+import { DropDown } from '../helpers/DropDown.tsx';
 import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import Moment from 'moment';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -128,7 +128,7 @@ export const TransactionTable = ({data, envList, callback}) => {
     };
   }; 
   
-  const handleTxEnvChange = ({id, new_value}) => {
+  const handleTxEnvChange = ({id, new_value, new_text}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_TX_ENV, [id, new_value]);
@@ -253,10 +253,10 @@ export const TransactionTable = ({data, envList, callback}) => {
               <td className="Table TC Left">{item.description}</td>
               <td className="Table TC Right">{formatCurrency(item.txAmt)}</td>
               <td className="Table TC TCInput">
-                <CategoryDropDown 
+                <DropDown 
                   id={item.txID}
-                  envID={item.envID}
-                  data={envList}
+                  selectedID={item.envID}
+                  optionData={envList}
                   changeCallback={handleTxEnvChange}
                   className={item.envID === -1 ? "envelopeDropDown-undefined":""}
                 />
@@ -324,10 +324,10 @@ export const TransactionTable = ({data, envList, callback}) => {
             )
           }</td>
           <td className="Table THR TCInput">
-            <CategoryDropDown
+            <DropDown
                   id={-1}
-                  envID={-1}
-                  data={envList}
+                  selectedID={-1}
+                  optionData={envList}
                   changeCallback={handleChangeAll}
                   className="filterEnvelope"
                 />

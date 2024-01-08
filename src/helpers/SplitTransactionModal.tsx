@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faShareNodes, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 import * as dayjs from 'dayjs'
 import { channels } from '../shared/constants.js';
-import { CategoryDropDown } from './CategoryDropDown.tsx';
+import { DropDown } from './DropDown.tsx';
 import { EditableText } from './EditableText.tsx';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -201,10 +201,10 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
                     />
                   </td>
                   <td className="Table TC Left">
-                    <CategoryDropDown 
+                    <DropDown 
                       id={index}
-                      envID={item.txEnvID}
-                      data={envList}
+                      selectedID={item.txEnvID}
+                      optionData={envList}
                       changeCallback={handleTxEnvIDChange}
                       className=""
                       />

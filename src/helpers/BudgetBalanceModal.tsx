@@ -4,7 +4,7 @@ import Modal from '@mui/material/Modal';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { channels } from '../shared/constants.js';
-import { CategoryDropDown } from './CategoryDropDown.tsx';
+import { DropDown } from './DropDown.tsx';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -83,10 +83,10 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
             className="Curr BalTransfer"
           />
           to&nbsp;
-          <CategoryDropDown 
+          <DropDown 
             id={'transfer-from-' + envID}
-            envID={envID}
-            data={transferEnvList}
+            selectedID={envID}
+            optionData={transferEnvList}
             changeCallback={handleFilterEnvChange}
             className=""
           />

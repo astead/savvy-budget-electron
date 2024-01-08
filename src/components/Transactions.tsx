@@ -3,7 +3,6 @@ import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
 import { MonthSelector } from '../helpers/MonthSelector.tsx';
 import { DropDown } from '../helpers/DropDown.tsx';
-import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 import Moment from 'moment';
 import * as dayjs from 'dayjs'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -71,12 +70,12 @@ export const Transactions: React.FC = () => {
   const [filterCatID, setFilterCatID] = useState(in_catID);
 
   // Filter by envelope
-  const [filterEnvList, setFilterEnvList] = useState<EnvelopeList[]>([]);
+  const [filterEnvList, setFilterEnvList] = useState<any[]>([]);
   const [filterEnvListLoaded, setFilterEnvListLoaded] = useState(false);
   const [filterEnvID, setFilterEnvID] = useState(in_envID);
 
   // Filter by account
-  const [filterAccList, setFilterAccList] = useState<AccountList[]>([]);
+  const [filterAccList, setFilterAccList] = useState<any[]>([]);
   const [filterAccListLoaded, setFilterAccListLoaded] = useState(false);
   const [filterAccID, setFilterAccID] = useState(-1);
   //const [filterAccName, setFilterAccName] = useState(null);
@@ -94,7 +93,7 @@ export const Transactions: React.FC = () => {
   const [filterEndDate, setFilterEndDate] = useState<Dayjs | null>(null);
 
   // Category : Envelope data for drop down lists
-  const [envList, setEnvList] = useState<EnvelopeList[]>([]);
+  const [envList, setEnvList] = useState<any[]>([]);
   const [envListLoaded, setEnvListLoaded] = useState(false);
   
   // Import filename
@@ -196,7 +195,7 @@ export const Transactions: React.FC = () => {
     ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
       
       const tmpFilterEnvList = arg.map((item) => {
-        return { envID: item.envID, category: item.category, envelope: item.envelope };
+        return { id: item.envID, text: item.category + " : " + item.envelope };
       });
       
       const tmpFilterCatList = arg.reduce((acc, item) => {
@@ -217,33 +216,20 @@ export const Transactions: React.FC = () => {
       setNewTxEnvList(tmpFilterEnvList);
       setNewTxEnvListLoaded(true);
 
-      setEnvList([{
-        envID: -1,
-        category: "Undefined",
-        envelope: "", 
-      }, ...(tmpFilterEnvList as EnvelopeList[])]);
+      setEnvList([{ id: -1, text: "Undefined"}, ...(tmpFilterEnvList)]);
       setEnvListLoaded(true);
 
-      setFilterEnvList([{
-        envID: -3,
-        category: "All",
-        envelope: "", 
-      },{
-        envID: -2,
-        category: "Not in current budget",
-        envelope: "", 
-      },{
-        envID: -1,
-        category: "Undefined",
-        envelope: "", 
-      }, ...(tmpFilterEnvList as EnvelopeList[])]);
+      setFilterEnvList([
+        { id: -3, text: "All" },
+        { id: -2, text: "Not in current budget" },
+        { id: -1, text: "Undefined" }, ...(tmpFilterEnvList)
+      ]);
       setFilterEnvListLoaded(true);
 
       setFilterCatList([
-        {
-          id: -1,
-          text: "All",
-        },...(tmpFilterCatList as CategoryList[])]);
+        { id: -1, text: "All" },
+        ...(tmpFilterCatList)
+      ]);
       setFilterCatListLoaded(true);
 
       ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
@@ -589,10 +575,10 @@ export const Transactions: React.FC = () => {
                         />
                     </td>
                     <td>
-                      <CategoryDropDown 
+                      <DropDown 
                           id={-1}
-                          envID={newTxEnvID}
-                          data={newTxEnvList}
+                          selectedID={newTxEnvID}
+                          optionData={newTxEnvList}
                           changeCallback={({id, new_value, new_text}) => setNewTxEnvID(new_value)}
                           className=""
                         />
@@ -742,10 +728,10 @@ export const Transactions: React.FC = () => {
                   <span>Envelope: </span>
                 </td>
                 <td className="Left">
-                  <CategoryDropDown 
+                  <DropDown 
                     id={-1}
-                    envID={filterEnvID}
-                    data={filterEnvList}
+                    selectedID={filterEnvID}
+                    optionData={filterEnvList}
                     changeCallback={handleFilterEnvChange}
                     className="filterSize"
                   />
