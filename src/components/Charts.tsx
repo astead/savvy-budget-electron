@@ -43,23 +43,19 @@ export const Charts: React.FC = () => {
   const [chartOptions, setChartOptions] = useState(null as any);
   const [chartSeriesData, setChartSeriesData] = useState(null as any);
 
+  const [savedValues, setSavedValues] = useState(null as any);
+
   const handleFilterEnvChange = ({id, new_value, new_text}) => {
-    localStorage.setItem(
-      'chart-filter-envID', 
-      JSON.stringify({ filterEnvID: new_value})
-    );
     setHaveChartData(false);
     setFilterEnvID(new_value);
     setFilterEnvelopeName(new_text);
+    setSavedValues({...savedValues, filterEnvID: new_value});
   };
 
   const handleFilterTimeFrameChange = ({id, new_value}) => {
-    localStorage.setItem(
-      'chart-filter-time', 
-      JSON.stringify({ filterTimeFrameID: new_value})
-    );
     setHaveChartData(false);
     setFilterTimeFrameID(new_value);
+    setSavedValues({...savedValues, filterTimeFrameID: new_value});
   };
 
   const load_filter_timeframe = () => {
@@ -294,6 +290,16 @@ export const Charts: React.FC = () => {
     });
   };
 
+  
+  useEffect(() => {
+    if (savedValues) {
+      localStorage.setItem(
+        'chart-filter', 
+        JSON.stringify(savedValues)
+      );
+    }
+  }, [savedValues]);
+
   useEffect(() => {
     if (chartData?.length > 0) {
       setHaveChartData(true);
@@ -315,22 +321,18 @@ export const Charts: React.FC = () => {
   }, [navigateTo, navigate]);
 
   useEffect(() => {
-    const my_filter_envID_str = localStorage.getItem('chart-filter-envID');
-    if (my_filter_envID_str?.length) {
-      const my_filter_envID = JSON.parse(my_filter_envID_str);
-      if (my_filter_envID) {
-        if (in_envID === "env-2" && my_filter_envID.filterEnvID) {
-          setFilterEnvID(my_filter_envID.filterEnvID);
+    const my_filte_str = localStorage.getItem('chart-filter');
+    if (my_filte_str?.length) {
+      const my_filter = JSON.parse(my_filte_str);
+      if (my_filter) {
+        setSavedValues(my_filter);
+        if (in_envID === "env-2") {
+          setFilterEnvID(my_filter.filterEnvID);
         }
+        setFilterTimeFrameID(my_filter.filterTimeFrameID);
       }
-    }
-
-    const my_filter_time_str = localStorage.getItem('chart-filter-time');
-    if (my_filter_time_str?.length) {
-      const my_filter_time = JSON.parse(my_filter_time_str);
-      if (my_filter_time) {
-        setFilterTimeFrameID(my_filter_time.filterTimeFrameID);
-      }
+    } else {
+      setSavedValues({filterEnvID: 'env-2', filterTimeFrameID: 1});
     }
 
     load_envelope_list();
