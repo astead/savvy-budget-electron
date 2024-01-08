@@ -687,7 +687,7 @@ export const Transactions: React.FC = () => {
                       onChange={(newValue) => {
                         localStorage.setItem(
                           'transaction-filter-endDate', 
-                          JSON.stringify({ filterEndDate: newValue}));
+                          JSON.stringify({ filterEndDate: newValue?.format('YYYY-MM-DD')}));
                         setFilterEndDate(newValue);
                       }}
                       sx={{ width:250}}
