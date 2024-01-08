@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import 'react-edit-text/dist/index.css';
 
 export const TimeFrameDropDown = ({id, time_id, data, changeCallback, className}) => {
   
@@ -12,8 +11,8 @@ export const TimeFrameDropDown = ({id, time_id, data, changeCallback, className}
   const [my_data, ] = useState(data);
 
   const handleChange = (e) => {
-    changeCallback({id: my_id, new_value: e.target.value});
     setMy_time_id(e.target.value);
+    changeCallback({id: my_id, new_value: e.target.value});
   };
 
   useEffect(() => {
@@ -23,7 +22,6 @@ export const TimeFrameDropDown = ({id, time_id, data, changeCallback, className}
   useEffect(() => {
     setMy_time_id(time_id);
   }, [time_id]);
-
 
   return (
     <select

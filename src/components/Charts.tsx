@@ -44,12 +44,20 @@ export const Charts: React.FC = () => {
   const [chartSeriesData, setChartSeriesData] = useState(null as any);
 
   const handleFilterEnvChange = ({id, new_value, new_text}) => {
+    localStorage.setItem(
+      'chart-filter-envID', 
+      JSON.stringify({ filterEnvID: new_value})
+    );
     setHaveChartData(false);
     setFilterEnvID(new_value);
     setFilterEnvelopeName(new_text);
   };
 
   const handleFilterTimeFrameChange = ({id, new_value}) => {
+    localStorage.setItem(
+      'chart-filter-time', 
+      JSON.stringify({ filterTimeFrameID: new_value})
+    );
     setHaveChartData(false);
     setFilterTimeFrameID(new_value);
   };
@@ -79,11 +87,9 @@ export const Charts: React.FC = () => {
         text: 'All', 
       }]);
     setFilterTimeFrameLoaded(true);
-    setFilterTimeFrameID(1);
   }
 
   const load_envelope_list = () => {
-    
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_CAT_ENV, {includeInactive: 1});
@@ -129,11 +135,15 @@ export const Charts: React.FC = () => {
         }
       }
 
-      setFilterEnvList([...groupedItems, ...tmpItems]);
+      const tmpEnvList = [...groupedItems, ...tmpItems];
+      setFilterEnvList(tmpEnvList);
 
+      const tmpEnv = tmpEnvList.find((i) => {return (i.envID === filterEnvID)});
+      if (tmpEnv) {
+        const tmpName = tmpEnv.category + (tmpEnv.category?.length && tmpEnv.envelope?.length?" : ":"") + tmpEnv.envelope;
+        setFilterEnvelopeName(tmpName);
+      }
       setFilterEnvListLoaded(true);
-      setFilterEnvelopeName("All");
-      setFilterEnvID(in_envID);
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
   };
@@ -305,6 +315,24 @@ export const Charts: React.FC = () => {
   }, [navigateTo, navigate]);
 
   useEffect(() => {
+    const my_filter_envID_str = localStorage.getItem('chart-filter-envID');
+    if (my_filter_envID_str?.length) {
+      const my_filter_envID = JSON.parse(my_filter_envID_str);
+      if (my_filter_envID) {
+        if (in_envID === "env-2" && my_filter_envID.filterEnvID) {
+          setFilterEnvID(my_filter_envID.filterEnvID);
+        }
+      }
+    }
+
+    const my_filter_time_str = localStorage.getItem('chart-filter-time');
+    if (my_filter_time_str?.length) {
+      const my_filter_time = JSON.parse(my_filter_time_str);
+      if (my_filter_time) {
+        setFilterTimeFrameID(my_filter_time.filterTimeFrameID);
+      }
+    }
+
     load_envelope_list();
     load_filter_timeframe();
   }, []);
@@ -339,7 +367,7 @@ export const Charts: React.FC = () => {
             />
           </div>
         }
-        {haveChartData && filterEnvelopeName &&
+        {haveChartData &&
           <div className="chartContainer">
             <Chart
               options={chartOptions}
