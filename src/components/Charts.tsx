@@ -255,7 +255,8 @@ export const Charts: React.FC = () => {
                 setNavigateTo("/Transactions" +
                   "/" + catID + "/" + envID + 
                   "/1/" + targetMonth.getFullYear() + 
-                  "/" + targetMonth.toLocaleDateString('en-EN', {month: 'numeric'}));
+                  "/" + (parseInt(targetMonth.toLocaleDateString('en-EN', {month: 'numeric'}))-1)
+                );
                 
               } else {
                 console.log("don't have filterEnvID: ");
