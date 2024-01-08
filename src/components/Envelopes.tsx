@@ -610,7 +610,7 @@ export const Envelopes: React.FC = () => {
                           callback={handleBudgetItemChange}/>
                       </td>
                       <td className="Table TC Right">
-                        <Link to={"/Transactions/" + item.envID + "/1/" + year + "/" + month}>
+                        <Link to={"/Transactions/-1/" + item.envID + "/1/" + year + "/" + month}>
                           {formatCurrency(item.currActual)}
                         </Link>
                       </td>
