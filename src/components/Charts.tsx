@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
-import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
 import { DropDown } from '../helpers/DropDown.tsx';
 import { useParams } from 'react-router';
 import Chart from "react-apexcharts";
@@ -93,18 +92,15 @@ export const Charts: React.FC = () => {
     // Receive the data
     ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
       let groupedItems = [{
-        envID: "env-3",
-        category: "All",
-        envelope: "", 
+        id: "env-3",
+        text: "All",
       },{
-        envID: "env-2",
-        category: "All Spending",
-        envelope: "", 
+        id: "env-2",
+        text: "All Spending",
       },{
-        envID: "env-1",
-        category: "Undefined",
-        envelope: "", 
-      }] as EnvelopeList[];
+        id: "env-1",
+        text: "Undefined",
+      }];
 
       let tmpItems = arg.map((item) => {
         let node = {
@@ -131,13 +127,19 @@ export const Charts: React.FC = () => {
         }
       }
 
-      const tmpEnvList = [...groupedItems, ...tmpItems];
+      let tmpNewItems = tmpItems.map((i) => {
+        return {
+          id: i.envID,
+          text: i.category + (i.category?.length && i.envelope?.length?" : ":"") + i.envelope,
+        }
+      });
+
+      const tmpEnvList = [...groupedItems, ...tmpNewItems];
       setFilterEnvList(tmpEnvList);
 
-      const tmpEnv = tmpEnvList.find((i) => {return (i.envID === filterEnvID)});
+      const tmpEnv = tmpEnvList.find((i) => {return (i.id === filterEnvID)});
       if (tmpEnv) {
-        const tmpName = tmpEnv.category + (tmpEnv.category?.length && tmpEnv.envelope?.length?" : ":"") + tmpEnv.envelope;
-        setFilterEnvelopeName(tmpName);
+        setFilterEnvelopeName(tmpEnv.text);
       }
       setFilterEnvListLoaded(true);
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
@@ -348,10 +350,10 @@ export const Charts: React.FC = () => {
         {filterEnvListLoaded &&
           <div className="chart-filter-container">
             <span>Envelope: </span>
-            <CategoryDropDown 
+            <DropDown 
               id={-1}
-              envID={filterEnvID}
-              data={filterEnvList}
+              selectedID={filterEnvID}
+              optionData={filterEnvList}
               changeCallback={handleFilterEnvChange}
               className=""
             />
