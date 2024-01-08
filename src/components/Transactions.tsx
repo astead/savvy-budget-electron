@@ -4,7 +4,6 @@ import { channels } from '../shared/constants.js';
 import { MonthSelector } from '../helpers/MonthSelector.tsx';
 import { DropDown } from '../helpers/DropDown.tsx';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
-import { AccountDropDown } from '../helpers/AccountDropDown.tsx';
 import Moment from 'moment';
 import * as dayjs from 'dayjs'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -274,8 +273,10 @@ export const Transactions: React.FC = () => {
     // Receive the data
     ipcRenderer.on(channels.LIST_ACCOUNT_NAMES, (arg) => {
       setFilterAccList([{
-        account: "All", 
-      }, ...(arg as AccountList[])]);
+        id: "All", text: "All"
+      }, ...(arg.map((i) => {
+        return { id: i.account, text: i.account }
+      }))]);
       setFilterAccListLoaded(true);
 
       ipcRenderer.removeAllListeners(channels.LIST_ACCOUNT_NAMES);
@@ -556,10 +557,10 @@ export const Transactions: React.FC = () => {
                       </LocalizationProvider>
                     </td>
                     <td>
-                      <AccountDropDown 
-                          keyID={-1}
-                          id={newTxAccID}
-                          data={newTxAccList}
+                      <DropDown 
+                          id={-1}
+                          selectedID={newTxAccID}
+                          optionData={newTxAccList}
                           changeCallback={({id, new_value, new_text}) => setNewTxAccID(new_value)}
                           className=""
                         />
@@ -755,10 +756,10 @@ export const Transactions: React.FC = () => {
                   <span>Account: </span>
                 </td>
                 <td className="Left">
-                  <AccountDropDown 
-                    keyID={-1}
-                    id={filterAccID}
-                    data={filterAccList}
+                  <DropDown 
+                    id={-1}
+                    selectedID={filterAccID}
+                    optionData={filterAccList}
                     changeCallback={handleFilterAccChange}
                     className="filterSize"
                   />

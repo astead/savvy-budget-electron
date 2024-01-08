@@ -4,9 +4,6 @@ import { faEyeSlash } from "@fortawesome/free-solid-svg-icons"
 import Moment from 'moment';
 import EditableAccount from '../helpers/EditableAccount.tsx';
 import { channels } from '../shared/constants.js';
-import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
-import { EditableKeyword } from '../helpers/EditableKeyword.tsx';
-
 
 export const ConfigAccount = () => {
 
