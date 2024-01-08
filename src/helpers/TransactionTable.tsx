@@ -222,7 +222,7 @@ export const TransactionTable = ({data, envList, callback}) => {
           <th className="Table THR THRC">{'Envelope'}</th>
           <th className="Table THR THRC">{'Split'}</th>
           <th className="Table THR THRC">{' KW '}</th>
-          <th className="Table THR THRC">
+          <th className="Table THR THRC THRCClickable">
             <div onClick={() => look_for_dups()}>{' Dup '}</div>
           </th>
           <th className="Table THR THRC">{' Vis '}</th>
