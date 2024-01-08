@@ -1087,7 +1087,7 @@ ipcMain.on(
         );
       }
       if (filterStartDate) {
-        query = query.andWhereRaw(`'transaction'.txDate > ?`, filterStartDate);
+        query = query.andWhereRaw(`'transaction'.txDate >= ?`, filterStartDate);
       }
       if (filterEndDate) {
         query = query.andWhereRaw(`'transaction'.txDate < ?`, filterEndDate);
