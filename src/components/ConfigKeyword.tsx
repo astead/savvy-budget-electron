@@ -2,15 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronUp, faChevronDown, faTrash, faReply, faReplyAll } from "@fortawesome/free-solid-svg-icons"
 import { channels } from '../shared/constants.js';
-import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
+import { DropDown } from '../helpers/DropDown.tsx';
 import { EditableKeyword } from '../helpers/EditableKeyword.tsx';
 
 
-interface EnvelopeList {
-  envID: number; 
-  category: string;
-  envelope: string; 
-}
 
 interface KeywordList {
   id: number;
@@ -23,7 +18,7 @@ interface KeywordList {
 export const ConfigKeyword = () => {
   const [keywordData, setKeywordData] = useState<KeywordList[]>([]);
   const [sortKeyword, setSortKeyword] = useState('10');
-  const [envList, setEnvList] = useState<EnvelopeList[]>([]);
+  const [envList, setEnvList] = useState<any[]>([]);
  
   const load_envelope_list = () => {
     // Signal we want to get data
@@ -32,7 +27,12 @@ export const ConfigKeyword = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
-      setEnvList([...arg]);
+      setEnvList([...arg.map((i) => {
+        return {
+          id: i.envID,
+          text: i.category + (i.category?.length && i.envelope?.length?" : ":"") + i.envelope,
+        }
+      })]);
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
     });
 
@@ -49,7 +49,7 @@ export const ConfigKeyword = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_KEYWORDS, (arg) => {
-      setKeywordData([...sort_keyword_array(arg)]);
+      setKeywordData([...arg]);
       ipcRenderer.removeAllListeners(channels.LIST_KEYWORDS);
     });
 
@@ -110,7 +110,7 @@ export const ConfigKeyword = () => {
     ipcRenderer.send(channels.SET_ALL_KEYWORD, {id, force});
   };
 
-  const handleEnvelopeChange = ({id, new_value}) => {
+  const handleEnvelopeChange = ({id, new_value, new_text}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_KEYWORD_ENV, {id, new_value});
@@ -163,14 +163,14 @@ export const ConfigKeyword = () => {
             <tr key={"row-"+id} className="Table TR">
               <td className="Table TC Left">
                 <EditableKeyword
-                  initialID={id.toString()}
+                  initialID={id}
                   initialDescription={description} />
               </td>
               <td className="Table TC">
-                <CategoryDropDown 
+                <DropDown 
                   id={id}
-                  envID={envelopeID}
-                  data={envList}
+                  selectedID={envelopeID}
+                  optionData={envList}
                   changeCallback={handleEnvelopeChange}
                   className={envelopeID === -1 ? "envelopeDropDown-undefined":""}
                 />
