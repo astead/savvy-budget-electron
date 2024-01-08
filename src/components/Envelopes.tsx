@@ -579,7 +579,7 @@ export const Envelopes: React.FC = () => {
                         <td colSpan={7} className="Table TGHR TC Left">{item.category}</td>
                       </tr>
                     )}
-                    <tr key={item.envID}>
+                    <tr key={item.envID} className="TR">
                       <td className="Table TC Left">{item.envelope}</td>
                       <td className="Table TC Right">{formatCurrency(item.prevBudget)}</td>
                       <td className="Table TC Right">

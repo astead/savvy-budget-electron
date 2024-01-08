@@ -65,7 +65,7 @@ export const ConfigAccount = () => {
     <tbody>
       {
         accountData.map(({ id, refNumber, account, isActive, lastTx }, index) => (
-          <tr key={"acc-" + id} className="Table">
+          <tr key={"acc-" + id} className="Table TR">
             <td className="Table TC Left">{refNumber}</td>
             <td className="Table TC Left">
               <EditableAccount

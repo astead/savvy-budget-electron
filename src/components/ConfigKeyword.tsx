@@ -160,7 +160,7 @@ export const ConfigKeyword = () => {
       <tbody>
         {
           keywordData.map(({ id, envelopeID, description }, index) => (
-            <tr key={"row-"+id} className="Table">
+            <tr key={"row-"+id} className="Table TR">
               <td className="Table TC Left">
                 <EditableKeyword
                   initialID={id.toString()}
