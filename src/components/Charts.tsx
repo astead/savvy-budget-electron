@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
 import { CategoryDropDown } from '../helpers/CategoryDropDown.tsx';
-import { TimeFrameDropDown } from '../helpers/TimeFrameDropDown.tsx';
+import { DropDown } from '../helpers/DropDown.tsx';
 import { useParams } from 'react-router';
 import Chart from "react-apexcharts";
 
@@ -52,7 +52,7 @@ export const Charts: React.FC = () => {
     setSavedValues({...savedValues, filterEnvID: new_value});
   };
 
-  const handleFilterTimeFrameChange = ({id, new_value}) => {
+  const handleFilterTimeFrameChange = ({id, new_value, new_text}) => {
     setHaveChartData(false);
     setFilterTimeFrameID(new_value);
     setSavedValues({...savedValues, filterTimeFrameID: new_value});
@@ -360,10 +360,10 @@ export const Charts: React.FC = () => {
         {filterTimeFrameLoaded &&
           <div className="chart-filter-container">
             <span>Time: </span>
-            <TimeFrameDropDown 
+            <DropDown 
               id={1}
-              time_id={filterTimeFrameID}
-              data={filterTimeFrame}
+              selectedID={filterTimeFrameID}
+              optionData={filterTimeFrame}
               changeCallback={handleFilterTimeFrameChange}
               className=""
             />
