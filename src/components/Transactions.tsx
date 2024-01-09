@@ -368,11 +368,6 @@ export const Transactions: React.FC = () => {
     setFilename(event.target.files[0].path);
   }
 
-
- 
-
-
-
   useEffect(() => {
     if (basicLoaded && accLoaded && envLoaded) {
       load_transactions();
@@ -464,6 +459,13 @@ export const Transactions: React.FC = () => {
       localStorage.setItem(
         'transaction-filter-endDate', 
         JSON.stringify({ filterEndDate: tmpEndDate?.format('YYYY-MM-DD')}));
+
+      // If we came in from a link, we should clear out any other filters
+      setFilterAccID("All");
+      setFilterAmountTemp("");
+      setFilterAmount("");
+      setFilterDescTemp("");
+      setFilterDesc("");
     }
     
     load_envelope_list();
