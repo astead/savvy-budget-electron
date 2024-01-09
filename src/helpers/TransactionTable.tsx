@@ -44,6 +44,7 @@ export const TransactionTable = ({data, envList, callback}) => {
   const [txData, setTxData] = useState<TransactionNodeData[]>(data);
   const [isChecked, setIsChecked] = useState<any[]>([]);
   const [isAllChecked, setIsAllChecked] = useState(false);
+  const [dataReady, setDataReady] = useState(false);
   
   // Variables for data table paging
   const [pagingCurPage, setPagingCurPage] = useState(1);
@@ -198,16 +199,17 @@ export const TransactionTable = ({data, envList, callback}) => {
       setPagingTotalRecords(0);
       setPagingNumPages(1);
     }
-    set_checkbox_array(data);
+    set_checkbox_array([...data]);
     setTxData([...data]);
   }, [data]);
 
   useEffect(() => {
-    forceUpdate();
-  }, [txData]);
-
-  useEffect(() => {
-  }, []);
+    if (txData?.length === isChecked?.length && txData?.length > 0) {
+      setDataReady(true);
+    } else {
+      setDataReady(false);
+    }
+  }, [txData, isChecked]);
 
 
   return (
@@ -242,7 +244,7 @@ export const TransactionTable = ({data, envList, callback}) => {
       </thead>
 
       <tbody>
-        {
+        { dataReady &&
         //for (const [index, item] of txData.entries()) {
           txData.map((item, index) => (
             index < (pagingCurPage * pagingPerPage) &&
@@ -258,7 +260,7 @@ export const TransactionTable = ({data, envList, callback}) => {
                   selectedID={item.envID}
                   optionData={envList}
                   changeCallback={handleTxEnvChange}
-                  className={item.envID === -1 ? "envelopeDropDown-undefined":""}
+                  className={"envelopeDropDown"}
                 />
               </td>
               <td className="Table TC">

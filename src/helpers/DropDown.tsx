@@ -4,7 +4,7 @@ import 'react-edit-text/dist/index.css';
 export const DropDown = ({id, selectedID, optionData, changeCallback, className}) => {
   
   if (selectedID === null) {
-    selectedID = -1;
+    selectedID = "-1";
   }
   
   const [my_id, setMy_ID] = useState(id);
@@ -34,7 +34,7 @@ export const DropDown = ({id, selectedID, optionData, changeCallback, className}
       name={my_id}
       value={my_selectedID}
       onChange={handleChange}
-      className={className+(selectedID === -1 ? "-undefined":"")}>
+      className={className+(my_selectedID.toString() === "-1" ? "-undefined":"")}>
         {my_optionData.map(o => (
           <option key={o.id} value={o.id}>{o.text}</option>
         ))}

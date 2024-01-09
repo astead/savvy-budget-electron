@@ -1027,6 +1027,8 @@ ipcMain.on(
       filterAmount
     );
 
+    console.log('Is startDate valid: ' + (filterStartDate ? 'true' : 'false'));
+
     if (knex) {
       let query = knex
         .select(
@@ -1061,10 +1063,10 @@ ipcMain.on(
         .where({ isBudget: 0 })
         .orderBy('transaction.txDate', 'desc');
 
-      if (filterEnvID > -2) {
+      if (parseInt(filterEnvID) > -2) {
         query = query.andWhere('transaction.envelopeID', filterEnvID);
       } else {
-        if (filterEnvID > -3) {
+        if (parseInt(filterEnvID) > -3) {
           query = query.andWhere(function () {
             this.where('transaction.envelopeID', -1).orWhere(
               'envelope.isActive',
@@ -1073,10 +1075,10 @@ ipcMain.on(
           });
         }
       }
-      if (filterCatID > -1) {
+      if (parseInt(filterCatID) > -1) {
         query = query.andWhere('envelope.categoryID', filterCatID);
       }
-      if (filterAccID !== '-1' && filterAccID !== 'All') {
+      if (filterAccID !== -1 && filterAccID !== '-1' && filterAccID !== 'All') {
         query = query.andWhere('account.account', filterAccID);
       }
       if (filterDesc?.length) {
@@ -1090,7 +1092,7 @@ ipcMain.on(
         query = query.andWhereRaw(`'transaction'.txDate >= ?`, filterStartDate);
       }
       if (filterEndDate) {
-        query = query.andWhereRaw(`'transaction'.txDate < ?`, filterEndDate);
+        query = query.andWhereRaw(`'transaction'.txDate <= ?`, filterEndDate);
       }
       if (filterAmount?.length) {
         query = query.andWhereRaw(

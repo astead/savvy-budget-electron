@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
-import { MonthSelector } from '../helpers/MonthSelector.tsx';
 import { DropDown } from '../helpers/DropDown.tsx';
 import Moment from 'moment';
 import * as dayjs from 'dayjs'
@@ -22,13 +21,10 @@ import { TransactionTable } from '../helpers/TransactionTable.tsx';
 
 /*
  TODO:
-  - add split transactions
-      https://fontawesome.com/icons/arrows-split-up-and-left?f=classic&s=solid&rt=flip-horizontal
   - modify description?
   - popup window to add notes, tags, etc and edit item
     https://mui.com/material-ui/react-modal/
   - somehow highlight if we could set a keyword
-  - auto select all possible duplicates
 */
 
 export const Transactions: React.FC = () => {
@@ -77,7 +73,7 @@ export const Transactions: React.FC = () => {
   // Filter by account
   const [filterAccList, setFilterAccList] = useState<any[]>([]);
   const [filterAccListLoaded, setFilterAccListLoaded] = useState(false);
-  const [filterAccID, setFilterAccID] = useState(-1);
+  const [filterAccID, setFilterAccID] = useState("All");
   //const [filterAccName, setFilterAccName] = useState(null);
 
   // Filter by description
@@ -104,46 +100,10 @@ export const Transactions: React.FC = () => {
   // Transaction data
   const [txData, setTxData] = useState<any[]>([]);
 
-  /* Month Selector code -------------------------------------------*/
-  const [force_date, set_force_date] = useState(in_force_date?parseInt(in_force_date):0);
-  const [year, setYear] = useState(in_year?parseInt(in_year):new Date().getFullYear());
-  const [month, setMonth] = useState(in_month?parseInt(in_month):new Date().getMonth());
-  const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
-  const [myStartMonth, setMyStartMonth] = useState(new Date(year, month-8));
-  const [myCurIndex, setMyCurIndex] = useState(8);
-  const [gotMonthData, setGotMonthData] = useState(false);
   
-  const monthSelectorCallback = ({ childStartMonth, childCurIndex, source }) => {    
-    
-    // Need to adjust our month/year to reflect the change
-    const child_start = new Date(childStartMonth);
-    const child_month = child_start.getMonth();
-    const child_year = child_start.getFullYear();
-    let tmpDate = new Date(child_year, child_month + childCurIndex);
-
-    localStorage.setItem('transaction-month-data', JSON.stringify({ childStartMonth, childCurIndex }));
-    setMyStartMonth(childStartMonth);
-    setMyCurIndex(childCurIndex);
-    setYear(tmpDate.getFullYear());
-    setMonth(tmpDate.getMonth());
-    setCurMonth(Moment(tmpDate).format('YYYY-MM-DD'));
-
-    if (source === 1 || (source === 0 && force_date === 1)) {
-      localStorage.setItem(
-        'transaction-filter-startDate', 
-        JSON.stringify({ filterStartDate: dayjs(new Date(child_year, child_month + childCurIndex))?.format('YYYY-MM-DD')}));
-      localStorage.setItem(
-        'transaction-filter-endDate', 
-        JSON.stringify({ filterEndDate: dayjs(new Date(child_year, child_month + childCurIndex+1))?.format('YYYY-MM-DD')}));
-        
-      setFilterStartDate(dayjs(new Date(child_year, child_month + childCurIndex)));
-      setFilterEndDate(dayjs(new Date(child_year, child_month + childCurIndex+1)));
-
-      set_force_date(0);
-    }
-  }
-  /* End Month Selector code ---------------------------------------*/
-
+  const [basicLoaded, setBasicLoaded] = useState(false);
+  const [accLoaded, setAccLoaded] = useState(false);
+  const [envLoaded, setEnvLoaded] = useState(false);
 
   function LinearProgressWithLabel(props: LinearProgressProps & { value: number }) {
     return (
@@ -174,8 +134,7 @@ export const Transactions: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
-      const newData = [...arg];
-      setTxData(newData);
+      setTxData([...arg]);
       
       ipcRenderer.removeAllListeners(channels.LIST_TX_DATA);
     });
@@ -231,6 +190,7 @@ export const Transactions: React.FC = () => {
         ...(tmpFilterCatList)
       ]);
       setFilterCatListLoaded(true);
+      setEnvLoaded(true);
 
       ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
     });
@@ -264,6 +224,7 @@ export const Transactions: React.FC = () => {
         return { id: i.account, text: i.account }
       }))]);
       setFilterAccListLoaded(true);
+      setAccLoaded(true);
 
       ipcRenderer.removeAllListeners(channels.LIST_ACCOUNT_NAMES);
     });
@@ -417,19 +378,29 @@ export const Transactions: React.FC = () => {
   }
 
 
+ 
+
+
+
   useEffect(() => {
-    if (gotMonthData) {
+    if (basicLoaded && accLoaded && envLoaded) {
       load_transactions();
     }
-  }, [curMonth, filterCatID, filterEnvID, gotMonthData, filterAccID, 
-      filterDesc, filterStartDate, filterEndDate, filterAmount]);
+  }, [filterCatID, filterEnvID, filterAccID, filterDesc,
+      filterStartDate, filterEndDate, filterAmount,
+      basicLoaded, accLoaded, envLoaded]);
 
   useEffect(() => {
     const my_filter_startDate_str = localStorage.getItem('transaction-filter-startDate');
     if (my_filter_startDate_str?.length) {
       const my_filter_startDate = JSON.parse(my_filter_startDate_str);
-      if (my_filter_startDate) {
-        setFilterStartDate(dayjs(my_filter_startDate.filterStartDate));
+      if (my_filter_startDate?.filterStartDate) {
+        const my_tmpStartDate = dayjs(my_filter_startDate.filterStartDate);
+        setFilterStartDate(my_tmpStartDate);
+        localStorage.setItem(
+          'transaction-filter-startDate', 
+          JSON.stringify({ filterStartDate: my_tmpStartDate?.format('YYYY-MM-DD')}));
+        
       }
     }
 
@@ -437,7 +408,11 @@ export const Transactions: React.FC = () => {
     if (my_filter_endDate_str?.length) {
       const my_filter_endDate = JSON.parse(my_filter_endDate_str);
       if (my_filter_endDate) {
-        setFilterEndDate(dayjs(my_filter_endDate.filterEndDate));
+        const my_tmpEndDate = dayjs(my_filter_endDate.filterEndDate);
+        setFilterEndDate(my_tmpEndDate);
+        localStorage.setItem(
+          'transaction-filter-endDate', 
+          JSON.stringify({ filterEndDate: my_tmpEndDate?.format('YYYY-MM-DD')}));
       }
     }
 
@@ -486,16 +461,23 @@ export const Transactions: React.FC = () => {
         setFilterAmount(my_filter_amount.filterAmount);
       }
     }
-    
-    monthSelectorCallback(
-      { childStartMonth: new Date(year, month-8), 
-        childCurIndex: 8,
-        source: 0 }
-    );
-    setGotMonthData(true);
+
+    if (in_force_date === "1" && in_year && in_month) {
+      let tmpStartDate = dayjs(new Date(parseInt(in_year), parseInt(in_month)));
+      let tmpEndDate = dayjs(new Date(parseInt(in_year), parseInt(in_month)+1,0));
+      setFilterStartDate(tmpStartDate);
+      setFilterEndDate(tmpEndDate);
+      localStorage.setItem(
+        'transaction-filter-startDate', 
+        JSON.stringify({ filterStartDate: tmpStartDate?.format('YYYY-MM-DD')}));
+      localStorage.setItem(
+        'transaction-filter-endDate', 
+        JSON.stringify({ filterEndDate: tmpEndDate?.format('YYYY-MM-DD')}));
+    }
     
     load_envelope_list();
     load_account_list();
+    setBasicLoaded(true);
   }, []);
 
   return (
@@ -504,10 +486,6 @@ export const Transactions: React.FC = () => {
         {<Header currTab="Transactions"/>}
       </header>
       <div className="mainContent">
-        {gotMonthData &&
-        <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
-        }
-        <br/>
         <Accordion>
           <AccordionSummary
             expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
@@ -640,18 +618,12 @@ export const Transactions: React.FC = () => {
                     <DatePicker
                       value={filterStartDate}
                       onChange={(newValue) => {
+                        setFilterStartDate(newValue)
                         localStorage.setItem(
                           'transaction-filter-startDate', 
-                          JSON.stringify({ filterStartDate: newValue?.format('YYYY-MM-DD')}));
-                          
-                        setFilterStartDate(newValue);
-                        
-                        monthSelectorCallback(
-                          { childStartMonth: newValue?.subtract(8,'month').toDate(), 
-                            childCurIndex: 8, 
-                            source: 2, }
+                          JSON.stringify({ filterStartDate: newValue?.format('YYYY-MM-DD')})
                         );
-
+                        
                         if (filterEndDate && newValue && filterEndDate.diff(newValue) <= 0 ) {
                           setFilterEndDate(newValue?.add(1, 'day'));
                         }
@@ -687,7 +659,8 @@ export const Transactions: React.FC = () => {
                       onChange={(newValue) => {
                         localStorage.setItem(
                           'transaction-filter-endDate', 
-                          JSON.stringify({ filterEndDate: newValue?.format('YYYY-MM-DD')}));
+                          JSON.stringify({ filterEndDate: newValue?.format('YYYY-MM-DD')})
+                        );
                         setFilterEndDate(newValue);
                       }}
                       sx={{ width:250}}
