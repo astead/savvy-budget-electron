@@ -695,13 +695,35 @@ ipcMain.on(channels.DEL_ENVELOPE, async (event, id) => {
 
   await knex('envelope')
     .where({ id: id })
-    .update({ isActive: 0 })
+    .delete()
+    .then()
+    .catch((err) => {
+      console.log('Error: ' + err);
+    });
+
+  await knex('transaction')
+    .where({ envelopeID: id })
+    .update({ envelopeID: -1 })
     .then()
     .catch((err) => {
       console.log('Error: ' + err);
     });
 
   event.sender.send(channels.DONE_DEL_ENVELOPE);
+});
+
+ipcMain.on(channels.HIDE_ENVELOPE, async (event, id) => {
+  console.log(channels.HIDE_ENVELOPE, id);
+
+  await knex('envelope')
+    .where({ id: id })
+    .update({ isActive: 0 })
+    .then()
+    .catch((err) => {
+      console.log('Error: ' + err);
+    });
+
+  event.sender.send(channels.DONE_HIDE_ENVELOPE);
 });
 
 ipcMain.on(channels.REN_CATEGORY, (event, { id, name }) => {

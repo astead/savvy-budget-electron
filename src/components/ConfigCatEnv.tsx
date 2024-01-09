@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { channels } from '../shared/constants.js';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faTrash, faEyeSlash } from "@fortawesome/free-solid-svg-icons"
 import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
 import NewCategory from '../helpers/NewCategory.tsx';
@@ -11,14 +11,13 @@ import NewEnvelope from '../helpers/NewEnvelope.tsx';
 
 export const ConfigCatEnv = () => {
  
-
   const [catData, setCatData] = useState<any[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   const load_cats_and_envs = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CAT_ENV, {onlyActive: 1});
+    ipcRenderer.send(channels.GET_CAT_ENV, {onlyActive: 0});
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
@@ -127,6 +126,24 @@ export const ConfigCatEnv = () => {
     };
   };
 
+  const handleEnvelopeHide = (id) => {
+    // Request we delete the category in the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.HIDE_ENVELOPE, id);
+    
+    // Wait till we are done
+    ipcRenderer.on(channels.DONE_HIDE_ENVELOPE, () => {
+      load_cats_and_envs();
+      ipcRenderer.removeAllListeners(channels.DONE_HIDE_ENVELOPE);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_HIDE_ENVELOPE);
+    };
+  };
+
+
   const handleOnDragEnd = (result) => {
     if (!result?.destination) return;
     
@@ -153,7 +170,7 @@ export const ConfigCatEnv = () => {
         const { catID, cat:cat_name, items } = category;
         
         return (
-          <Droppable droppableId={catID.toString()} key={index}>
+          <Droppable droppableId={catID.toString()} key={"cat-" + catID}>
             {(provided) => (
               <section  {...provided.droppableProps} ref={provided.innerRef}>
                 <article className="cat">
@@ -186,7 +203,7 @@ export const ConfigCatEnv = () => {
                     items.map((env, index2) => {
                       return (
                         (env.envID) &&
-                        <Draggable key={index2} draggableId={env.envID.toString()} index={index2}>
+                        <Draggable key={"env" + env.envID} draggableId={env.envID.toString()} index={index2}>
                           {(provided) => (
                             <article className="cat env ei-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
                               <article className="cat env ei-container ei">
@@ -195,6 +212,10 @@ export const ConfigCatEnv = () => {
                                     initialID={env.envID.toString()}
                                     initialName={env.envelope} />
                                 </div>
+                                <button onClick={() => handleEnvelopeHide( env.envID )}
+                                  className={"Toggle" + (!env.isActive?" Toggle-active":"")}>
+                                  <FontAwesomeIcon icon={faEyeSlash} />
+                                </button>
                                 <button className="trash" onClick={() => handleEnvelopeDelete( env.envID )}>
                                     <FontAwesomeIcon icon={faTrash} />
                                 </button>

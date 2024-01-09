@@ -41,6 +41,8 @@ module.exports = {
     REN_ENVELOPE: 'ren_envelope',
     DEL_ENVELOPE: 'del_envelope',
     DONE_DEL_ENVELOPE: 'done_del_envelope',
+    HIDE_ENVELOPE: 'del_envelope',
+    DONE_HIDE_ENVELOPE: 'done_del_envelope',
     MOV_ENVELOPE: 'move_envelope',
 
     UPDATE_BUDGET: 'update_budget',
