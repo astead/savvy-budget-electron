@@ -961,13 +961,13 @@ ipcMain.on(channels.GET_CUR_ACTUAL, (event, find_date) => {
     .select('envelopeID')
     .sum({ totalAmt: 'txAmt' })
     .from('transaction')
-    .orderBy('envelopeID')
     .where({ isBudget: 0 })
-    .andWhereRaw(`strftime('%m', txDate) = ?`, month)
     .andWhere({ isDuplicate: 0 })
     .andWhere({ isVisible: 1 })
     .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
+    .andWhereRaw(`strftime('%m', txDate) = ?`, month)
     .groupBy('envelopeID')
+    .orderBy('envelopeID')
     .then((data) => {
       event.sender.send(channels.LIST_CUR_ACTUAL, data);
     })
