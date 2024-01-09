@@ -53,10 +53,7 @@ export const ConfigPlaid = () => {
         setEnvironment(data[0].environment);
         setEnvironmentTemp(data[0].environment);
         
-        if (!token) {
-          createLinkToken();
-          setLoading(false);
-        }
+        setLoading(false);
       }
       ipcRenderer.removeAllListeners(channels.PLAID_LIST_KEYS);
     });
@@ -66,6 +63,8 @@ export const ConfigPlaid = () => {
       ipcRenderer.removeAllListeners(channels.PLAID_LIST_KEYS);
     };
   };
+
+
 
   const createLinkToken = () => {
     const ipcRenderer = (window as any).ipcRenderer;
@@ -108,30 +107,37 @@ export const ConfigPlaid = () => {
   };
 
   const get_transactions = (acc : PLAIDAccount) => {
-      console.log("Calling into main to get transaction list. ");
-      setUploading(true);
-      
-      // Get transactions
-      const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send(channels.PLAID_GET_TRANSACTIONS, 
-        { access_token: acc.access_token,
-          cursor: acc.cursor,
-        }
-      );
+    setUploading(true);
+    
+    // Get transactions
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.PLAID_GET_TRANSACTIONS, 
+      { access_token: acc.access_token,
+        cursor: acc.cursor,
+      }
+    );
 
-      // Listen for progress updates
-      ipcRenderer.on(channels.UPLOAD_PROGRESS, (data) => {
-        setProgress(data);
-        if (data >= 100) {
-          ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
-          setUploading(false);
-        }
-      });
-      
-      // Clean the listener after the component is dismounted
-      return () => {
+    // Listen for progress updates
+    ipcRenderer.on(channels.UPLOAD_PROGRESS, (data) => {
+      setProgress(data);
+      if (data >= 100) {
         ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
-      };
+        setUploading(false);
+      }
+    });
+
+    ipcRenderer.on(channels.PLAID_LIST_TRANSACTIONS, (data) => {
+      if (data.error_message?.length) {
+        setLink_Error("Error: " + data.error_message);
+      }
+      ipcRenderer.removeAllListeners(channels.PLAID_LIST_TRANSACTIONS);
+    });
+      
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
+      ipcRenderer.removeAllListeners(channels.PLAID_LIST_TRANSACTIONS);
+    };
   };
 
   const onSuccess: PlaidLinkOnSuccess = (public_token, metadata) => {
@@ -159,6 +165,9 @@ export const ConfigPlaid = () => {
     // log onExit callbacks from Link, handle errors
     // https://plaid.com/docs/link/web/#onexit
     console.log("Error:", error, metadata);
+    if (error) {
+      setLink_Error("Error: " + error.error_message);
+    }
   };
 
   const handleClientChange = () => {
@@ -188,7 +197,7 @@ export const ConfigPlaid = () => {
     ipcRenderer.send(channels.PLAID_SET_KEYS, 
       { client_id: clientTemp, secret: secretTemp, environment: environmentTemp }
     );
-    createLinkToken();
+    setToken(null);
   };
 
   const NewPlaid = () => {
@@ -205,10 +214,6 @@ export const ConfigPlaid = () => {
       </PlaidLink>
     );
   };
-
-  useEffect(() => {
-    
-  }, [token]);
 
   useEffect(() => {
     getPLAIDInfo();
@@ -229,7 +234,7 @@ export const ConfigPlaid = () => {
           defaultValue={client}
           onChange={(e) => setClientTemp(e.target.value)}
           onBlur={handleClientChange}
-          className="filterDescription"
+          className="filterSize"
         />
       </td>
     </tr>
@@ -243,7 +248,7 @@ export const ConfigPlaid = () => {
           defaultValue={secret}
           onChange={(e) => setSecretTemp(e.target.value)}
           onBlur={handleSecretChange}
-          className="filterDescription"
+          className="filterSize"
         />
       </td>
     </tr>
@@ -257,7 +262,7 @@ export const ConfigPlaid = () => {
           defaultValue={environment}
           onChange={(e) => setEnvironmentTemp(e.target.value)}
           onBlur={handleEnvironmentChange}
-          className="filterDescription"
+          className="filterSize"
         />
       </td>
     </tr>
@@ -267,52 +272,65 @@ export const ConfigPlaid = () => {
     <div><br/>{link_Error}</div>
   }
   <>
-    <div><NewPlaid /></div>
     <div>
-      <table className="Table" cellSpacing={1} cellPadding={1}>
-        <thead>
-          <tr className="Table THR">
-            <th className="Table THR THRC">{'Bank'}</th>
-            <th className="Table THR THRC">{'Last Transaction'}</th>
-            <th className="Table THR THRC">{' '}</th>
-          </tr>
-        </thead>
-        <tbody>
-        { PLAIDAccounts.map((acc, index, myArray) => (
-          <React.Fragment key={index}>
-            { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
-              <React.Fragment>
-              <tr className="Table TGHR">
-                <td className="Table THRC">{acc.institution}</td>
-                <td className="Table THRC">{acc.lastTx && dayjs(acc.lastTx).format('M/D/YYYY')}</td>
-                <td className="Table THRC">
-                  <button 
-                    className='textButton'
-                    onClick={() => {
-                      get_transactions(acc)
-                    }} 
-                    disabled={!token}>
-                    Get Transactions
-                  </button>
-                </td>
-              </tr>
-              
-              {uploading && 
-                <tr><td colSpan={3}>
-                <Box sx={{ width: '100%' }}>
-                  <LinearProgressWithLabel value={progress} />
-                </Box>
-                </td></tr>
-              }
-              </React.Fragment>
-            )}
-            <tr key={index}>
-              <td colSpan={3} align='left'>{acc.account_name + '-' + acc.mask}</td>
-            </tr>
-          </React.Fragment>
-        ))}
-      </tbody></table>
+      <button 
+        className='textButton'
+        onClick={() => createLinkToken()} >
+        Get Link Token
+      </button>
     </div>
+    {token &&
+      <div>
+        <div>
+          <NewPlaid />
+        </div>
+        <div>
+          <table className="Table" cellSpacing={1} cellPadding={1}>
+            <thead>
+              <tr className="Table THR">
+                <th className="Table THR THRC">{'Bank'}</th>
+                <th className="Table THR THRC">{'Last Transaction'}</th>
+                <th className="Table THR THRC">{' '}</th>
+              </tr>
+            </thead>
+            <tbody>
+            { PLAIDAccounts.map((acc, index, myArray) => (
+              <React.Fragment key={index}>
+                { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
+                  <React.Fragment>
+                  <tr className="Table TGHR">
+                    <td className="Table THRC">{acc.institution}</td>
+                    <td className="Table THRC">{acc.lastTx && dayjs(acc.lastTx).format('M/D/YYYY')}</td>
+                    <td className="Table THRC">
+                      <button 
+                        className='textButton'
+                        onClick={() => {
+                          get_transactions(acc)
+                        }} 
+                        disabled={!token}>
+                        Get Transactions
+                      </button>
+                    </td>
+                  </tr>
+                  
+                  {uploading && 
+                    <tr><td colSpan={3}>
+                    <Box sx={{ width: '100%' }}>
+                      <LinearProgressWithLabel value={progress} />
+                    </Box>
+                    </td></tr>
+                  }
+                  </React.Fragment>
+                )}
+                <tr key={index}>
+                  <td colSpan={3} align='left'>{acc.account_name + '-' + acc.mask}</td>
+                </tr>
+              </React.Fragment>
+            ))}
+          </tbody></table>
+        </div>
+      </div>
+    }
   </>
   </>
   );

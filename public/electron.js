@@ -114,7 +114,7 @@ let PLAID_ENV = '';
 // PLAID_PRODUCTS is a comma-separated list of products to use when initializing
 // Link. Note that this list must contain 'assets' in order for the app to be
 // able to create and retrieve asset reports.
-const PLAID_PRODUCTS = Products.Auth.split(',');
+const PLAID_PRODUCTS = [Products.Transactions, Products.Auth];
 
 // PLAID_COUNTRY_CODES is a comma-separated list of countries for which users
 // will be able to select institutions from.
@@ -155,7 +155,7 @@ const client = new PlaidApi(configuration);
 const configs = {
   user: {
     // This should correspond to a unique id for the current user.
-    client_user_id: '1',
+    client_user_id: '2',
   },
   client_name: 'Savvy Budget',
   products: PLAID_PRODUCTS,
@@ -178,6 +178,7 @@ ipcMain.on(channels.PLAID_GET_TOKEN, async (event) => {
       const createTokenResponse = await client.linkTokenCreate(configs);
       event.sender.send(channels.PLAID_LIST_TOKEN, createTokenResponse.data);
     } catch (error) {
+      console.log(error);
       // handle error
       console.log('Error: ', error.response.data.error_message);
       event.sender.send(channels.PLAID_LIST_TOKEN, error.response.data);
@@ -260,12 +261,21 @@ ipcMain.on(
 
     while (hasMore) {
       console.log('Making the call ');
-      const response = await client.transactionsSync({
-        access_token: access_token,
-        cursor: cursor,
-      });
+      let response = null;
+      try {
+        response = await client.transactionsSync({
+          access_token: access_token,
+          cursor: cursor,
+        });
+      } catch (e) {
+        console.log('Error: ', e.response.data.error_message);
+        event.sender.send(channels.UPLOAD_PROGRESS, 100);
+        event.sender.send(channels.PLAID_LIST_TRANSACTIONS, e.response.data);
+        return;
+      }
+      console.log('Response: ' + response);
       const data = response.data;
-      //console.log(' Response: ', data);
+      console.log(' Response: ', data);
 
       // Add this page of results
       added = added.concat(data.added);
