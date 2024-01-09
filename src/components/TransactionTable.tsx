@@ -77,15 +77,39 @@ export const TransactionTable = ({data, envList, callback}) => {
       return (index < (pagingCurPage * pagingPerPage) &&
       index >= ((pagingCurPage-1) * pagingPerPage));
     });
+    let found = false;
     filtered_nodes.forEach((item, index, myArr) => {
-      if (myArr.find((item2, index2) => {
-        return (item.txID !== item2.txID &&
-        item.txAmt === item2.txAmt &&
-        item.txDate === item2.txDate &&
-        item.description === item2.description &&
-        index2 > index);
-        })) {
-          isChecked.find(n => n.txID === item.txID).isChecked = true;
+      if (item.isDuplicate) {
+        found = true;
+        isChecked.find(n => n.txID === item.txID).isChecked = true;
+      }
+    });
+    if (found) {
+      setIsChecked([...isChecked]);
+    } else {
+      filtered_nodes.forEach((item, index, myArr) => {
+        if (myArr.find((item2, index2) => {
+          return (item.txID !== item2.txID &&
+          item.txAmt === item2.txAmt &&
+          item.txDate === item2.txDate &&
+          item.description === item2.description &&
+          index2 > index);
+          })) {
+            isChecked.find(n => n.txID === item.txID).isChecked = true;
+        }
+      });
+      setIsChecked([...isChecked]);
+    }
+  }
+
+  const look_for_invisible = () => {
+    let filtered_nodes = txData.filter((item, index) => {
+      return (index < (pagingCurPage * pagingPerPage) &&
+      index >= ((pagingCurPage-1) * pagingPerPage));
+    });
+    filtered_nodes.forEach((item, index, myArr) => {
+      if (!item.isVisible) {
+        isChecked.find(n => n.txID === item.txID).isChecked = true;
       }
     });
     setIsChecked([...isChecked]);
@@ -227,7 +251,9 @@ export const TransactionTable = ({data, envList, callback}) => {
           <th className="Table THR THRC THRCClickable">
             <div onClick={() => look_for_dups()}>{' Dup '}</div>
           </th>
-          <th className="Table THR THRC">{' Vis '}</th>
+          <th className="Table THR THRC THRCClickable">
+            <div onClick={() => look_for_invisible()}>{' Vis '}</div>
+          </th>
           <th className="Table THR THRC">
             <input type="checkbox" onChange={(e) => {
               for(let iter=((pagingCurPage-1) * pagingPerPage); 
