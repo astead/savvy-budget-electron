@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js';
 import { DropDown } from '../helpers/DropDown.tsx';
-import Moment from 'moment';
 import * as dayjs from 'dayjs'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileImport, faChevronDown, faChevronRight } from "@fortawesome/free-solid-svg-icons";

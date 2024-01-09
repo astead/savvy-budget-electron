@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEyeSlash } from "@fortawesome/free-solid-svg-icons"
-import Moment from 'moment';
-import EditableAccount from '../helpers/EditableAccount.tsx';
 import { channels } from '../shared/constants.js';
 
 export const ConfigDB = () => {
