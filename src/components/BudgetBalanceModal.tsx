@@ -4,7 +4,7 @@ import Modal from '@mui/material/Modal';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { channels } from '../shared/constants.js';
-import { DropDown } from './DropDown.tsx';
+import { DropDown } from '../helpers/DropDown.tsx';
 
 const style = {
   position: 'absolute' as 'absolute',

@@ -5,7 +5,7 @@ import { KeywordSave } from '../helpers/KeywordSave.tsx';
 import * as dayjs from 'dayjs';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faEyeSlash, faTrash } from "@fortawesome/free-solid-svg-icons";
-import SplitTransactionModal from '../helpers/SplitTransactionModal.tsx';
+import SplitTransactionModal from './SplitTransactionModal.tsx';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Pagination from '@mui/material/Pagination';

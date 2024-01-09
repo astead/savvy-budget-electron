@@ -5,7 +5,7 @@ import { EditableBudget } from '../helpers/EditableBudget.tsx';
 import { MonthSelector } from '../helpers/MonthSelector.tsx';
 import * as dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
-import BudgetBalanceModal from '../helpers/BudgetBalanceModal.tsx';
+import BudgetBalanceModal from './BudgetBalanceModal.tsx';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
 

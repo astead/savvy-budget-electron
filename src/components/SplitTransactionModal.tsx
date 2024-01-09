@@ -5,8 +5,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faShareNodes, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 import * as dayjs from 'dayjs'
 import { channels } from '../shared/constants.js';
-import { DropDown } from './DropDown.tsx';
-import { EditableText } from './EditableText.tsx';
+import { DropDown } from '../helpers/DropDown.tsx';
+import { EditableText } from '../helpers/EditableText.tsx';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
