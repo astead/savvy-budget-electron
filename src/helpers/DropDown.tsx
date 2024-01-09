@@ -34,7 +34,7 @@ export const DropDown = ({id, selectedID, optionData, changeCallback, className}
       name={my_id}
       value={my_selectedID}
       onChange={handleChange}
-      className={className+(my_selectedID.toString() === "-1" ? "-undefined":"")}>
+      className={className}>
         {my_optionData.map(o => (
           <option key={o.id} value={o.id}>{o.text}</option>
         ))}

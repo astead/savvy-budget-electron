@@ -260,7 +260,7 @@ export const TransactionTable = ({data, envList, callback}) => {
                   selectedID={item.envID}
                   optionData={envList}
                   changeCallback={handleTxEnvChange}
-                  className={"envelopeDropDown"}
+                  className={item.envID.toString() === "-1" ? "envelopeDropDown-undefined":"envelopeDropDown"}
                 />
               </td>
               <td className="Table TC">
@@ -331,7 +331,7 @@ export const TransactionTable = ({data, envList, callback}) => {
                   selectedID={-1}
                   optionData={envList}
                   changeCallback={handleChangeAll}
-                  className="filterEnvelope"
+                  className="envelopeDropDown"
                 />
           </td>
           <td className="Table THR THRC" colSpan={4}></td>

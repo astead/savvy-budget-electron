@@ -197,7 +197,7 @@ export const Configure = () => {
   const load_cats_and_envs = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CAT_ENV);
+    ipcRenderer.send(channels.GET_CAT_ENV, {onlyActive: 1});
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {

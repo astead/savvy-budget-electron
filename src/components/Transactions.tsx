@@ -148,7 +148,7 @@ export const Transactions: React.FC = () => {
   const load_envelope_list = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CAT_ENV);
+    ipcRenderer.send(channels.GET_CAT_ENV, {onlyActive: 0});
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {

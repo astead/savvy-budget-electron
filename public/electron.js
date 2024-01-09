@@ -846,23 +846,29 @@ ipcMain.on(channels.MOVE_BALANCE, (event, [transferAmt, fromID, toID]) => {
     .then();
 });
 
-ipcMain.on(channels.GET_CAT_ENV, (event) => {
+ipcMain.on(channels.GET_CAT_ENV, (event, { onlyActive }) => {
   console.log(channels.GET_CAT_ENV);
   if (knex) {
-    knex
+    let query = knex
       .select(
         'category.id as catID',
         'category.category',
         'envelope.id as envID',
         'envelope.envelope',
-        'envelope.balance as currBalance'
+        'envelope.balance as currBalance',
+        'envelope.isActive'
       )
       .from('category')
       .leftJoin('envelope', function () {
         this.on('category.id', '=', 'envelope.categoryID');
-        this.on('envelope.isActive', 1);
       })
-      .orderBy('category.id')
+      .orderBy('category.id');
+
+    if (onlyActive === 1) {
+      query.where('envelope.isActive', 1);
+    }
+
+    query
       .then((data) => {
         event.sender.send(channels.LIST_CAT_ENV, data);
       })
@@ -1135,7 +1141,7 @@ ipcMain.on(channels.ADD_TX, async (event, data) => {
   await update_env_balance(data.txEnvID, data.txAmt);
 });
 
-ipcMain.on(channels.GET_ENV_LIST, (event, { includeInactive }) => {
+ipcMain.on(channels.GET_ENV_LIST, (event, { onlyActive }) => {
   console.log(channels.GET_ENV_LIST);
 
   if (knex) {
@@ -1151,7 +1157,7 @@ ipcMain.on(channels.GET_ENV_LIST, (event, { includeInactive }) => {
       })
       .orderBy('category.category', 'envelope.envelope');
 
-    if (includeInactive === 0) {
+    if (onlyActive === 1) {
       query.where('envelope.isActive', 1);
     }
 

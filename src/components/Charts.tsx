@@ -87,7 +87,7 @@ export const Charts: React.FC = () => {
   const load_envelope_list = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CAT_ENV, {includeInactive: 1});
+    ipcRenderer.send(channels.GET_CAT_ENV, {onlyActive: 1});
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {

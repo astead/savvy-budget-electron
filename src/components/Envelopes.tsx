@@ -126,7 +126,7 @@ export const Envelopes: React.FC = () => {
   const load_envelope_list = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_ENV_LIST, {includeInactive: 1});
+    ipcRenderer.send(channels.GET_ENV_LIST, {onlyActive: 1});
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
@@ -661,7 +661,7 @@ export const Envelopes: React.FC = () => {
                 <div className="envelopeDataDiffItem">
                   <div>Missing:</div>
                   <div className="envelopeDataDiffItemCurr">
-                    <Link to={"/Transactions/-2/1/" + year + "/" + month}>
+                    <Link to={"/Transactions/-1/-2/1/" + year + "/" + month}>
                       {formatWholeCurrency(curTotalActualUndefined)}
                     </Link>
                   </div>
