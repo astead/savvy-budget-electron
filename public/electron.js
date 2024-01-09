@@ -1575,14 +1575,14 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
 
   const nodes = ofxString.split('\n');
 
-  if (account_string.startsWith('sofi-')) {
+  if (account_string.toLowerCase().startsWith('sofi-')) {
     accountID = await lookup_account(account_string);
     totalNodes = nodes.length;
     for (const [i, tx] of nodes.entries()) {
-      if (i > 0) {
+      if (i > 0 && tx.trim().length > 0) {
         const tx_values = tx.split(',');
 
-        insert_transaction_node(
+        await insert_transaction_node(
           accountID,
           tx_values[3],
           tx_values[0],
@@ -1593,7 +1593,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
       }
     }
   }
-  if (account_string === 'Venmo') {
+  if (account_string.toLowerCase() === 'venmo') {
     accountID = await lookup_account(account_string);
     totalNodes = nodes.length;
     for (const [i, tx] of nodes.entries()) {
@@ -1636,7 +1636,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
       }
     }
   }
-  if (account_string === 'PayPal') {
+  if (account_string.toLowerCase() === 'paypal') {
     accountID = await lookup_account(account_string);
     totalNodes = nodes.length;
     for (const [i, tx] of nodes.entries()) {
@@ -1676,7 +1676,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
       }
     }
   }
-  if (account_string === 'Mint') {
+  if (account_string.toLowerCase() === 'mint') {
     const accountArr = [];
     const envelopeArr = [];
     const uncategorizedID = await lookup_uncategorized();
@@ -1796,7 +1796,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
       }
     }
   }
-  if (account_string === 'mint tab') {
+  if (account_string.toLowerCase() === 'mint tab') {
     const accountArr = [];
 
     for (const [i, tx] of nodes.entries()) {
