@@ -6,8 +6,6 @@ import './includes/styles.css';
 
 /*
   TODO:
-  - Improve CRUD reposting
-  - DRY stylesheets
   - Consolidate Editable?
 */
 

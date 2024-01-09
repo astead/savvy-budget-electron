@@ -18,14 +18,6 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { TransactionTable } from './TransactionTable.tsx';
 
-/*
- TODO:
-  - modify description?
-  - popup window to add notes, tags, etc and edit item
-    https://mui.com/material-ui/react-modal/
-  - somehow highlight if we could set a keyword
-*/
-
 export const Transactions: React.FC = () => {
   
   const { in_catID, in_envID, in_force_date, in_year, in_month } = useParams();
