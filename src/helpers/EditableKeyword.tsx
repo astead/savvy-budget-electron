@@ -19,7 +19,7 @@ export const EditableKeyword = ({ initialID, initialDescription}) => {
 
   return (
     <EditText
-      name={id}
+      name={id.toString()}
       defaultValue={description}
       value={description}
       onChange={(e) => handleChange(e, setDescription)}
