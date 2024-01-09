@@ -8,7 +8,7 @@ import { usePlaidLink, PlaidLink,
   PlaidLinkOnEvent,
   PlaidLinkOnExit } from 'react-plaid-link';
 
-export const PlaidConfig = () => {
+export const ConfigPlaid = () => {
   
   const [loading, setLoading] = useState(true);
   const [client, setClient] = useState('');
@@ -318,4 +318,4 @@ export const PlaidConfig = () => {
   );
 };
 
-export default PlaidConfig;
+export default ConfigPlaid;

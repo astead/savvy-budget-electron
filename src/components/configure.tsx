@@ -14,6 +14,7 @@ import { channels } from '../shared/constants.js';
 import { ConfigKeyword } from './ConfigKeyword.tsx';
 import { ConfigAccount } from './ConfigAccount.tsx';
 import { ConfigDB } from './ConfigDB.tsx';
+import { ConfigPlaid } from './ConfigPlaid.tsx';
 
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -22,7 +23,6 @@ import Box from '@mui/material/Box';
 
 
 import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgress';
-import PlaidConfig from '../helpers/PlaidConfig.tsx';
 
 /*
   TODO:
@@ -352,7 +352,7 @@ export const Configure = () => {
             <ConfigDB />
           </CustomTabPanel>
           <CustomTabPanel tabValue={tabValue} index={4}>
-            <PlaidConfig />
+            <ConfigPlaid />
           </CustomTabPanel>
       </div>
     </div>
