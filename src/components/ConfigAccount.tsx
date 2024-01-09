@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEyeSlash } from "@fortawesome/free-solid-svg-icons"
-import Moment from 'moment';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import * as dayjs from 'dayjs';
 import EditableAccount from '../helpers/EditableAccount.tsx';
 import { channels } from '../shared/constants.js';
 
@@ -69,7 +69,7 @@ export const ConfigAccount = () => {
                 initialID={id.toString()}
                 initialName={account} />
             </td>
-            <td className="Table TC Right">{lastTx && Moment(lastTx).format('M/D/YYYY')}</td>
+            <td className="Table TC Right">{lastTx && dayjs(lastTx).format('M/D/YYYY')}</td>
             <td className="Table TC">
             <div 
               className={"Toggle" + (!isActive?" Toggle-active":"")}

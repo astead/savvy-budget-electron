@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { channels } from '../shared/constants.js';
-import Moment from 'moment';
+import * as dayjs from 'dayjs';
 import Box from '@mui/material/Box';
 import LinearProgressWithLabel from '@mui/material/LinearProgress';
 import { usePlaidLink, PlaidLink,
@@ -284,7 +284,7 @@ export const ConfigPlaid = () => {
               <React.Fragment>
               <tr className="Table TGHR">
                 <td className="Table THRC">{acc.institution}</td>
-                <td className="Table THRC">{acc.lastTx && Moment(acc.lastTx).format('M/D/YYYY')}</td>
+                <td className="Table THRC">{acc.lastTx && dayjs(acc.lastTx).format('M/D/YYYY')}</td>
                 <td className="Table THRC">
                   <button 
                     className='textButton'

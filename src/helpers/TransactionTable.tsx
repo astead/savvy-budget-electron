@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useState } from 'react';
 import { channels } from '../shared/constants.js';
 import { DropDown } from '../helpers/DropDown.tsx';
 import { KeywordSave } from '../helpers/KeywordSave.tsx';
-import Moment from 'moment';
+import * as dayjs from 'dayjs';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faEyeSlash, faTrash } from "@fortawesome/free-solid-svg-icons";
 import SplitTransactionModal from '../helpers/SplitTransactionModal.tsx';
@@ -250,7 +250,7 @@ export const TransactionTable = ({data, envList, callback}) => {
             index < (pagingCurPage * pagingPerPage) &&
             index >= ((pagingCurPage-1) * pagingPerPage) &&
             <tr key={"tx-" + item.txID} className={(item.isDuplicate === 1 ? "TR-duplicate":"TR")}>
-              <td className="Table TC">{Moment(item.txDate).format('M/D/YYYY')}</td>
+              <td className="Table TC">{dayjs(item.txDate).format('M/D/YYYY')}</td>
               <td className="Table TC Left">{item.account}</td>
               <td className="Table TC Left">{item.description}</td>
               <td className="Table TC Right">{formatCurrency(item.txAmt)}</td>

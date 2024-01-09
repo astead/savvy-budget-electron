@@ -3,7 +3,7 @@ const isDev = require('electron-is-dev'); // To check if electron is in developm
 const path = require('path');
 const initializeKnexInstance = require('./db/db.js');
 const { channels } = require('../src/shared/constants.js');
-const Moment = require('moment');
+const dayjs = require('dayjs');
 const { BankTransferList, Ofx } = require('ofx-convert');
 const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
 const { Knex } = require('knex');
@@ -931,8 +931,8 @@ ipcMain.on(channels.GET_CUR_BUDGET, (event, find_date) => {
 ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
   console.log(channels.GET_PREV_ACTUAL);
 
-  const month = Moment(new Date(find_date)).format('MM');
-  const year = Moment(new Date(find_date)).format('YYYY');
+  const month = dayjs(new Date(find_date)).format('MM');
+  const year = dayjs(new Date(find_date)).format('YYYY');
 
   knex
     .select('envelopeID')
@@ -954,8 +954,8 @@ ipcMain.on(channels.GET_PREV_ACTUAL, (event, find_date) => {
 ipcMain.on(channels.GET_CUR_ACTUAL, (event, find_date) => {
   console.log(channels.GET_CUR_ACTUAL);
 
-  const month = Moment(new Date(find_date)).format('MM');
-  const year = Moment(new Date(find_date)).format('YYYY');
+  const month = dayjs(new Date(find_date)).format('MM');
+  const year = dayjs(new Date(find_date)).format('YYYY');
 
   knex
     .select('envelopeID')
@@ -1644,7 +1644,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
         const tx_values = tx.split(',');
 
         if (tx_values?.length) {
-          let txDate = Moment(
+          let txDate = dayjs(
             new Date(tx_values[0].replace(/\"/g, '').trim())
           ).format('YYYY-MM-DD');
 
@@ -1688,7 +1688,7 @@ ipcMain.on(channels.IMPORT_CSV, async (event, [account_string, ofxString]) => {
 
         if (tx_values?.length) {
           // Date
-          let txDate = Moment(
+          let txDate = dayjs(
             new Date(tx_values[0].replace(/\"/g, '').trim())
           ).format('YYYY-MM-DD');
 
@@ -1846,7 +1846,7 @@ async function basic_insert_transaction_node(
   refNumber,
   envID
 ) {
-  let my_txDate = Moment(new Date(txDate)).format('YYYY-MM-DD');
+  let my_txDate = dayjs(new Date(txDate)).format('YYYY-MM-DD');
 
   // Prepare the data node
   const myNode = {
@@ -1921,7 +1921,7 @@ async function insert_transaction_node(
 ) {
   let envID = -1;
   let isDuplicate = 0;
-  let my_txDate = Moment(new Date(txDate)).format('YYYY-MM-DD');
+  let my_txDate = dayjs(new Date(txDate)).format('YYYY-MM-DD');
 
   // Check if this matches a keyword
   envID = await lookup_keyword(description);
@@ -2092,7 +2092,7 @@ ipcMain.on(
   (event, { filterEnvID, filterTimeFrameID }) => {
     console.log(channels.GET_ENV_CHART_DATA, filterEnvID);
 
-    const find_date = Moment(new Date()).format('YYYY-MM-DD');
+    const find_date = dayjs(new Date()).format('YYYY-MM-DD');
 
     const filterType = filterEnvID.substr(0, 3);
     const envID = filterEnvID.substr(3);

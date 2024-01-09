@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js'
 import { EditableBudget } from '../helpers/EditableBudget.tsx';
-import { MonthSelector } from '../helpers/MonthSelector.tsx'
-import Moment from 'moment';
+import { MonthSelector } from '../helpers/MonthSelector.tsx';
+import * as dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import BudgetBalanceModal from '../helpers/BudgetBalanceModal.tsx';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -19,7 +19,7 @@ export const Envelopes: React.FC = () => {
   /* Month Selector code -------------------------------------------*/
   const [year, setYear] = useState((new Date()).getFullYear());
   const [month, setMonth] = useState((new Date()).getMonth());
-  const [curMonth, setCurMonth] = useState(Moment(new Date(year, month)).format('YYYY-MM-DD'));
+  const [curMonth, setCurMonth] = useState(dayjs(new Date(year, month)).format('YYYY-MM-DD'));
   const [myStartMonth, setMyStartMonth] = useState(new Date(year, month));
   const [myCurIndex, setMyCurIndex] = useState(0);
   const [gotMonthData, setGotMonthData] = useState(false);
@@ -37,7 +37,7 @@ export const Envelopes: React.FC = () => {
     setMyCurIndex(childCurIndex);
     setYear(tmpDate.getFullYear());
     setMonth(tmpDate.getMonth());
-    setCurMonth(Moment(tmpDate).format('YYYY-MM-DD'));
+    setCurMonth(dayjs(tmpDate).format('YYYY-MM-DD'));
   };
   /* End Month Selector code ---------------------------------------*/
   
@@ -145,7 +145,7 @@ export const Envelopes: React.FC = () => {
   const load_PrevBudget = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_PREV_BUDGET, Moment(new Date(year, month-1)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_PREV_BUDGET, dayjs(new Date(year, month-1)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_BUDGET, (arg) => {
@@ -175,7 +175,7 @@ export const Envelopes: React.FC = () => {
   const load_PrevActual = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_PREV_ACTUAL, Moment(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_PREV_ACTUAL, dayjs(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_ACTUAL, (arg) => {
@@ -235,7 +235,7 @@ export const Envelopes: React.FC = () => {
   const load_CurrBudget = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CUR_BUDGET, Moment(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_CUR_BUDGET, dayjs(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CUR_BUDGET, (arg) => {
@@ -280,7 +280,7 @@ export const Envelopes: React.FC = () => {
 
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.COPY_BUDGET, 
-      [Moment(new Date(year, month)).format('YYYY-MM-DD'),
+      [dayjs(new Date(year, month)).format('YYYY-MM-DD'),
       prev_budget_values]);
     
     // Wait till we are done
@@ -323,7 +323,7 @@ export const Envelopes: React.FC = () => {
   const load_CurrActual = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CUR_ACTUAL, Moment(new Date(year, month+1)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_CUR_ACTUAL, dayjs(new Date(year, month+1)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CUR_ACTUAL, (arg) => {
@@ -360,7 +360,7 @@ export const Envelopes: React.FC = () => {
   const load_MonthlyAvg = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_MONTHLY_AVG, Moment(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_MONTHLY_AVG, dayjs(new Date(year, month)).format('YYYY-MM-DD'));
 
     // Receive the data
     ipcRenderer.on(channels.LIST_MONTHLY_AVG, (arg) => {
