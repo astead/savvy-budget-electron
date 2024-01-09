@@ -120,7 +120,7 @@ export const Envelopes: React.FC = () => {
   const [curTotalBudgetSpending, setCurTotalBudgetSpending] = useState(0);
   const [curTotalActualUndefined, setCurTotalActualUndefined] = useState(0);
   
-  const [transferEnvList, setTransferEnvList] = useState<EnvelopeList[]>([]);
+  const [transferEnvList, setTransferEnvList] = useState<any[]>([]);
   //const [transferEnvListLoaded, setTransferEnvListLoaded] = useState(false);
 
   const load_envelope_list = () => {
@@ -130,7 +130,9 @@ export const Envelopes: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
-      setTransferEnvList(arg as EnvelopeList[]);
+      setTransferEnvList(arg.map((item) => {
+        return { id: item.envID, text: item.category + " : " + item.envelope };
+      }));
       //setTransferEnvListLoaded(true);
 
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
