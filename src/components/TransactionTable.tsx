@@ -66,8 +66,8 @@ export const TransactionTable = ({data, envList, callback}) => {
 
   const set_checkbox_array = (myArr) => {
     // Set our array of checkboxes
-    let check_list = myArr.map((item) => {
-      return {txID: item.txID, isChecked: false};
+    let check_list = myArr.map((item, index) => {
+      return {txID: item.txID, isChecked: false, index: index};
     });
     setIsChecked([...check_list]);
   }
@@ -136,6 +136,11 @@ export const TransactionTable = ({data, envList, callback}) => {
   
   const handleChangeAll = ({id, new_value}) => {
     let filtered_nodes = isChecked.filter((item) => item.isChecked);
+    
+    filtered_nodes.forEach((item) => {
+      txData[item.index].envID = new_value;
+    });
+
     // Signal we want to del data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.UPDATE_TX_ENV_LIST, [new_value, filtered_nodes]);
