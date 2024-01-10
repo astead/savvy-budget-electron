@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { EditText } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
 
-export const EditableText = ({ initialID, initialName, callback, className, inputClassName}) => {
+export const EditableText = ({ initialID, initialName, callback, style, className, inputClassName}) => {
   const [id, ] = useState(initialID);
   const [name, setName] = useState(initialName);
 
@@ -13,6 +13,7 @@ export const EditableText = ({ initialID, initialName, callback, className, inpu
       value={name}
       onChange={(e) => setName(e.target.value)}
       onBlur={callback(id, name)}
+      style={style}
       className={className}
       inputClassName={inputClassName} />
   );

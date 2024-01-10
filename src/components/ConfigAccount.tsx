@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import * as dayjs from 'dayjs';
-import EditableAccount from '../helpers/EditableAccount.tsx';
+import { EditableText } from '../helpers/EditableText.tsx';
 import { channels } from '../shared/constants.js';
 
 export const ConfigAccount = () => {
@@ -43,6 +43,12 @@ export const ConfigAccount = () => {
     };
   };
 
+  const handleBlur = (id, name) => {
+    // Request we rename the category in the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.UPDATE_ACCOUNT, { id, new_value: name });
+  };
+
   useEffect(() => {
     load_accounts();
   }, []);
@@ -65,9 +71,15 @@ export const ConfigAccount = () => {
           <tr key={"acc-" + id} className="Table TR">
             <td className="Table TC Left">{refNumber}</td>
             <td className="Table TC Left">
-              <EditableAccount
+              
+              <EditableText
                 initialID={id.toString()}
-                initialName={account} />
+                initialName={account}
+                callback={handleBlur}
+                style={{padding: '0px', margin: '0px', minHeight: '1rem'}}
+                className={"editableText"}
+                inputClassName={"normalInput"}
+              />
             </td>
             <td className="Table TC Right">{lastTx && dayjs(lastTx).format('M/D/YYYY')}</td>
             <td className="Table TC">
