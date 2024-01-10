@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import './includes/styles.css';
 import { channels } from './shared/constants.js';
@@ -10,28 +10,20 @@ import { Configure } from './components/Configure.tsx';
 
 
 export const App: React.FC = () => {
-  // Database filename
-  const [loaded, setLoaded] = useState(false);
-  
   useEffect(() => {
-    if (!loaded) {
-
-      const databaseFile_str = localStorage.getItem('databaseFile');
-      if (databaseFile_str?.length) {
-        const my_databaseFile = JSON.parse(databaseFile_str);
-        if (my_databaseFile) {
-          // Check if the database exists
+    const databaseFile_str = localStorage.getItem('databaseFile');
+    if (databaseFile_str?.length) {
+      const my_databaseFile = JSON.parse(databaseFile_str);
+      if (my_databaseFile) {
+        // Check if the database exists
+        const ipcRenderer = (window as any).ipcRenderer;
+        const fs = ipcRenderer.require('fs')
+        
+        if (fs.existsSync(my_databaseFile)) {
           const ipcRenderer = (window as any).ipcRenderer;
-          const fs = ipcRenderer.require('fs')
-          
-          if (fs.existsSync(my_databaseFile)) {
-            const ipcRenderer = (window as any).ipcRenderer;
-            ipcRenderer.send(channels.SET_DB_PATH, my_databaseFile);
-          }
+          ipcRenderer.send(channels.SET_DB_PATH, my_databaseFile);
         }
       }
-
-      setLoaded(true);
     }
   }, []);
 

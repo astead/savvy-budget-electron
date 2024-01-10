@@ -46,7 +46,7 @@ export const MonthSelector = ({ numMonths, startMonth, curIndex, parentCallback}
 
       setArrayMonths(tmpMonths);
     }
-  }, [myStartMonth, myCurIndex]);
+  }, [myStartMonth, myCurIndex, numMonths]);
 
   useEffect(() => {
     setMyStartMonth(startMonth);

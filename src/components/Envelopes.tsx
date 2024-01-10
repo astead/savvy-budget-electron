@@ -12,6 +12,7 @@ import InputText from '../helpers/InputText.tsx';
 /*
   TODO:
   - Color based on how healthy the envelope is
+  - Don't really like how this is loading everything sequentially
 */
 
 export const Envelopes: React.FC = () => {
@@ -443,6 +444,7 @@ export const Envelopes: React.FC = () => {
     if (gotMonthData) {
       setLoadedEnvelopes(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [curMonth]);  
 
   useEffect(() => {
@@ -456,6 +458,7 @@ export const Envelopes: React.FC = () => {
     } else {
       load_initialEnvelopes();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [budgetData]);
 
   useEffect(() => {
@@ -477,36 +480,42 @@ export const Envelopes: React.FC = () => {
       setLoadedMonthlyAvg(false);
       setBudgetData([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedEnvelopes]);
 
   useEffect(() => {
     if (loadedCurrBudget) {      
       load_PrevBudget();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedCurrBudget]);
 
   useEffect(() => {
     if (loadedPrevBudget) {      
       load_PrevActual();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedPrevBudget]);
 
   useEffect(() => {
     if (loadedPrevActual) {      
       load_CurrBalance();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedPrevActual]);
 
   useEffect(() => {
     if (loadedCurrBalance) {      
       load_CurrActual();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedCurrBalance]);
 
   useEffect(() => {
     if (loadedCurrActual) {      
       load_MonthlyAvg();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedCurrActual]);
 
   useEffect(() => {
@@ -521,6 +530,7 @@ export const Envelopes: React.FC = () => {
       
       setLoaded(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedMonthlyAvg]);
 
   useEffect(() => {
@@ -536,6 +546,7 @@ export const Envelopes: React.FC = () => {
 
     load_envelope_list();
     load_initialEnvelopes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

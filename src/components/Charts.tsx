@@ -316,6 +316,8 @@ export const Charts: React.FC = () => {
     if (filterEnvID && filterEnvelopeName?.length) {
       load_chart();
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterEnvID, filterEnvelopeName, filterTimeFrameID]);
   
   useEffect(() => {
@@ -341,6 +343,8 @@ export const Charts: React.FC = () => {
 
     load_envelope_list();
     load_filter_timeframe();
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

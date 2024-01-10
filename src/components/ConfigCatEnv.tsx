@@ -185,6 +185,8 @@ export const ConfigCatEnv = () => {
     if (!loaded) {
       load_cats_and_envs();
     }
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

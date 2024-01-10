@@ -227,6 +227,8 @@ export const TransactionTable = ({data, envList, callback}) => {
     setPagingCurPage(newItemIndex?newItemIndex:1);
     
     setPagingNumPages(Math.ceil(pagingTotalRecords / pagingPerPage));
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagingPerPage]);
   
   useEffect(() => {
@@ -241,6 +243,8 @@ export const TransactionTable = ({data, envList, callback}) => {
     const tmpData = [...data];
     set_checkbox_array(tmpData);
     setTxData(tmpData);
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   useEffect(() => {

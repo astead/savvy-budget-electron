@@ -3,7 +3,7 @@ import { channels } from '../shared/constants.js';
 import * as dayjs from 'dayjs';
 import Box from '@mui/material/Box';
 import LinearProgressWithLabel from '@mui/material/LinearProgress';
-import { usePlaidLink, PlaidLink,
+import { PlaidLink,
   PlaidLinkOnSuccess,
   PlaidLinkOnEvent,
   PlaidLinkOnExit } from 'react-plaid-link';
@@ -218,6 +218,8 @@ export const ConfigPlaid = () => {
   useEffect(() => {
     getPLAIDInfo();
     getAccountList();
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 

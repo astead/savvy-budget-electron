@@ -122,6 +122,7 @@ export const ConfigKeyword = () => {
 
   useEffect(() => {
     setKeywordData([...sort_keyword_array(keywordData)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortKeyword]);
 
   useEffect(() => {

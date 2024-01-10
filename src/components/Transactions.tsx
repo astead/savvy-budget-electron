@@ -398,6 +398,8 @@ export const Transactions: React.FC = () => {
     if (basicLoaded && accLoaded && envLoaded) {
       load_transactions();
     }
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterCatID, filterEnvID, filterAccID, filterDesc,
       filterStartDate, filterEndDate, filterAmount,
       basicLoaded, accLoaded, envLoaded]);
@@ -497,6 +499,8 @@ export const Transactions: React.FC = () => {
     load_envelope_list();
     load_account_list();
     setBasicLoaded(true);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
