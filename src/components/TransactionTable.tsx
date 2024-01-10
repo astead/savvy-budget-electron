@@ -228,8 +228,9 @@ export const TransactionTable = ({data, envList, callback}) => {
       setPagingTotalRecords(0);
       setPagingNumPages(1);
     }
-    set_checkbox_array([...data]);
-    setTxData([...data]);
+    const tmpData = [...data];
+    set_checkbox_array(tmpData);
+    setTxData(tmpData);
   }, [data]);
 
   useEffect(() => {
