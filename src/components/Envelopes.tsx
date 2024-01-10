@@ -302,7 +302,9 @@ export const Envelopes: React.FC = () => {
   }
 
   const handleBudgetItemChange = (index, value) => {
+    const oldValue = budgetData[index].currBudget;
     budgetData[index].currBudget = parseFloat(value);
+    budgetData[index].currBalance += value - oldValue;
     get_totals();
   }
 
