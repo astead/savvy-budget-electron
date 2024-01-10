@@ -6,7 +6,7 @@ import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
 import NewCategory from '../helpers/NewCategory.tsx';
 import EditableCategory from '../helpers/EditableCategory.tsx';
-import EditableEnvelope from '../helpers/EditableEnvelope.tsx';
+import { EditableText } from '../helpers/EditableText.tsx';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
 
 export const ConfigCatEnv = () => {
@@ -143,7 +143,6 @@ export const ConfigCatEnv = () => {
     };
   };
 
-
   const handleOnDragEnd = (result) => {
     if (!result?.destination) return;
     
@@ -154,7 +153,12 @@ export const ConfigCatEnv = () => {
       ipcRenderer.send(channels.MOV_ENVELOPE,  [result.draggableId, result.destination.droppableId] );
     }
   };
-  
+
+  const handleEnvBlur = (id, value) => {
+    // Request we rename the envelope in the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.REN_ENVELOPE, { id: id, name: value });
+  };
 
   useEffect(() => {
     if (!loaded) {
@@ -208,9 +212,14 @@ export const ConfigCatEnv = () => {
                             <article className="cat env ei-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
                               <article className="cat env ei-container ei">
                                 <div className="cat">
-                                  <EditableEnvelope
+                                  <EditableText
                                     initialID={env.envID.toString()}
-                                    initialName={env.envelope} />
+                                    initialValue={env.envelope}
+                                    callback={handleEnvBlur}
+                                    style={{}}
+                                    className={"cat"}
+                                    inputClassName={""}
+                                  />
                                 </div>
                                 <button onClick={() => handleEnvelopeHide( env.envID )}
                                   className={"Toggle" + (!env.isActive?" Toggle-active":"")}>
