@@ -27,6 +27,7 @@ module.exports = {
     UPDATE_TX_ENV_LIST: 'update_tx_env_list',
     DONE_UPDATE_TX_ENV_LIST: 'done_update_tx_env_list',
     ADD_TX: 'add_transaction',
+    DONE_ADD_TX: 'done_add_transaction',
     UPDATE_TX_ENV: 'update_tx_envelope',
     DONE_UPDATE_TX_ENV: 'done_update_tx_envelope',
     SPLIT_TX: 'split_tx',

@@ -319,6 +319,17 @@ export const Transactions: React.FC = () => {
       txAccID: newTxAccID,
       txDesc: newTxDesc
     });
+
+    // Listen for progress updates
+    ipcRenderer.on(channels.DONE_ADD_TX, (data) => {
+      ipcRenderer.removeAllListeners(channels.DONE_ADD_TX);
+      load_transactions();      
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_ADD_TX);
+    };
   }
 
   const handleImport = async () => {

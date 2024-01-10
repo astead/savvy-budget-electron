@@ -1171,6 +1171,8 @@ ipcMain.on(channels.ADD_TX, async (event, data) => {
 
   // Update the envelope balance
   await update_env_balance(data.txEnvID, data.txAmt);
+
+  event.sender.send(channels.DONE_ADD_TX);
 });
 
 ipcMain.on(channels.GET_ENV_LIST, (event, { onlyActive }) => {
