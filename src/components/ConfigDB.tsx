@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { channels } from '../shared/constants.js';
 
-export const ConfigDB = () => {
+/* 
+  TODO:
+  - allow DB file to be on Google Drive?
+    Not sure we if need to do anything special here if we have a local copy of the file.
+  - Show more DB data? transaction dates, # transactions, # accounts?
+*/
 
+export const ConfigDB = () => {
 
   // Database filename
   const [databaseFile, setDatabaseFile] = useState('');

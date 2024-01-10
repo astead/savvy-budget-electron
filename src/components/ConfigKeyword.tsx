@@ -5,6 +5,12 @@ import { channels } from '../shared/constants.js';
 import { DropDown } from '../helpers/DropDown.tsx';
 import { EditText } from 'react-edit-text';
 
+/*
+  TODO:
+  - Allow keyword to be tied to an account
+  - Show keyword conflicts? 
+*/
+
 interface KeywordList {
   id: number;
   envelopeID: number;

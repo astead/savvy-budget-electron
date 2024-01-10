@@ -19,25 +19,19 @@ import Box from '@mui/material/Box';
 import { TransactionTable } from './TransactionTable.tsx';
 import { EditText } from 'react-edit-text';
 
+/*
+  TODO:
+  - after uploading transactions, make sure table re-renders.
+  - better way to pass in parameters?
+  - better default parameter values (vs using -1, etc)
+  - consolidate tx filter local storage
+  - export transactions
+*/
+
 export const Transactions: React.FC = () => {
   
   const { in_catID, in_envID, in_force_date, in_year, in_month } = useParams();
-  
-  interface CategoryList {
-    catID: number;
-    category: string;
-  }
-
-  interface EnvelopeList {
-    envID: number;
-    category: string;
-    envelope: string;
-  }
-
-  interface AccountList {
-    account: string;
-  }
-
+ 
   // Add new Transaction values
   const [newTxDate, setNewTxDate] = useState<Dayjs | null>(dayjs(new Date()));
   const [newTxAmount, setNewTxAmount] = useState('');
@@ -585,7 +579,7 @@ export const Transactions: React.FC = () => {
                           width: '100px',
                           height: '1.1rem'
                         }}
-                        defaultValue={newTxDescTemp}
+                        defaultValue={newTxAmountTemp}
                         onSave={({name, value, previousValue}) => {
                           setNewTxAmount(value);
                           setNewError("");
