@@ -726,10 +726,10 @@ ipcMain.on(channels.HIDE_ENVELOPE, async (event, id) => {
   event.sender.send(channels.DONE_HIDE_ENVELOPE);
 });
 
-ipcMain.on(channels.REN_CATEGORY, (event, { id, name }) => {
+ipcMain.on(channels.REN_CATEGORY, async (event, { id, name }) => {
   console.log(channels.REN_CATEGORY, id, name);
 
-  knex('category')
+  await knex('category')
     .where({ id: id })
     .update({ category: name })
     .then(() => {
@@ -738,6 +738,8 @@ ipcMain.on(channels.REN_CATEGORY, (event, { id, name }) => {
     .catch((err) => {
       console.log('Error: ' + err);
     });
+
+  event.sender.send(channels.DONE_REN_CATEGORY);
 });
 
 ipcMain.on(channels.REN_ENVELOPE, (event, { id, name }) => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import * as dayjs from 'dayjs';
-import { EditableText } from '../helpers/EditableText.tsx';
+import { EditText } from 'react-edit-text';
 import { channels } from '../shared/constants.js';
 
 export const ConfigAccount = () => {
@@ -43,12 +43,6 @@ export const ConfigAccount = () => {
     };
   };
 
-  const handleBlur = (id, value) => {
-    // Request we rename the account in the DB
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.UPDATE_ACCOUNT, { id, new_value: value });
-  };
-
   useEffect(() => {
     load_accounts();
   }, []);
@@ -72,10 +66,14 @@ export const ConfigAccount = () => {
             <td className="Table TC Left">{refNumber}</td>
             <td className="Table TC Left">
               
-              <EditableText
-                initialID={id.toString()}
-                initialValue={account}
-                callback={handleBlur}
+              <EditText
+                name={id.toString()}
+                defaultValue={account}
+                onSave={({name, value, previousValue}) => {
+                  // Request we rename the account in the DB
+                  const ipcRenderer = (window as any).ipcRenderer;
+                  ipcRenderer.send(channels.UPDATE_ACCOUNT, { id, new_value: value });
+                }}
                 style={{padding: '0px', margin: '0px', minHeight: '1rem'}}
                 className={"editableText"}
                 inputClassName={"normalInput"}

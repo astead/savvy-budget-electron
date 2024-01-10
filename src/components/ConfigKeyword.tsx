@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronUp, faChevronDown, faTrash, faReply, faReplyAll } from "@fortawesome/free-solid-svg-icons"
 import { channels } from '../shared/constants.js';
 import { DropDown } from '../helpers/DropDown.tsx';
-import { EditableText } from '../helpers/EditableText.tsx';
+import { EditText } from 'react-edit-text';
 
 interface KeywordList {
   id: number;
@@ -114,12 +114,6 @@ export const ConfigKeyword = () => {
     ipcRenderer.send(channels.UPDATE_KEYWORD_ENV, {id, new_value});
   };
 
-  const handleBlur = (id, value) => {
-    // Request we rename the keyword in the DB
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.UPDATE_KEYWORD, { id, new_value: value });
-  };
-
   useEffect(() => {
     setKeywordData([...sort_keyword_array(keywordData)]);
   }, [sortKeyword]);
@@ -166,10 +160,14 @@ export const ConfigKeyword = () => {
           keywordData.map(({ id, envelopeID, description }, index) => (
             <tr key={"row-"+id} className="Table TR">
               <td className="Table TC Left">
-                <EditableText
-                  initialID={id.toString()}
-                  initialValue={description} 
-                  callback={handleBlur}
+                <EditText
+                  name={id.toString()}
+                  defaultValue={description} 
+                  onSave={({name, value, previousValue}) => {
+                    // Request we rename the keyword in the DB
+                    const ipcRenderer = (window as any).ipcRenderer;
+                    ipcRenderer.send(channels.UPDATE_KEYWORD, { id, new_value: value });
+                  }}
                   style={{padding: '0px', margin: '0px', minHeight: '1rem'}}
                   className={"editableText"}
                   inputClassName={"normalInput"}

@@ -5,8 +5,7 @@ import { faTrash, faEyeSlash } from "@fortawesome/free-solid-svg-icons"
 import { DragDropContext, Draggable } from "react-beautiful-dnd"
 import { StrictModeDroppable as Droppable } from '../helpers/StrictModeDroppable.js';
 import NewCategory from '../helpers/NewCategory.tsx';
-import EditableCategory from '../helpers/EditableCategory.tsx';
-import { EditableText } from '../helpers/EditableText.tsx';
+import { EditText } from 'react-edit-text';
 import NewEnvelope from '../helpers/NewEnvelope.tsx';
 
 export const ConfigCatEnv = () => {
@@ -154,11 +153,33 @@ export const ConfigCatEnv = () => {
     }
   };
 
-  const handleEnvBlur = (id, value) => {
-    // Request we rename the envelope in the DB
+  const handleCatOnSave = (id, value) => {
+    let tmpName = value;
+
+    if (tmpName === 'Income') {
+      tmpName = 'Income 2'; 
+    }
+    if (tmpName === 'Uncategorized') {
+      tmpName = 'Uncategorized 2';
+    }
+
+    // Request we rename the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.REN_ENVELOPE, { id: id, name: value });
-  };
+    ipcRenderer.send(channels.REN_CATEGORY, { id: id, name: tmpName });
+    
+    if (tmpName !== value) {
+      // Wait till we are done
+      ipcRenderer.on(channels.DONE_REN_CATEGORY, () => {
+        load_cats_and_envs();
+        ipcRenderer.removeAllListeners(channels.DONE_REN_CATEGORY);
+      });
+      
+      // Clean the listener after the component is dismounted
+      return () => {
+        ipcRenderer.removeAllListeners(channels.DONE_REN_CATEGORY);
+      };
+    }
+  }
 
   useEffect(() => {
     if (!loaded) {
@@ -174,7 +195,7 @@ export const ConfigCatEnv = () => {
         const { catID, cat:cat_name, items } = category;
         
         return (
-          <Droppable droppableId={catID.toString()} key={"cat-" + catID}>
+          <Droppable droppableId={catID.toString()} key={"cat-" + cat_name}>
             {(provided) => (
               <section  {...provided.droppableProps} ref={provided.innerRef}>
                 <article className="cat">
@@ -186,9 +207,17 @@ export const ConfigCatEnv = () => {
                       {(cat_name === 'Income' || cat_name === 'Uncategorized')?
                         <div className="cat">{cat_name}</div>
                         :
-                        <EditableCategory
-                          initialID={catID.toString()}
-                          initialName={cat_name} />
+                        <EditText
+                          key={"cat-" + catID.toString() + "-" + cat_name}  
+                          name={"cat-" + catID.toString()}
+                          defaultValue={cat_name}
+                          onSave={({name, value, previousValue}) => {
+                            handleCatOnSave(catID, value);
+                          }}
+                          style={{}}
+                          className={"cat"}
+                          inputClassName={""}
+                        />
                       }
                     </div>
                     <NewEnvelope id={catID} callback={handleNewEnvelope} />
@@ -212,10 +241,14 @@ export const ConfigCatEnv = () => {
                             <article className="cat env ei-container" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
                               <article className="cat env ei-container ei">
                                 <div className="cat">
-                                  <EditableText
-                                    initialID={env.envID.toString()}
-                                    initialValue={env.envelope}
-                                    callback={handleEnvBlur}
+                                  <EditText
+                                    name={env.envID.toString()}
+                                    defaultValue={env.envelope}
+                                    onSave={({name, value, previousValue}) => {
+                                      // Request we rename the envelope in the DB
+                                      const ipcRenderer = (window as any).ipcRenderer;
+                                      ipcRenderer.send(channels.REN_ENVELOPE, { id: env.envID, name: value });
+                                    }}
                                     style={{}}
                                     className={"cat"}
                                     inputClassName={""}

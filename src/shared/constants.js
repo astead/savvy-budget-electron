@@ -33,6 +33,7 @@ module.exports = {
     SPLIT_TX: 'split_tx',
 
     REN_CATEGORY: 'ren_category',
+    DONE_REN_CATEGORY: 'done_ren_category',
     DEL_CATEGORY: 'del_category',
     DONE_DEL_CATEGORY: 'done_del_category',
     ADD_CATEGORY: 'add_category',
