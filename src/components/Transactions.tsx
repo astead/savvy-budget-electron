@@ -424,7 +424,7 @@ export const Transactions: React.FC = () => {
     const my_filter_endDate_str = localStorage.getItem('transaction-filter-endDate');
     if (my_filter_endDate_str?.length) {
       const my_filter_endDate = JSON.parse(my_filter_endDate_str);
-      if (my_filter_endDate) {
+      if (my_filter_endDate?.filterEndDate) {
         const my_tmpEndDate = dayjs(my_filter_endDate.filterEndDate);
         setFilterEndDate(my_tmpEndDate);
         localStorage.setItem(
@@ -685,7 +685,9 @@ export const Transactions: React.FC = () => {
                           'transaction-filter-endDate', 
                           JSON.stringify({ filterEndDate: newValue?.format('YYYY-MM-DD')})
                         );
-                        setFilterEndDate(newValue);
+                        if (newValue) {
+                          setFilterEndDate(newValue);
+                        }
                       }}
                       sx={{ width:250}}
                     />
