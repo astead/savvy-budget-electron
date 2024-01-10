@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { channels } from '../shared/constants.js';
 import { DropDown } from '../helpers/DropDown.tsx';
 import { KeywordSave } from '../helpers/KeywordSave.tsx';
@@ -34,8 +34,6 @@ interface TransactionNodeData {
 }
 
 export const TransactionTable = ({data, envList, callback}) => {  
-
-  const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
   // Other variables
   const [changeAllEnvID, setChangeAllEnvID] = useState(-1);

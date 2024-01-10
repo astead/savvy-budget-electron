@@ -35,9 +35,9 @@ export const Transactions: React.FC = () => {
   // Add new Transaction values
   const [newTxDate, setNewTxDate] = useState<Dayjs | null>(dayjs(new Date()));
   const [newTxAmount, setNewTxAmount] = useState('');
-  const [newTxAmountTemp, setNewTxAmountTemp] = useState('');
+  const [newTxAmountTemp, ] = useState('');
   const [newTxDesc, setNewTxDesc] = useState('');
-  const [newTxDescTemp, setNewTxDescTemp] = useState('');
+  const [newTxDescTemp, ] = useState('');
   const [newTxAccList, setNewTxAccList] = useState<any[]>([]);
   const [newTxAccID, setNewTxAccID] = useState(-1);
   const [newTxEnvList, setNewTxEnvList] = useState<any[]>([]);

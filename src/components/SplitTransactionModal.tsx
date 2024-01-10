@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight, faShareNodes, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
+import { faShareNodes, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 import * as dayjs from 'dayjs'
 import { channels } from '../shared/constants.js';
 import { DropDown } from '../helpers/DropDown.tsx';
@@ -35,16 +35,6 @@ function formatCurrency(currencyNumber:number) {
 };
 
 export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, envID, isSplit, envList, callback}) => {
-  const [myTxID, ] = useState(txID);
-  const [myTxDate, ] = useState(txDate);
-  const [myTxAmt, ] = useState(txAmt);
-  const [myTxDesc, ] = useState(txDesc);
-  const [myCat, ] = useState(cat);
-  const [myEnv, ] = useState(env);
-  const [mmEnvID, ] = useState(envID);
-  const [myIsSplit, ] = useState(isSplit);
-  const [myEnvList, ] = useState(envList);
-  
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
