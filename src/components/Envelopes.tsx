@@ -62,14 +62,6 @@ export const Envelopes: React.FC = () => {
     return currencyNumber.toLocaleString('en-EN', {style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
   };
 
-  const disp_date_label = (m, y) => {
-    const myDate = new Date(y, m);
-    const monthString = 
-      myDate.toLocaleString('en-US', {month: 'short'}) + " '" + 
-      myDate.toLocaleString('en-US', {year: 'numeric'}).slice(2) ;
-    return monthString; 
-  }
-
   const compare = (a,b) => {
     if (a.category === 'Income' || b.category === 'Income') {
       if (a.category === 'Income' && b.category !== 'Income') {
@@ -566,7 +558,9 @@ export const Envelopes: React.FC = () => {
                     <th className="Table THR THRC">{' \nEnvelope'}</th>
                     <th className="Table THR THRC Small">
                       <div className="PrevTHRC">
-                        <div className="PrevHRCLabel">{'Prev\nBudget'}</div>
+                        <div className="PrevHRCLabel">
+                          { dayjs(new Date(year, month)).subtract(1,'month').format("MMM 'YY") + '\nBudget' }
+                        </div>
                         {!haveCurrBudget &&
                           <div
                             onClick={() => {
@@ -578,11 +572,13 @@ export const Envelopes: React.FC = () => {
                         }
                       </div>
                     </th>
-                    <th className="Table THR THRC Small">{'Prev\nActual'}</th>
-                    <th className="Table THR THRC Small">{'Curr\nBalance'}</th>
-                    <th className="Table THR THRC Small">{disp_date_label(month, year) + '\nBudget'}</th>
-                    <th className="Table THR THRC Small">{'Curr\nActual'}</th>
-                    <th className="Table THR THRC Small">{'Monthly\nAvg'}</th>
+                    <th className="Table THR THRC Small">
+                      { dayjs(new Date(year, month)).subtract(1,'month').format("MMM 'YY") + '\nActual' }
+                    </th>
+                    <th className="Table THR THRC Small">{ 'Curr\nBalance' }</th>
+                    <th className="Table THR THRC Small">{ dayjs(new Date(year, month)).format("MMM 'YY") + '\nBudget' }</th>
+                    <th className="Table THR THRC Small">{ dayjs(new Date(year, month)).format("MMM 'YY")+ '\nActual' }</th>
+                    <th className="Table THR THRC Small">{ 'TTM\nAvg' }</th>
                   </tr>
                 </thead>
       
