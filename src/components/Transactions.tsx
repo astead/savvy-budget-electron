@@ -43,9 +43,9 @@ export const Transactions: React.FC = () => {
   const [newTxAmountTemp, setNewTxAmountTemp] = useState('');
   const [newTxDesc, setNewTxDesc] = useState('');
   const [newTxDescTemp, setNewTxDescTemp] = useState('');
-  const [newTxAccList, setNewTxAccList] = useState<AccountList[]>([]);
+  const [newTxAccList, setNewTxAccList] = useState<any[]>([]);
   const [newTxAccID, setNewTxAccID] = useState(-1);
-  const [newTxEnvList, setNewTxEnvList] = useState<EnvelopeList[]>([]);
+  const [newTxEnvList, setNewTxEnvList] = useState<any[]>([]);
   const [newTxEnvID, setNewTxEnvID] = useState(-1);
   const [newTxEnvListLoaded, setNewTxEnvListLoaded] = useState(false);
   const [newTxAccListLoaded, setNewTxAccListLoaded] = useState(false);
@@ -144,7 +144,11 @@ export const Transactions: React.FC = () => {
     // Receive the data
     ipcRenderer.on(channels.LIST_CAT_ENV, (arg) => {
       
-      const tmpFilterEnvList = arg.map((item) => {
+      let firstID = -1;
+      const tmpFilterEnvList = arg.map((item, index) => {
+        if (index === 0) {
+          firstID = item.envID;
+        }
         return { id: item.envID, text: item.category + " : " + item.envelope };
       });
       
@@ -164,6 +168,7 @@ export const Transactions: React.FC = () => {
       }, []);
 
       setNewTxEnvList(tmpFilterEnvList);
+      setNewTxEnvID(firstID);
       setNewTxEnvListLoaded(true);
 
       setEnvList([{ id: -1, text: "Undefined"}, ...(tmpFilterEnvList)]);
@@ -199,7 +204,20 @@ export const Transactions: React.FC = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ACCOUNTS, (arg) => {
-      setNewTxAccList(arg);
+      const tmpFiltered = arg.filter((item) => {
+        return (arg.find((i) => {
+          return (i.account === item.account);
+        }).id === item.id);
+      });
+      
+      let firstID = -1;
+      setNewTxAccList([...(tmpFiltered.map((i, index) => {
+        if (index === 0) {
+          firstID = i.id;
+        }
+        return { id: i.id, text: i.account }
+      }))]);
+      setNewTxAccID(firstID);
       setNewTxAccListLoaded(true);
       ipcRenderer.removeAllListeners(channels.LIST_ACCOUNTS);
     });
@@ -292,7 +310,7 @@ export const Transactions: React.FC = () => {
       setNewError(errorMsg);
       return;
     }
-
+    
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.ADD_TX, {
       txDate: newTxDate?.format('YYYY-MM-DD'),
