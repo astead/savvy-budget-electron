@@ -12,8 +12,6 @@ export const EditableEnvelope = ({ initialID, initialName}) => {
   };
 
   const handleEnvBlur = () => {
-    //console.log('handleEnvBlur: calling ', channels.REN_ENVELOPE, id, name);
-    
     // Request we rename the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.REN_ENVELOPE, { id, name });

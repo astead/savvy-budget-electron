@@ -43,10 +43,10 @@ export const ConfigAccount = () => {
     };
   };
 
-  const handleBlur = (id, name) => {
-    // Request we rename the category in the DB
+  const handleBlur = (id, value) => {
+    // Request we rename the account in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.UPDATE_ACCOUNT, { id, new_value: name });
+    ipcRenderer.send(channels.UPDATE_ACCOUNT, { id, new_value: value });
   };
 
   useEffect(() => {
@@ -74,7 +74,7 @@ export const ConfigAccount = () => {
               
               <EditableText
                 initialID={id.toString()}
-                initialName={account}
+                initialValue={account}
                 callback={handleBlur}
                 style={{padding: '0px', margin: '0px', minHeight: '1rem'}}
                 className={"editableText"}
