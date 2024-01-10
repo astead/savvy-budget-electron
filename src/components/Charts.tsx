@@ -175,14 +175,16 @@ export const Charts: React.FC = () => {
         if (!obj.isBudget) {
           // Let's show spending as positive, it's easier to read in a chart,
           // and also compare against the budget.
-          if (!filterEnvelopeName.includes("Income")) {
+          if (!filterEnvelopeName.includes("Income") &&
+          filterEnvID !== "env-3") {
             obj.totalAmt = -1 * obj.totalAmt;
           }
           totalValue += obj.totalAmt;
         } else {
           // Let's show income budget values as positive, for the same
           // reason as above.
-          if (filterEnvelopeName.includes("Income")) {
+          if (filterEnvelopeName.includes("Income") ||
+          filterEnvID === "env-3") {
             obj.totalAmt = -1 * obj.totalAmt;
           }
         }
