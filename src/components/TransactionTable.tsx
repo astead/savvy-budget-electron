@@ -40,6 +40,9 @@ export const TransactionTable = ({data, envList, callback}) => {
 
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
+  // Other variables
+  const [changeAllEnvID, setChangeAllEnvID] = useState(-1);
+
   // Transaction data
   const [txData, setTxData] = useState<TransactionNodeData[]>(data);
   const [isChecked, setIsChecked] = useState<any[]>([]);
@@ -140,6 +143,18 @@ export const TransactionTable = ({data, envList, callback}) => {
     filtered_nodes.forEach((item) => {
       txData[item.index].envID = new_value;
     });
+    setIsAllChecked(false);
+
+    // Reset the drop down to the default
+    setChangeAllEnvID(-1);
+
+    // Reset all checkboxes
+    setIsAllChecked(false);
+    isChecked.forEach((i) => i.isChecked = false);
+    setIsChecked([...isChecked]);
+
+    // Reset the main data array
+    setTxData([...txData]);
 
     // Signal we want to del data
     const ipcRenderer = (window as any).ipcRenderer;
@@ -147,8 +162,7 @@ export const TransactionTable = ({data, envList, callback}) => {
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_DEL_TX_LIST, () => {
-      setIsAllChecked(false);
-      callback();      
+      callback();
       ipcRenderer.removeAllListeners(channels.DONE_DEL_TX_LIST);
     });
     
@@ -361,7 +375,7 @@ export const TransactionTable = ({data, envList, callback}) => {
           <td className="Table THR TCInput">
             <DropDown
                   id={-1}
-                  selectedID={-1}
+                  selectedID={changeAllEnvID}
                   optionData={envList}
                   changeCallback={handleChangeAll}
                   className="envelopeDropDown"
