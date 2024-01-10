@@ -329,6 +329,10 @@ input.import-file {
   width: 350px;
 }
 
+input.import-file:hover {
+  background-color: limegreen;
+}
+
 div.envelopeDataContainer {
   display:flex;
   flex-direction: row;
