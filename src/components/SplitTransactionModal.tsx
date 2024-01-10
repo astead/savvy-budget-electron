@@ -6,7 +6,7 @@ import { faArrowRight, faShareNodes, faPlus, faMinus } from "@fortawesome/free-s
 import * as dayjs from 'dayjs'
 import { channels } from '../shared/constants.js';
 import { DropDown } from '../helpers/DropDown.tsx';
-import { EditableText } from '../helpers/EditableText.tsx';
+import { InputText } from '../helpers/InputText.tsx';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -193,7 +193,7 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
                     </LocalizationProvider>
                   </td>
                   <td className="Table TC Left">
-                    <EditableText
+                    <InputText
                       in_ID={index}
                       in_value={item.txDesc}
                       callback={handleTxDescChange}
@@ -210,7 +210,7 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
                       />
                   </td>
                   <td className="Table TC Right">
-                    <EditableText
+                    <InputText
                       in_ID={index}
                       in_value={item.txAmt.toFixed(2)}
                       callback={handleTxAmtChange}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import 'react-edit-text/dist/index.css';
 
-export const EditableText = ({ in_ID, in_value, callback, className}) => {
+export const InputText = ({ in_ID, in_value, callback, className}) => {
   const [id, ] = useState(in_ID);
   const [value, setValue] = useState(in_value);
 
@@ -28,4 +28,4 @@ export const EditableText = ({ in_ID, in_value, callback, className}) => {
   );
 };
 
-export default EditableText;
+export default InputText;
