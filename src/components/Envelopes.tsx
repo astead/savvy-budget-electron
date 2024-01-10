@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './header.tsx';
 import { channels } from '../shared/constants.js'
-import { EditableBudget } from '../helpers/EditableBudget.tsx';
 import { MonthSelector } from '../helpers/MonthSelector.tsx';
 import * as dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import BudgetBalanceModal from './BudgetBalanceModal.tsx';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import InputText from '../helpers/InputText.tsx';
 
 /*
   TODO:
@@ -52,12 +52,6 @@ export const Envelopes: React.FC = () => {
     prevActual: number;
     currActual: number; 
     prevBudget: number; 
-  };
-
-  interface EnvelopeList {
-    envID: number; 
-    category: string;
-    envelope: string; 
   };
 
   function formatCurrency(currencyNumber:number) {
@@ -299,6 +293,23 @@ export const Envelopes: React.FC = () => {
 
   const handleBalanceChangeTransfer = () => {
     load_CurrBalance();
+  }
+
+  const handleUpdateBudget = ({index, id, date, value}) => {
+    // Request we update the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.UPDATE_BUDGET, [id, date, value]);
+    
+    // Wait till we are done
+    ipcRenderer.on(channels.DONE_UPDATE_BUDGET, () => {
+      handleBudgetItemChange(index, value);
+      ipcRenderer.removeAllListeners(channels.DONE_UPDATE_BUDGET);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_UPDATE_BUDGET);
+    };
   }
 
   const handleBudgetItemChange = (index, value) => {
@@ -606,12 +617,14 @@ export const Envelopes: React.FC = () => {
                         />
                       </td>
                       <td className="Table TC Right">
-                        <EditableBudget 
-                          index={index}
-                          id={item.envID}
-                          date={curMonth}
-                          value={item.currBudget}
-                          callback={handleBudgetItemChange}/>
+                        <InputText
+                          in_ID={item.envID}
+                          in_value={item.currBudget}
+                          callback={(id, value) => {
+                            handleUpdateBudget({index, id, date: curMonth, value});
+                          }}
+                          className={"Curr"}
+                        />
                       </td>
                       <td className="Table TC Right">
                         <Link to={"/Transactions/-1/" + item.envID + "/1/" + year + "/" + month}>
