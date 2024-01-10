@@ -375,6 +375,7 @@ export const Transactions: React.FC = () => {
           // Listen for progress updates
           ipcRenderer.on(channels.UPLOAD_PROGRESS, (data) => {
             setProgress(data);
+            
             if (data >= 100) {
               ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
               setUploading(false);

@@ -156,6 +156,7 @@ export const TransactionTable = ({data, envList, callback}) => {
     return () => {
       ipcRenderer.removeAllListeners(channels.DONE_DEL_TX_LIST);
     };
+
   }; 
   
   const handleTxEnvChange = ({id, new_value, new_text}) => {
