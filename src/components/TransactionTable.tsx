@@ -10,13 +10,10 @@ import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Pagination from '@mui/material/Pagination';
 
-
 /*
  TODO:
-  - modify description?
+  - modify description? date?
   - popup window to add notes, tags, etc and edit item
-    https://mui.com/material-ui/react-modal/
-  - somehow highlight if we could set a keyword
 */
 
 interface TransactionNodeData {

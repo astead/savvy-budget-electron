@@ -4,16 +4,9 @@ import reportWebVitals from './reportWebVitals';
 import { App } from './App.tsx';
 import './includes/styles.css';
 
-/*
-  TODO:
-  - Consolidate Editable?
-*/
-
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
-
-
 
 root.render(
   <React.StrictMode>
