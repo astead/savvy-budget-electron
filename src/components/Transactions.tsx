@@ -17,6 +17,7 @@ import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgres
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { TransactionTable } from './TransactionTable.tsx';
+import { EditText } from 'react-edit-text';
 
 export const Transactions: React.FC = () => {
   
@@ -554,26 +555,43 @@ export const Transactions: React.FC = () => {
                         />
                     </td>
                     <td>
-                      <input
-                          name="newTxDescTemp"
-                          defaultValue={newTxDescTemp}
-                          onChange={(e) => setNewTxDescTemp(e.target.value)}
-                          onBlur={() => {
-                            setNewTxDesc(newTxDescTemp);
-                            setNewError("");
-                          }}
-                        />
+                    <EditText
+                      name="newTxDescTemp"
+                      style={{
+                        border: '1px solid #999', 
+                        padding: '0px', 
+                        margin: '0px', 
+                        minHeight: '1.1rem', 
+                        width: '250px',
+                        height: '1.1rem'
+                      }}
+                      defaultValue={newTxDescTemp}
+                      onSave={({name, value, previousValue}) => {
+                        setNewTxDesc(value);
+                        setNewError("");
+                      }}
+                      className={"editableText"}
+                      inputClassName={"normalInput"}
+                      />
                     </td>
                     <td>
-                      <input
-                          name="newTxAmountTemp"
-                          defaultValue={newTxAmountTemp}
-                          onChange={(e) => setNewTxAmountTemp(e.target.value)}
-                          onBlur={() => {
-                            setNewTxAmount(newTxAmountTemp);
-                            setNewError("");
-                          }}
-                          className="Small"
+                      <EditText
+                        name="newTxAmountTemp"
+                        style={{
+                          border: '1px solid #999', 
+                          padding: '0px', 
+                          margin: '0px', 
+                          minHeight: '1.1rem', 
+                          width: '100px',
+                          height: '1.1rem'
+                        }}
+                        defaultValue={newTxDescTemp}
+                        onSave={({name, value, previousValue}) => {
+                          setNewTxAmount(value);
+                          setNewError("");
+                        }}
+                        className={"Right editableText"}
+                        inputClassName={"Right normalInput"}
                         />
                     </td>
                     <td>
