@@ -8,6 +8,15 @@ const { BankTransferList, Ofx } = require('ofx-convert');
 const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
 const { Knex } = require('knex');
 
+const { GoogleAuth, auth, OAuth2Client } = require('google-auth-library');
+const { authenticate } = require('@google-cloud/local-auth');
+const { google } = require('googleapis');
+
+const http = require('http');
+const url = require('url');
+const opn = require('opn');
+const destroyer = require('server-destroy');
+
 /*
   TODO:
   - consolidate redundant work?
@@ -387,6 +396,156 @@ ipcMain.on(
     event.sender.send(channels.UPLOAD_PROGRESS, 100);
   }
 );
+
+ipcMain.on(
+  channels.DRIVE_AUTH,
+  async (event, { privateCreds, credentials }) => {
+    console.log(channels.DRIVE_AUTH);
+    const { client_secret, client_id, redirect_uris } = credentials.installed;
+
+    const clientEmail = privateCreds.clientEmail;
+    const privateKey = privateCreds.privateKey;
+    if (!clientEmail || !privateKey) {
+      throw new Error(`
+      The CLIENT_EMAIL and PRIVATE_KEY environment variables are required for
+      this sample.
+    `);
+    }
+    console.log('Trying OAuth2Client');
+    const auth = new GoogleAuth({
+      credentials: {
+        client_email: clientEmail,
+        private_key: privateKey,
+      },
+      scopes: 'https://www.googleapis.com/auth/drive',
+    });
+    console.log('auth: ' + auth);
+
+    console.log('Trying to get client');
+    const client = await auth.getClient();
+    console.log('client: ' + client);
+
+    console.log('calling getAuthenticatedClient');
+    const oAuth2Client = await getAuthenticatedClient(credentials.installed);
+
+    // Verify the id_token, and access the claims.
+    const ticket = await oAuth2Client.verifyIdToken({
+      idToken: oAuth2Client.credentials.id_token,
+      audience: credentials.installed.client_id,
+    });
+    console.log('ticket:' + ticket);
+
+    // After acquiring an access_token, you may want to check on the audience, expiration,
+    // or original scopes requested.  You can do that with the `getTokenInfo` method.
+    const tokenInfo = await oAuth2Client.getTokenInfo(
+      oAuth2Client.credentials.access_token
+    );
+    console.log('token info: ' + tokenInfo);
+
+    event.sender.send(channels.DRIVE_DONE_AUTH, {
+      return_creds: oAuth2Client.credentials,
+    });
+  }
+);
+
+ipcMain.on(
+  channels.DRIVE_LIST_FILES,
+  async (event, { credentials, tokens }) => {
+    console.log(channels.DRIVE_LIST_FILES, credentials, tokens);
+    console.log('a');
+    let file_list = null;
+    console.log('b');
+    console.log('Creating oAuth2Client');
+    const oAuth2Client = new OAuth2Client(credentials);
+    console.log('setting tokens');
+    oAuth2Client.setCredentials(tokens);
+
+    console.log('querying list of files');
+    // Make a simple request to the People API using our pre-authenticated client. The `request()` method
+    // takes an GaxiosOptions object.  Visit https://github.com/JustinBeckwith/gaxios.
+    try {
+      let url = 'https://www.googleapis.com/drive/v3/files';
+      const res = await oAuth2Client.request({ url });
+      console.log(res.data);
+      file_list = res.data;
+    } catch (e) {
+      console.log('error listing files: ' + e);
+    }
+
+    event.sender.send(channels.DRIVE_DONE_LIST_FILES, { file_list: file_list });
+  }
+);
+
+/**
+ * Create a new OAuth2Client, and go through the OAuth2 content
+ * workflow.  Return the full client to the callback.
+ */
+function getAuthenticatedClient(credentials) {
+  const { client_secret, client_id, redirect_uris } = credentials;
+
+  return new Promise((resolve, reject) => {
+    console.log('setting up OAuth2Client');
+    // create an oAuth client to authorize the API call.  Secrets are kept in a `keys.json` file,
+    // which should be downloaded from the Google Developers Console.
+    const oAuth2Client = new OAuth2Client(
+      client_id,
+      client_secret,
+      redirect_uris[0]
+    );
+
+    console.log('calling generateAuthUrl');
+    // Generate the url that will be used for the consent dialog.
+    const authorizeUrl = oAuth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: [
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/drive',
+      ],
+    });
+
+    console.log('creating server');
+    // Open an http server to accept the oauth callback. In this simple example, the
+    // only request to our webserver is to /oauth2callback?code=<code>
+    const server = http
+      .createServer(async (req, res) => {
+        try {
+          //if (req.url.indexOf('/oauth2callback') > -1) {
+          //console.log('index is  > -1');
+
+          // acquire the code from the querystring, and close the web server.
+          const qs = new url.URL(req.url, 'http://localhost:3001').searchParams;
+          const code = qs.get('code');
+          console.log(`Code is ${code}`);
+          res.end('Authentication successful! Please close this window.');
+          server.destroy();
+
+          // Now that we have the code, use that to acquire tokens.
+          console.log('getting token from code');
+          const r = await oAuth2Client.getToken(code);
+          console.log('got token: ' + r.tokens);
+
+          console.log('storing tokens');
+          // Make sure to set the credentials on the OAuth2 client.
+          oAuth2Client.setCredentials(r.tokens);
+          console.info('Tokens stored.');
+
+          resolve(oAuth2Client);
+          //} else {
+          //  console.log('index is less than 0');
+          //  console.log(res);
+          //}
+        } catch (e) {
+          reject(e);
+        }
+      })
+      .listen(3001, () => {
+        console.log('opening the browser?');
+        // open the browser to the authorize url to start the workflow
+        opn(authorizeUrl, { wait: false }).then((cp) => cp.unref());
+      });
+    destroyer(server);
+  });
+}
 
 ipcMain.on(
   channels.UPDATE_TX_ENV_LIST,

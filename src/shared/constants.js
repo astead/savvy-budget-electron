@@ -101,5 +101,10 @@ module.exports = {
     PLAID_LIST_TRANSACTIONS: 'plaid_list_transactions',
     PLAID_GET_ACCOUNTS: 'plaid_get_accounts',
     PLAID_LIST_ACCOUNTS: 'plaid_list_accounts',
+
+    DRIVE_AUTH: 'drive_auth',
+    DRIVE_DONE_AUTH: 'drive_done_auth',
+    DRIVE_LIST_FILES: 'drive_list_files',
+    DRIVE_DONE_LIST_FILES: 'drive_done_list_files',
   },
 };
