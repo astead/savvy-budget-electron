@@ -1021,6 +1021,14 @@ ipcMain.on(channels.DEL_ENVELOPE, async (event, id) => {
       console.log('Error: ' + err);
     });
 
+  await knex('keyword')
+    .where({ envelopeID: id })
+    .delete()
+    .then()
+    .catch((err) => {
+      console.log('Error: ' + err);
+    });
+
   event.sender.send(channels.DONE_DEL_ENVELOPE);
 });
 
