@@ -77,6 +77,31 @@ export const ConfigDB = () => {
     };
   };
   
+  const handlePushFile = async () => {
+    if (client) {
+      if (driveFile) {
+        const ipcRenderer = (window as any).ipcRenderer;
+        ipcRenderer.send(channels.DRIVE_PUSH_FILE, { credentials: credentials, tokens: client, fileId: driveFile.id });
+        
+        // Receive the data
+        ipcRenderer.on(channels.DRIVE_DONE_PUSH_FILE, () => {
+          console.log("Done pushing the file");
+
+          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_PUSH_FILE);
+        });
+
+        // Clean the listener after the component is dismounted
+        return () => {
+          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_PUSH_FILE);
+        };
+      } else {
+        console.log("Don't have driveFile");
+      }
+    } else {
+      console.log("Don't have client");
+    }
+  }
+  
   const handleGetFile = async () => {
     if (client) {
       if (driveFile) {
@@ -365,6 +390,8 @@ export const ConfigDB = () => {
             <button onClick={handleListFiles} className="textButton">List Google Drive Files</button>
             <br/>
             <button onClick={handleGetFile} className="textButton">Download File</button>
+            <br/>
+            <button onClick={handlePushFile} className="textButton">Upload File</button>
           </>
         }
       </td>

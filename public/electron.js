@@ -18,8 +18,7 @@ const opn = require('opn');
 const destroyer = require('server-destroy');
 
 const fs = require('fs');
-const os = require('os');
-const uuid = require('uuid');
+const readline = require('readline');
 
 /*
   TODO:
@@ -553,11 +552,67 @@ ipcMain.on(
         });
       console.log(file);
 
-      event.sender.send(channels.DRIVE_DONE_LIST_FILES);
+      event.sender.send(channels.DRIVE_DONE_GET_FILE);
     } catch (err) {
       // TODO(developer) - Handle error
       console.log(err);
-      event.sender.send(channels.DRIVE_DONE_LIST_FILES, {});
+      event.sender.send(channels.DRIVE_DONE_GET_FILE);
+    }
+  }
+);
+
+ipcMain.on(
+  channels.DRIVE_PUSH_FILE,
+  async (event, { credentials, tokens, fileId }) => {
+    console.log(channels.DRIVE_PUSH_FILE);
+
+    console.log('Creating oAuth2Client');
+    const { client_secret, client_id, redirect_uris } = credentials.installed;
+    const oAuth2Client = new OAuth2Client(
+      client_id,
+      client_secret,
+      redirect_uris[0]
+    );
+    console.log('setting tokens');
+    oAuth2Client.setCredentials(tokens);
+
+    console.log('pushing the file');
+    const fileName = isDev
+      ? path.join(app.getAppPath(), './public/SavvyBudget.db')
+      : path.join(app.getAppPath(), './build/SavvyBudget.db');
+
+    const service = google.drive({ version: 'v3', auth: oAuth2Client });
+    try {
+      const fileSize = fs.statSync(fileName).size;
+      const res = await service.files.update(
+        {
+          uploadType: 'media',
+          fileId: fileId,
+          requestBody: {
+            // a requestBody element is required if you want to use multipart
+          },
+          media: {
+            body: fs.createReadStream(fileName),
+          },
+        },
+        {
+          // Use the `onUploadProgress` event from Axios to track the
+          // number of bytes uploaded to this point.
+          onUploadProgress: (evt) => {
+            const progress = (evt.bytesRead / fileSize) * 100;
+            readline.clearLine(process.stdout, 0);
+            readline.cursorTo(process.stdout, 0);
+            process.stdout.write(`${Math.round(progress)}% complete`);
+          },
+        }
+      );
+      console.log(res.data);
+
+      event.sender.send(channels.DRIVE_DONE_PUSH_FILE);
+    } catch (err) {
+      // TODO(developer) - Handle error
+      console.log(err);
+      event.sender.send(channels.DRIVE_DONE_PUSH_FILE, {});
     }
   }
 );
