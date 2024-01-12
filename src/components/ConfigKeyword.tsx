@@ -78,7 +78,8 @@ export const ConfigKeyword = () => {
 
     // Receive the data
     ipcRenderer.on(channels.LIST_KEYWORDS, (arg) => {
-      setKeywordData([...arg]);
+      const tmpArr = sort_keyword_array(arg)
+      setKeywordData(tmpArr);
       ipcRenderer.removeAllListeners(channels.LIST_KEYWORDS);
     });
 
