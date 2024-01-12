@@ -26,6 +26,7 @@ export const ConfigDB = () => {
   const [clientTemp, setClientTemp] = useState('');
   const [secret, setSecret] = useState('');
   const [secretTemp, setSecretTemp] = useState('');
+  const [driveFile, setDriveFile] = useState<any>(null);
 
  
   const check_database_file = (my_databaseFile) => {
@@ -76,15 +77,46 @@ export const ConfigDB = () => {
     };
   };
   
+  const handleGetFile = async () => {
+    if (client) {
+      if (driveFile) {
+        console.log("creds: ", credentials);
+        console.log("token: ", client);
+
+        const ipcRenderer = (window as any).ipcRenderer;
+        ipcRenderer.send(channels.DRIVE_GET_FILE, { credentials: credentials, tokens: client, fileId: driveFile.id });
+        
+        // Receive the data
+        ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, () => {
+          console.log("We got the file");
+
+          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
+        });
+
+        // Clean the listener after the component is dismounted
+        return () => {
+          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
+        };
+      }
+    }
+  }
+  
   const handleListFiles = async () => {
     if (client) {
+
+      console.log("creds: ", credentials);
+      console.log("token: ", client);
+
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.DRIVE_LIST_FILES, { credentials: credentials, tokens: client });
       
       // Receive the data
       ipcRenderer.on(channels.DRIVE_DONE_LIST_FILES, ({file_list}) => {
         console.log(file_list);
-
+        if (file_list?.length > 0) {
+          setDriveFile(file_list[0]);
+        }
+        localStorage.setItem('drive-file', JSON.stringify({ fileId: file_list[0] }));
         ipcRenderer.removeAllListeners(channels.DRIVE_DONE_LIST_FILES);
       });
 
@@ -93,7 +125,7 @@ export const ConfigDB = () => {
         ipcRenderer.removeAllListeners(channels.DRIVE_DONE_LIST_FILES);
       };
     }
-  }
+  };
   
   
   const handleAuthClick = async () => {
@@ -194,7 +226,14 @@ export const ConfigDB = () => {
         setClient(drive_client.client);
       }
     }
-    
+
+    const drive_file_str = localStorage.getItem('drive-file');
+    if (drive_file_str?.length) {
+      const drive_file = JSON.parse(drive_file_str);
+      if (drive_file) {
+        setDriveFile(drive_file.fileId);
+      }
+    }
 
   }, []);
 
@@ -324,6 +363,8 @@ export const ConfigDB = () => {
             <button onClick={handleAuthClick} className="textButton">Authorize Google Drive</button>
             <br/>
             <button onClick={handleListFiles} className="textButton">List Google Drive Files</button>
+            <br/>
+            <button onClick={handleGetFile} className="textButton">Download File</button>
           </>
         }
       </td>

@@ -17,6 +17,10 @@ const url = require('url');
 const opn = require('opn');
 const destroyer = require('server-destroy');
 
+const fs = require('fs');
+const os = require('os');
+const uuid = require('uuid');
+
 /*
   TODO:
   - consolidate redundant work?
@@ -401,8 +405,10 @@ ipcMain.on(
   channels.DRIVE_AUTH,
   async (event, { privateCreds, credentials }) => {
     console.log(channels.DRIVE_AUTH);
-    const { client_secret, client_id, redirect_uris } = credentials.installed;
 
+    /* This may not be necessory?
+    ---------------------------------------------------------
+    */
     const clientEmail = privateCreds.clientEmail;
     const privateKey = privateCreds.privateKey;
     if (!clientEmail || !privateKey) {
@@ -424,6 +430,9 @@ ipcMain.on(
     console.log('Trying to get client');
     const client = await auth.getClient();
     console.log('client: ' + client);
+    /* This may not be necessory?
+    ---------------------------------------------------------
+    */
 
     console.log('calling getAuthenticatedClient');
     const oAuth2Client = await getAuthenticatedClient(credentials.installed);
@@ -452,27 +461,104 @@ ipcMain.on(
   channels.DRIVE_LIST_FILES,
   async (event, { credentials, tokens }) => {
     console.log(channels.DRIVE_LIST_FILES, credentials, tokens);
-    console.log('a');
     let file_list = null;
-    console.log('b');
     console.log('Creating oAuth2Client');
-    const oAuth2Client = new OAuth2Client(credentials);
+    const { client_secret, client_id, redirect_uris } = credentials.installed;
+    const oAuth2Client = new OAuth2Client(
+      client_id,
+      client_secret,
+      redirect_uris[0]
+    );
     console.log('setting tokens');
     oAuth2Client.setCredentials(tokens);
 
     console.log('querying list of files');
-    // Make a simple request to the People API using our pre-authenticated client. The `request()` method
-    // takes an GaxiosOptions object.  Visit https://github.com/JustinBeckwith/gaxios.
-    try {
-      let url = 'https://www.googleapis.com/drive/v3/files';
-      const res = await oAuth2Client.request({ url });
-      console.log(res.data);
-      file_list = res.data;
-    } catch (e) {
-      console.log('error listing files: ' + e);
-    }
 
-    event.sender.send(channels.DRIVE_DONE_LIST_FILES, { file_list: file_list });
+    const service = google.drive({ version: 'v3', auth: oAuth2Client });
+    try {
+      const res = await service.files.list({
+        q: "name='SavvyBudget.db'",
+        fields: 'nextPageToken, files(id, name)',
+        spaces: 'drive',
+      });
+      file_list = res.data.files;
+      console.log('Got ' + file_list?.length + ' files.');
+      event.sender.send(channels.DRIVE_DONE_LIST_FILES, {
+        file_list: file_list,
+      });
+    } catch (err) {
+      // TODO(developer) - Handle error
+      console.log(err);
+      event.sender.send(channels.DRIVE_DONE_LIST_FILES, {});
+    }
+  }
+);
+
+ipcMain.on(
+  channels.DRIVE_GET_FILE,
+  async (event, { credentials, tokens, fileId }) => {
+    console.log(channels.DRIVE_GET_FILE);
+
+    console.log('Creating oAuth2Client');
+    const { client_secret, client_id, redirect_uris } = credentials.installed;
+    const oAuth2Client = new OAuth2Client(
+      client_id,
+      client_secret,
+      redirect_uris[0]
+    );
+    console.log('setting tokens');
+    oAuth2Client.setCredentials(tokens);
+
+    console.log('getting the file');
+
+    const service = google.drive({ version: 'v3', auth: oAuth2Client });
+    try {
+      const file = await service.files
+        .get(
+          {
+            fileId: fileId,
+            alt: 'media',
+          },
+          { responseType: 'stream' }
+        )
+        .then((res) => {
+          return new Promise((resolve, reject) => {
+            const filePath = isDev
+              ? path.join(app.getAppPath(), './public/SavvyBudget.db')
+              : path.join(app.getAppPath(), './build/SavvyBudget.db');
+
+            console.log(`writing to ${filePath}`);
+            const dest = fs.createWriteStream(filePath);
+            let progress = 0;
+
+            res.data
+              .on('end', () => {
+                console.log('Done downloading file.');
+                resolve(filePath);
+              })
+              .on('error', (err) => {
+                console.error('Error downloading file.');
+                reject(err);
+              })
+              .on('data', (d) => {
+                progress += d.length;
+                if (process.stdout.isTTY) {
+                  process.stdout.clearLine();
+                  process.stdout.cursorTo(0);
+                  process.stdout.write(`Downloaded ${progress} bytes`);
+                }
+              })
+              .pipe(dest);
+          });
+        });
+      console.log(file);
+
+      event.sender.send(channels.DRIVE_DONE_LIST_FILES);
+    } catch (err) {
+      // TODO(developer) - Handle error
+      console.log(err);
+      event.sender.send(channels.DRIVE_DONE_LIST_FILES, {});
+    }
   }
 );
 
