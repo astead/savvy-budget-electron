@@ -440,6 +440,14 @@ export const Envelopes: React.FC = () => {
     };
   }
 
+  const set_color = (target, actual) => {
+    if (actual > target) {
+      return '#dd8888'
+    } else if (actual <= target) {
+      return '#ffffff'
+    }
+  }
+
   useEffect(() => {
     if (gotMonthData) {
       setLoadedEnvelopes(false);
@@ -631,9 +639,11 @@ export const Envelopes: React.FC = () => {
                             handleUpdateBudget({index, id, date: curMonth, value});
                           }}
                           className={"Curr"}
+                          style={{backgroundColor: set_color(item.currBudget, -1*item.monthlyAvg) }}
                         />
                       </td>
-                      <td className="Table TC Right">
+                      <td className="Table TC Right"
+                        style={{backgroundColor: set_color(item.currBudget, -1*item.currActual) }}>
                         <Link to={"/Transactions/-1/" + item.envID + "/1/" + year + "/" + month}>
                           {formatCurrency(item.currActual)}
                         </Link>
