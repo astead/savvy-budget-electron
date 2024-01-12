@@ -444,7 +444,7 @@ export const Envelopes: React.FC = () => {
     if (actual > target) {
       return '#dd8888'
     } else if (actual <= target) {
-      return '#ffffff'
+      return 'none'
     }
   }
 
