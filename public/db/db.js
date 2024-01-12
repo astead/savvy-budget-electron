@@ -137,6 +137,7 @@ ipcMain.on(channels.CREATE_DB, async (event) => {
       table.increments('id').primary();
       table.integer('envelopeID');
       table.text('description');
+      table.text('account');
     });
 
     // Create Transaction Table
@@ -183,7 +184,7 @@ ipcMain.on(channels.CREATE_DB, async (event) => {
     });
 
     // Set the version to 1
-    db('version').insert({ version: 3 }).then();
+    db('version').insert({ version: 4 }).then();
 
     // Add the Income Category
     db('category').insert({ category: 'Uncategorized' }).then();

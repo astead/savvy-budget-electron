@@ -322,7 +322,7 @@ ipcMain.on(
         accountArr.push({ name: account_str, id: accountID });
       }
 
-      let envID = await lookup_keyword(a.name);
+      let envID = await lookup_keyword(accountID, a.name);
 
       await basic_insert_transaction_node(
         accountID,
@@ -368,7 +368,7 @@ ipcMain.on(
         accountArr.push({ name: account_str, id: accountID });
       }
 
-      let envID = await lookup_keyword(m.name);
+      let envID = await lookup_keyword(accountID, m.name);
 
       // Rather than modify it, just remove the old and the new
       // TODO: Not sure how much faster it would be to just update
@@ -1572,8 +1572,8 @@ ipcMain.on(channels.UPDATE_TX_ENV, async (event, [txID, envID]) => {
   event.sender.send(channels.DONE_UPDATE_TX_ENV);
 });
 
-ipcMain.on(channels.SAVE_KEYWORD, (event, [envID, description]) => {
-  console.log(channels.SAVE_KEYWORD, envID, description);
+ipcMain.on(channels.SAVE_KEYWORD, (event, [acc, envID, description]) => {
+  console.log(channels.SAVE_KEYWORD, acc, envID, description);
 
   knex
     .from('keyword')
@@ -1581,6 +1581,7 @@ ipcMain.on(channels.SAVE_KEYWORD, (event, [envID, description]) => {
     .where({ description: description })
     .then(() => {
       const node = {
+        account: acc,
         envelopeID: envID,
         description: description,
       };
@@ -1774,18 +1775,25 @@ async function lookup_uncategorized() {
   return categoryID;
 }
 
-async function lookup_keyword(description) {
+async function lookup_keyword(accountID, description) {
   let envID = -1;
 
   if (description?.length) {
-    await knex('keyword')
+    let query = knex('keyword')
       .select('envelopeID')
-      .where({ description: description })
-      .then((data) => {
-        if (data?.length) {
-          envID = data[0].envelopeID;
-        }
+      .where({ description: description });
+
+    query = query.andWhere(function () {
+      this.where('account', 'All').orWhere({
+        account: knex('account').select('account').where('id', accountID),
       });
+    });
+
+    query.then((data) => {
+      if (data?.length) {
+        envID = data[0].envelopeID;
+      }
+    });
   }
 
   return envID;
@@ -2272,7 +2280,7 @@ async function insert_transaction_node(
   let my_txDate = dayjs(new Date(txDate)).format('YYYY-MM-DD');
 
   // Check if this matches a keyword
-  envID = await lookup_keyword(description);
+  envID = await lookup_keyword(accountID, description);
 
   // Check if this is a duplicate
   isDuplicate = await lookup_if_duplicate(
@@ -2318,7 +2326,8 @@ ipcMain.on(channels.GET_KEYWORDS, (event) => {
         'keyword.envelopeID',
         'description',
         'category',
-        'envelope'
+        'envelope',
+        'account'
       )
       .from('keyword')
       .leftJoin('envelope', function () {
@@ -2379,17 +2388,34 @@ ipcMain.on(channels.UPDATE_KEYWORD_ENV, (event, { id, new_value }) => {
     .catch((err) => console.log(err));
 });
 
+ipcMain.on(channels.UPDATE_KEYWORD_ACC, (event, { id, new_value }) => {
+  console.log(channels.UPDATE_KEYWORD_ACC, { id, new_value });
+  knex('keyword')
+    .update({ account: new_value })
+    .where({ id: id })
+    .catch((err) => console.log(err));
+});
+
 ipcMain.on(channels.SET_ALL_KEYWORD, (event, { id, force }) => {
   console.log(channels.SET_ALL_KEYWORD, { id });
 
   knex
-    .select('envelopeID', 'description')
+    .select('envelopeID', 'description', 'account')
     .from('keyword')
     .where({ id: id })
     .then((data) => {
       let query = knex('transaction')
         .update({ envelopeID: data[0].envelopeID })
         .where({ description: data[0].description });
+
+      if (data[0].account !== 'All') {
+        query = query.andWhere({
+          accountID: knex('account')
+            .select('id')
+            .where('account', data[0].account),
+        });
+      }
+
       if (force === 0) {
         query = query.andWhere({ envelopeID: -1 });
       }

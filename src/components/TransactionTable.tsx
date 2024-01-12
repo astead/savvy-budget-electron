@@ -326,6 +326,7 @@ export const TransactionTable = ({data, envList, callback}) => {
               <td className="Table TC">
                   <KeywordSave
                     txID={item.txID}
+                    acc={item.account}
                     envID={item.envID}
                     description={item.description}
                     keywordEnvID={item.keywordEnvID} />

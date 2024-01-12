@@ -17,17 +17,19 @@ interface KeywordList {
   description: string;
   category: string;
   envelope: string;
+  account: string;
 }
 
 export const ConfigKeyword = () => {
   const [keywordData, setKeywordData] = useState<KeywordList[]>([]);
   const [sortKeyword, setSortKeyword] = useState('10');
   const [envList, setEnvList] = useState<any[]>([]);
+  const [accList, setAccList] = useState<any[]>([]);
  
   const load_envelope_list = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_ENV_LIST, {includeInactive: 0});
+    ipcRenderer.send(channels.GET_ENV_LIST, {includeInactive: 1});
 
     // Receive the data
     ipcRenderer.on(channels.LIST_ENV_LIST, (arg) => {
@@ -43,6 +45,29 @@ export const ConfigKeyword = () => {
     // Clean the listener after the component is dismounted
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_ENV_LIST);
+    };
+  }
+
+  const load_account_list = () => {
+    
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.GET_ACCOUNT_NAMES);
+
+    // Receive the data
+    ipcRenderer.on(channels.LIST_ACCOUNT_NAMES, (arg) => {
+      setAccList([{
+        id: "All", text: "All"
+      }, ...(arg.map((i) => {
+        return { id: i.account, text: i.account }
+      }))]);
+
+      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNT_NAMES);
+    });
+    
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.LIST_ACCOUNT_NAMES);
     };
   }
 
@@ -73,13 +98,26 @@ export const ConfigKeyword = () => {
       tmpArr.sort((a, b) => a.description.localeCompare(b.description) * (sortDir === '0' ? 1 : -1));
     } else {
       tmpArr.sort((a, b) => {
-        const categoryComparison = a.category.localeCompare(b.category);
-        if (categoryComparison !== 0) {
-          return categoryComparison * (sortDir === '0' ? 1 : -1);
+        
+        if (a.category && b.category) {
+          const categoryComparison = a.category.localeCompare(b.category);
+          if (categoryComparison !== 0) {
+            return categoryComparison * (sortDir === '0' ? 1 : -1);
+          }
+        } else {
+          if (!(!a.category && !b.category)) {
+            return (a.category && !b.category) ? 1 : -1;
+          }
         }
-        const envelopeComparison = a.envelope.localeCompare(b.envelope);
-        if (envelopeComparison !== 0) {
-          return envelopeComparison * (sortDir === '0' ? 1 : -1);
+        if (a.envelope && b.envelope) {
+          const envelopeComparison = a.envelope.localeCompare(b.envelope);
+          if (envelopeComparison !== 0) {
+            return envelopeComparison * (sortDir === '0' ? 1 : -1);
+          }
+        } else {
+          if (!(!a.envelope && !b.envelope)) {
+            return (a.envelope && !b.envelope) ? 1 : -1;
+          }
         }
         return a.description.localeCompare(b.description) * (sortDir === '0' ? 1 : -1);
       });
@@ -114,6 +152,12 @@ export const ConfigKeyword = () => {
     ipcRenderer.send(channels.SET_ALL_KEYWORD, {id, force});
   };
 
+  const handleAccountChange = ({id, new_value, new_text}) => {
+    // Request we update the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.UPDATE_KEYWORD_ACC, {id, new_value});
+  };
+
   const handleEnvelopeChange = ({id, new_value, new_text}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
@@ -127,6 +171,7 @@ export const ConfigKeyword = () => {
 
   useEffect(() => {
     load_keywords();
+    load_account_list();
     load_envelope_list();
   }, []);
 
@@ -134,6 +179,7 @@ export const ConfigKeyword = () => {
     <table className="Table" cellSpacing={0} cellPadding={0}>
       <thead>
         <tr className="Table THR">
+          <th className="Table THR THRC">{'Account'}</th>
           <th className="Table THR THRC THRCClickable" onClick={() => {
             set_keyword_sort('0', (sortKeyword[0] === '0')?((sortKeyword[1] === '0')?('1'):('0')):('0'));
           }}>
@@ -164,8 +210,17 @@ export const ConfigKeyword = () => {
 
       <tbody>
         {
-          keywordData.map(({ id, envelopeID, description }, index) => (
+          keywordData.map(({ id, envelopeID, description, account }, index) => (
             <tr key={"row-"+id} className="Table TR">
+              <td className="Table TC">
+                <DropDown 
+                  id={id}
+                  selectedID={account}
+                  optionData={accList}
+                  changeCallback={handleAccountChange}
+                  className={""}
+                />
+              </td>
               <td className="Table TC Left">
                 <EditText
                   name={id.toString()}
