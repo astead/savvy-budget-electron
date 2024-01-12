@@ -77,6 +77,31 @@ export const ConfigDB = () => {
     };
   };
   
+  const handleUseDriveFile = async () => {
+    if (client) {
+      if (driveFile) {
+        const ipcRenderer = (window as any).ipcRenderer;
+        ipcRenderer.send(channels.DRIVE_USE_FILE, { credentials: credentials, tokens: client, fileId: driveFile.id });
+        
+        // Receive the data
+        ipcRenderer.on(channels.DRIVE_DONE_USE_FILE, ({fileName}) => {
+          check_database_file(fileName);
+
+          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_USE_FILE);
+        });
+
+        // Clean the listener after the component is dismounted
+        return () => {
+          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_USE_FILE);
+        };
+      } else {
+        console.log("Don't have driveFile");
+      }
+    } else {
+      console.log("Don't have client");
+    }
+  }
+  
   const handlePushFile = async () => {
     if (client) {
       if (driveFile) {
@@ -100,7 +125,7 @@ export const ConfigDB = () => {
     } else {
       console.log("Don't have client");
     }
-  }
+  };
   
   const handleGetFile = async () => {
     if (client) {
@@ -112,8 +137,9 @@ export const ConfigDB = () => {
         ipcRenderer.send(channels.DRIVE_GET_FILE, { credentials: credentials, tokens: client, fileId: driveFile.id });
         
         // Receive the data
-        ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, () => {
+        ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, ({fileName}) => {
           console.log("We got the file");
+          check_database_file(fileName);
 
           ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
         });
@@ -124,7 +150,7 @@ export const ConfigDB = () => {
         };
       }
     }
-  }
+  };
   
   const handleListFiles = async () => {
     if (client) {
@@ -387,9 +413,11 @@ export const ConfigDB = () => {
             <br/>
             <button onClick={handleAuthClick} className="textButton">Authorize Google Drive</button>
             <br/>
-            <button onClick={handleListFiles} className="textButton">List Google Drive Files</button>
+            <button onClick={handleListFiles} className="textButton">Find Google Drive File</button>
             <br/>
             <button onClick={handleGetFile} className="textButton">Download File</button>
+            <br/>
+            <button onClick={handleUseDriveFile} className="textButton">Use File</button>
             <br/>
             <button onClick={handlePushFile} className="textButton">Upload File</button>
           </>

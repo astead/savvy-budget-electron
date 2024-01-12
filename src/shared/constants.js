@@ -110,5 +110,7 @@ module.exports = {
     DRIVE_DONE_GET_FILE: 'drive_done_get_file',
     DRIVE_PUSH_FILE: 'drive_push_file',
     DRIVE_DONE_PUSH_FILE: 'drive_done_push_file',
+    DRIVE_USE_FILE: 'drive_use_file',
+    DRIVE_DONE_USE_FILE: 'drive_done_use_file',
   },
 };

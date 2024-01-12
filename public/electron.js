@@ -510,6 +510,9 @@ ipcMain.on(
 
     console.log('getting the file');
 
+    const fileName = isDev
+      ? path.join(app.getAppPath(), './public/SavvyBudget.db')
+      : path.join(app.getAppPath(), './build/SavvyBudget.db');
     const service = google.drive({ version: 'v3', auth: oAuth2Client });
     try {
       const file = await service.files
@@ -522,18 +525,14 @@ ipcMain.on(
         )
         .then((res) => {
           return new Promise((resolve, reject) => {
-            const filePath = isDev
-              ? path.join(app.getAppPath(), './public/SavvyBudget.db')
-              : path.join(app.getAppPath(), './build/SavvyBudget.db');
-
-            console.log(`writing to ${filePath}`);
-            const dest = fs.createWriteStream(filePath);
+            console.log(`writing to ${fileName}`);
+            const dest = fs.createWriteStream(fileName);
             let progress = 0;
 
             res.data
               .on('end', () => {
                 console.log('Done downloading file.');
-                resolve(filePath);
+                resolve(fileName);
               })
               .on('error', (err) => {
                 console.error('Error downloading file.');
@@ -552,11 +551,11 @@ ipcMain.on(
         });
       console.log(file);
 
-      event.sender.send(channels.DRIVE_DONE_GET_FILE);
+      event.sender.send(channels.DRIVE_DONE_GET_FILE, { fileName });
     } catch (err) {
       // TODO(developer) - Handle error
       console.log(err);
-      event.sender.send(channels.DRIVE_DONE_GET_FILE);
+      event.sender.send(channels.DRIVE_DONE_GET_FILE, {});
     }
   }
 );
@@ -612,8 +611,21 @@ ipcMain.on(
     } catch (err) {
       // TODO(developer) - Handle error
       console.log(err);
-      event.sender.send(channels.DRIVE_DONE_PUSH_FILE, {});
+      event.sender.send(channels.DRIVE_DONE_PUSH_FILE);
     }
+  }
+);
+
+ipcMain.on(
+  channels.DRIVE_USE_FILE,
+  async (event, { credentials, tokens, fileId }) => {
+    console.log(channels.DRIVE_USE_FILE);
+
+    const fileName = isDev
+      ? path.join(app.getAppPath(), './public/SavvyBudget.db')
+      : path.join(app.getAppPath(), './build/SavvyBudget.db');
+
+    event.sender.send(channels.DRIVE_DONE_USE_FILE, { fileName });
   }
 );
 
