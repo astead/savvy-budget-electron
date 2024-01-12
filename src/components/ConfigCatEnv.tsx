@@ -145,11 +145,24 @@ export const ConfigCatEnv = () => {
   const handleOnDragEnd = (result) => {
     if (!result?.destination) return;
     
-    if (result.source.droppableId !== result.destination.droppableId) {
+    const envID = parseInt(result.draggableId);
+    const oldCatID = parseInt(result.source.droppableId);
+    const newCatID = parseInt(result.destination.droppableId);
+
+    if (oldCatID !== newCatID) {
       
       // Request we move the envelope in the DB
       const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send(channels.MOV_ENVELOPE,  { id: result.draggableId, newCatID: result.destination.droppableId } );
+      ipcRenderer.send(channels.MOV_ENVELOPE,  { id: envID, newCatID: newCatID } );
+
+      // Move these around in the arrays (or for pull from DB after this is done)
+      const oldCatNode = catData.find((i) => i.catID === oldCatID);
+      const newCatNode = catData.find((i) => i.catID === newCatID);
+      const oldIndex = oldCatNode.items.indexOf((item) => item.envID === envID);
+      const myNode = oldCatNode.items.splice(oldIndex, 1).pop();
+      newCatNode.items.push({...myNode, catID: newCatID, category: newCatNode.cat });
+
+      setCatData([...catData]);
     }
   };
 
