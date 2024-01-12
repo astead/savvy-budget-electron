@@ -31,6 +31,7 @@ module.exports = {
     UPDATE_TX_ENV: 'update_tx_envelope',
     DONE_UPDATE_TX_ENV: 'done_update_tx_envelope',
     SPLIT_TX: 'split_tx',
+    UPDATE_TX_DESC: 'update_tx_description',
 
     REN_CATEGORY: 'ren_category',
     DONE_REN_CATEGORY: 'done_ren_category',

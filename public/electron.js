@@ -1580,6 +1580,18 @@ ipcMain.on(channels.UPDATE_TX_ENV, async (event, [txID, envID]) => {
   event.sender.send(channels.DONE_UPDATE_TX_ENV);
 });
 
+ipcMain.on(channels.UPDATE_TX_DESC, async (event, { txID, new_value }) => {
+  console.log(channels.UPDATE_TX_DESC, txID, new_value);
+
+  knex('transaction')
+    .where({ id: txID })
+    .update({ description: new_value })
+    .then()
+    .catch((err) => {
+      console.log('Error: ' + err);
+    });
+});
+
 ipcMain.on(channels.SAVE_KEYWORD, (event, [acc, envID, description]) => {
   console.log(channels.SAVE_KEYWORD, acc, envID, description);
 

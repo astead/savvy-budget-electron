@@ -9,6 +9,7 @@ import SplitTransactionModal from './SplitTransactionModal.tsx';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Pagination from '@mui/material/Pagination';
+import { EditText } from 'react-edit-text';
 
 /*
  TODO:
@@ -298,7 +299,20 @@ export const TransactionTable = ({data, envList, callback}) => {
             <tr key={"tx-" + item.txID} className={(item.isDuplicate === 1 ? "TR-duplicate":"TR")}>
               <td className="Table TC">{dayjs(item.txDate).format('M/D/YYYY')}</td>
               <td className="Table TC Left">{item.account}</td>
-              <td className="Table TC Left">{item.description}</td>
+              <td className="Table TC Left">
+                <EditText
+                  name={item.txID.toString()}
+                  defaultValue={item.description}
+                  onSave={({name, value, previousValue}) => {
+                    // Request we rename the account in the DB
+                    const ipcRenderer = (window as any).ipcRenderer;
+                    ipcRenderer.send(channels.UPDATE_TX_DESC, { txID: item.txID, new_value: value });
+                  }}
+                  style={{padding: '0px', margin: '0px', minHeight: '1rem'}}
+                  className={"editableText"}
+                  inputClassName={"normalInput"}
+                />
+              </td>
               <td className="Table TC Right">{formatCurrency(item.txAmt)}</td>
               <td className="Table TC TCInput">
                 <DropDown 
