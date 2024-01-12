@@ -11,7 +11,7 @@ export const NewCategory = ({ callback }) => {
     if (newCategory) {
       // Request we add the new category
       const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send(channels.ADD_CATEGORY, newCategory);
+      ipcRenderer.send(channels.ADD_CATEGORY, { name: newCategory });
     
       // Wait till we are done
       ipcRenderer.on(channels.DONE_ADD_CATEGORY, () => {

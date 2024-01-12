@@ -12,8 +12,8 @@ let dbPath = '';
 let db = null;
 let initializationCallback = null;
 
-ipcMain.on(channels.SET_DB_PATH, async (event, databaseFile) => {
-  if (databaseFile === dbPath && db) {
+ipcMain.on(channels.SET_DB_PATH, async (event, { DBPath }) => {
+  if (DBPath === dbPath && db) {
     //console.log('db connection is already set to the same file. ignoring.');
     return;
   }
@@ -31,7 +31,7 @@ ipcMain.on(channels.SET_DB_PATH, async (event, databaseFile) => {
   }
   if (!db) {
     //console.log('setting db path and db is null');
-    dbPath = databaseFile;
+    dbPath = DBPath;
 
     // Re-initialize knexInstance with the new path
     //console.log('Setting DB to: ', dbPath);

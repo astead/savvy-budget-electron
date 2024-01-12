@@ -154,7 +154,7 @@ export const TransactionTable = ({data, envList, callback}) => {
 
     // Signal we want to del data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.UPDATE_TX_ENV_LIST, [new_value, filtered_nodes]);
+    ipcRenderer.send(channels.UPDATE_TX_ENV_LIST, {new_value, filtered_nodes});
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_DEL_TX_LIST, () => {
@@ -172,7 +172,7 @@ export const TransactionTable = ({data, envList, callback}) => {
   const handleTxEnvChange = ({id, new_value, new_text}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.UPDATE_TX_ENV, [id, new_value]);
+    ipcRenderer.send(channels.UPDATE_TX_ENV, { txID: id, envID: new_value });
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_UPDATE_TX_ENV, () => {
@@ -189,7 +189,7 @@ export const TransactionTable = ({data, envList, callback}) => {
   const toggleDuplicate = ({txID, isDuplicate}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.SET_DUPLICATE, [txID, isDuplicate]);
+    ipcRenderer.send(channels.SET_DUPLICATE, { txID: txID, isDuplicate: isDuplicate });
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_SET_DUPLICATE, () => {
@@ -206,7 +206,7 @@ export const TransactionTable = ({data, envList, callback}) => {
   const toggleVisibility = ({txID, isVisible}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.SET_VISIBILITY, [txID, isVisible]);
+    ipcRenderer.send(channels.SET_VISIBILITY, { txID: txID, isVisible: isVisible });
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_SET_VISIBILITY, () => {

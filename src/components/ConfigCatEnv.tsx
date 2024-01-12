@@ -86,7 +86,7 @@ export const ConfigCatEnv = () => {
 
     // Request we delete the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.DEL_CATEGORY, id);
+    ipcRenderer.send(channels.DEL_CATEGORY, { id });
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_DEL_CATEGORY, () => {
@@ -111,7 +111,7 @@ export const ConfigCatEnv = () => {
   const handleEnvelopeDelete = (id) => {
     // Request we delete the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.DEL_ENVELOPE, id);
+    ipcRenderer.send(channels.DEL_ENVELOPE, { id });
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_DEL_ENVELOPE, () => {
@@ -128,7 +128,7 @@ export const ConfigCatEnv = () => {
   const handleEnvelopeHide = (id) => {
     // Request we delete the category in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.HIDE_ENVELOPE, id);
+    ipcRenderer.send(channels.HIDE_ENVELOPE, { id });
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_HIDE_ENVELOPE, () => {
@@ -149,7 +149,7 @@ export const ConfigCatEnv = () => {
       
       // Request we move the envelope in the DB
       const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send(channels.MOV_ENVELOPE,  [result.draggableId, result.destination.droppableId] );
+      ipcRenderer.send(channels.MOV_ENVELOPE,  { id: result.draggableId, newCatID: result.destination.droppableId } );
     }
   };
 

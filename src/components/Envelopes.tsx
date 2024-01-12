@@ -134,7 +134,7 @@ export const Envelopes: React.FC = () => {
   const load_PrevBudget = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_PREV_BUDGET, dayjs(new Date(year, month-1)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_PREV_BUDGET, { find_date: dayjs(new Date(year, month-1)).format('YYYY-MM-DD') });
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_BUDGET, (arg) => {
@@ -164,7 +164,7 @@ export const Envelopes: React.FC = () => {
   const load_PrevActual = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_PREV_ACTUAL, dayjs(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_PREV_ACTUAL, { find_date: dayjs(new Date(year, month)).format('YYYY-MM-DD') });
 
     // Receive the data
     ipcRenderer.on(channels.LIST_PREV_ACTUAL, (arg) => {
@@ -224,7 +224,7 @@ export const Envelopes: React.FC = () => {
   const load_CurrBudget = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CUR_BUDGET, dayjs(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_CUR_BUDGET, { find_date: dayjs(new Date(year, month)).format('YYYY-MM-DD') });
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CUR_BUDGET, (arg) => {
@@ -269,8 +269,9 @@ export const Envelopes: React.FC = () => {
 
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.COPY_BUDGET, 
-      [dayjs(new Date(year, month)).format('YYYY-MM-DD'),
-      prev_budget_values]);
+      { newtxDate: dayjs(new Date(year, month)).format('YYYY-MM-DD'),
+        budget_values: prev_budget_values}
+    );
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_COPY_BUDGET, () => {
@@ -291,7 +292,7 @@ export const Envelopes: React.FC = () => {
   const handleUpdateBudget = ({index, id, date, value}) => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.UPDATE_BUDGET, [id, date, value]);
+    ipcRenderer.send(channels.UPDATE_BUDGET, { newEnvelopeID: id, newtxDate: date, newtxAmt: value });
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_UPDATE_BUDGET, () => {
@@ -331,7 +332,7 @@ export const Envelopes: React.FC = () => {
   const load_CurrActual = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_CUR_ACTUAL, dayjs(new Date(year, month+1)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_CUR_ACTUAL, { find_date: dayjs(new Date(year, month+1)).format('YYYY-MM-DD') });
 
     // Receive the data
     ipcRenderer.on(channels.LIST_CUR_ACTUAL, (arg) => {
@@ -368,7 +369,7 @@ export const Envelopes: React.FC = () => {
   const load_MonthlyAvg = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.GET_MONTHLY_AVG, dayjs(new Date(year, month)).format('YYYY-MM-DD'));
+    ipcRenderer.send(channels.GET_MONTHLY_AVG, { find_date: dayjs(new Date(year, month)).format('YYYY-MM-DD') });
 
     // Receive the data
     ipcRenderer.on(channels.LIST_MONTHLY_AVG, (arg) => {

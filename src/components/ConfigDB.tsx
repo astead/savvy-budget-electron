@@ -44,7 +44,7 @@ export const ConfigDB = () => {
         // Save this in local storage
         localStorage.setItem('databaseFile', JSON.stringify(my_databaseFile));
         const ipcRenderer = (window as any).ipcRenderer;
-        ipcRenderer.send(channels.SET_DB_PATH, my_databaseFile);
+        ipcRenderer.send(channels.SET_DB_PATH, { DBPath: my_databaseFile });
 
         get_db_version();
       } else {

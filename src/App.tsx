@@ -21,7 +21,7 @@ export const App: React.FC = () => {
         
         if (fs.existsSync(my_databaseFile)) {
           const ipcRenderer = (window as any).ipcRenderer;
-          ipcRenderer.send(channels.SET_DB_PATH, my_databaseFile);
+          ipcRenderer.send(channels.SET_DB_PATH, { DBPath: my_databaseFile });
         }
       }
     }

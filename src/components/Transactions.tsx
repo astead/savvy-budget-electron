@@ -110,13 +110,13 @@ export const Transactions: React.FC = () => {
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.GET_TX_DATA, 
-      [ filterStartDate?.format('YYYY-MM-DD'),
-        filterEndDate?.format('YYYY-MM-DD'),
-        filterCatID,
-        filterEnvID,
-        filterAccID,
-        filterDesc,
-        filterAmount ]);
+      { filterStartDate : filterStartDate?.format('YYYY-MM-DD'),
+        filterEndDate: filterEndDate?.format('YYYY-MM-DD'),
+        filterCatID: filterCatID,
+        filterEnvID: filterEnvID,
+        filterAccID: filterAccID,
+        filterDesc: filterDesc,
+        filterAmount: filterAmount });
 
     // Receive the data
     ipcRenderer.on(channels.LIST_TX_DATA, (arg) => {
@@ -317,7 +317,7 @@ export const Transactions: React.FC = () => {
     });
 
     // Listen for progress updates
-    ipcRenderer.on(channels.DONE_ADD_TX, (data) => {
+    ipcRenderer.on(channels.DONE_ADD_TX, () => {
       ipcRenderer.removeAllListeners(channels.DONE_ADD_TX);
       load_transactions();      
     });
@@ -338,7 +338,7 @@ export const Transactions: React.FC = () => {
       } else {
         // Insert this transaction
         if (filename.toLowerCase().endsWith("qfx")) {
-          ipcRenderer.send(channels.IMPORT_OFX, ofxString);
+          ipcRenderer.send(channels.IMPORT_OFX, { ofxString });
         }
         if (filename.toLowerCase().endsWith("csv")) {
           let account_string = '';
@@ -365,7 +365,7 @@ export const Transactions: React.FC = () => {
           }
           setProgress(0);
           setUploading(true);
-          ipcRenderer.send(channels.IMPORT_CSV, [account_string, ofxString]);
+          ipcRenderer.send(channels.IMPORT_CSV, { account_string: account_string, ofxString: ofxString });
           
           // Listen for progress updates
           ipcRenderer.on(channels.UPLOAD_PROGRESS, (data) => {
@@ -384,7 +384,7 @@ export const Transactions: React.FC = () => {
           };
         }
         if (filename.toLowerCase().endsWith("txt")) {
-          ipcRenderer.send(channels.IMPORT_CSV, ["mint tab", ofxString]);
+          ipcRenderer.send(channels.IMPORT_CSV, { account_string: "mint tab", ofxString: ofxString });
         }
       }
     });

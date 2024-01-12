@@ -33,7 +33,7 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
   const handleSaveNewValue = () => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.UPDATE_BALANCE, [envID, newAmt]);
+    ipcRenderer.send(channels.UPDATE_BALANCE, { id: envID, newAmt: newAmt });
     setOpen(false);
     callback();
   };
@@ -41,7 +41,7 @@ export const BudgetBalanceModal = ({balanceAmt, category, envelope, envID, trans
   const handleSaveTransfer = () => {
     // Request we update the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.MOVE_BALANCE, [transferAmt, envID, transferEnvID]);
+    ipcRenderer.send(channels.MOVE_BALANCE, { transferAmt: transferAmt, fromID: envID, toID: transferEnvID });
     setOpen(false);
     callback();
   };
