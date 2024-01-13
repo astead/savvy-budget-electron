@@ -1912,8 +1912,9 @@ ipcMain.on(channels.IMPORT_OFX, async (event, { ofxString }) => {
   if (ver[0] === '1') {
     const ofx = new Ofx(ofxString);
     const trans = await ofx.getBankTransferList();
+    let total_records = trans.length;
 
-    trans.map(async (tx, i) => {
+    trans.forEach(async (tx, i) => {
       insert_transaction_node(
         accountID,
         tx.TRNAMT,
@@ -1921,14 +1922,16 @@ ipcMain.on(channels.IMPORT_OFX, async (event, { ofxString }) => {
         tx.NAME,
         tx.FITID
       );
+      event.sender.send(channels.UPLOAD_PROGRESS, (i * 100) / total_records);
     });
   }
   if (ver[0] === '2') {
     const xml = new XMLParser().parse(ofxString);
     const trans = await xml.OFX.CREDITCARDMSGSRSV1.CCSTMTTRNRS.CCSTMTRS
       .BANKTRANLIST.STMTTRN;
+    let total_records = trans.length;
 
-    trans.map(async (tx, i) => {
+    trans.forEach(async (tx, i) => {
       insert_transaction_node(
         accountID,
         tx.TRNAMT,
@@ -1940,9 +1943,11 @@ ipcMain.on(channels.IMPORT_OFX, async (event, { ofxString }) => {
         tx.NAME,
         tx.FITID
       );
+      event.sender.send(channels.UPLOAD_PROGRESS, (i * 100) / total_records);
     });
   }
   process.stdout.write('\n');
+  event.sender.send(channels.UPLOAD_PROGRESS, 100);
 });
 
 ipcMain.on(
