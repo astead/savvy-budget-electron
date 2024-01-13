@@ -1421,7 +1421,20 @@ ipcMain.on(
           this.on('account.id', '=', 'transaction.accountID');
         })
         .leftJoin('keyword', function () {
-          this.on('keyword.description', '=', 'transaction.description');
+          //this.on('keyword.description', '=', 'transaction.description');
+          /*
+          TODO: This is pulling in multiple instances.
+          */
+          this.on(
+            'transaction.description',
+            'like',
+            'keyword.description'
+          ).andOn(function () {
+            this.onVal('keyword.account', '=', 'All').orOn(
+              'keyword.account',
+              'account.account'
+            );
+          });
         })
         .where({ isBudget: 0 })
         .orderBy('transaction.txDate', 'desc');
@@ -1804,7 +1817,7 @@ async function lookup_keyword(accountID, description) {
   if (description?.length) {
     let query = knex('keyword')
       .select('envelopeID')
-      .where({ description: description });
+      .whereRaw(`? LIKE description`, description);
 
     query = query.andWhere(function () {
       this.where('account', 'All').orWhere({
@@ -1818,7 +1831,6 @@ async function lookup_keyword(accountID, description) {
       }
     });
   }
-
   return envID;
 }
 
@@ -1997,6 +2009,7 @@ ipcMain.on(
               }
               description = description.replace(/\"/g, '');
             }
+            // TODO: Need a better way to determine who the account owner is.
             let txFrom = tx_values[j + 1];
             let txTo = tx_values[j + 2];
             description =
@@ -2436,7 +2449,7 @@ ipcMain.on(channels.SET_ALL_KEYWORD, (event, { id, force }) => {
     .then((data) => {
       let query = knex('transaction')
         .update({ envelopeID: data[0].envelopeID })
-        .where({ description: data[0].description });
+        .whereRaw(`description LIKE ?`, data[0].description);
 
       if (data[0].account !== 'All') {
         query = query.andWhere({
