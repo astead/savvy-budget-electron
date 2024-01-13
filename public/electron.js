@@ -1812,7 +1812,7 @@ async function lookup_keyword(accountID, description) {
       });
     });
 
-    query.then((data) => {
+    await query.then((data) => {
       if (data?.length) {
         envID = data[0].envelopeID;
       }
@@ -1946,7 +1946,6 @@ ipcMain.on(channels.IMPORT_OFX, async (event, { ofxString }) => {
       event.sender.send(channels.UPLOAD_PROGRESS, (i * 100) / total_records);
     });
   }
-  process.stdout.write('\n');
   event.sender.send(channels.UPLOAD_PROGRESS, 100);
 });
 
@@ -2309,12 +2308,11 @@ async function insert_transaction_node(
   description,
   refNumber
 ) {
-  let envID = -1;
   let isDuplicate = 0;
   let my_txDate = dayjs(new Date(txDate)).format('YYYY-MM-DD');
 
   // Check if this matches a keyword
-  envID = await lookup_keyword(accountID, description);
+  let envID = await lookup_keyword(accountID, description);
 
   // Check if this is a duplicate
   isDuplicate = await lookup_if_duplicate(
@@ -2347,8 +2345,6 @@ async function insert_transaction_node(
   if (envID !== -1 && isDuplicate !== 1) {
     await update_env_balance(envID, txAmt);
   }
-
-  process.stdout.write('.');
 }
 
 ipcMain.on(channels.GET_KEYWORDS, (event) => {
