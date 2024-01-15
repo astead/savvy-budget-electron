@@ -1999,7 +1999,7 @@ ipcMain.on(
         if (i > 3 && tx[0] === ',') {
           const tx_values = tx.split(',');
 
-          if (tx_values?.length) {
+          if (tx_values?.length && tx_values[1]?.length) {
             let refNumber = tx_values[1];
             let txDate = tx_values[2].substr(0, 10);
             let description = tx_values[5];
