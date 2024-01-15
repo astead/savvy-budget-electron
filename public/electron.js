@@ -2279,13 +2279,15 @@ async function basic_insert_transaction_node(
 
 async function remove_transaction(txID) {
   await knex
-    .select('id', 'envelopeID', 'txAmt')
+    .select('id', 'envelopeID', 'txAmt', 'isDuplicate', 'isVisible')
     .from('transaction')
     .where({ id: txID })
     .then(async (data) => {
       if (data?.length) {
         await knex('transaction').delete().where({ id: data[0].id });
-        await update_env_balance(data[0].envelopeID, -1 * data[0].txAmt);
+        if (data[0].isVisible && !data[0].isDuplicate) {
+          await update_env_balance(data[0].envelopeID, -1 * data[0].txAmt);
+        }
       }
     })
     .catch((err) => console.log(err));
