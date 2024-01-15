@@ -2325,7 +2325,14 @@ async function insert_transaction_node(
   refNumber
 ) {
   let isDuplicate = 0;
+
   let my_txDate = dayjs(new Date(txDate)).format('YYYY-MM-DD');
+  if (my_txDate === 'Invalid Date') {
+    return;
+  }
+  if (txAmt === null || txAmt === '') {
+    return;
+  }
 
   // Check if this matches a keyword
   let envID = await lookup_keyword(accountID, description);
