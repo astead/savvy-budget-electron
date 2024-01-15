@@ -2043,24 +2043,48 @@ ipcMain.on(
           const tx_values = tx.split(',');
 
           if (tx_values?.length) {
-            let txDate = dayjs(
-              new Date(tx_values[0].replace(/\"/g, '').trim())
-            ).format('YYYY-MM-DD');
+            let j = 0;
+            let item_iter = 0;
+            let txDate = '';
+            let description = '';
+            let description2 = '';
+            let txAmt = '';
+            let refNum = '';
+            while (j < tx_values?.length) {
+              let item_str = tx_values[j];
+              if (item_str[0] === '"') {
+                while (j < tx_values?.length - 1 && !item_str.endsWith('"')) {
+                  j++;
+                  item_str += ',' + tx_values[j];
+                }
+                item_str = item_str.replace(/\"/g, '');
+              }
 
-            let description = tx_values[3].replace(/\"/g, '').trim();
-            let description2 = tx_values[4].replace(/\"/g, '').trim();
-            if (!description?.length && description2?.length) {
-              description = description2;
+              switch (item_iter) {
+                case 0:
+                  txDate = item_str.trim();
+                  break;
+                case 3:
+                  description = item_str.trim();
+                  break;
+                case 4:
+                  description2 = item_str.trim();
+                  break;
+                case 7:
+                  txAmt = item_str.trim().replace(/,/g, '');
+                  break;
+                case 12:
+                  refNum = item_str.trim();
+                  break;
+                default:
+              }
+
+              j++;
+              item_iter++;
             }
 
-            let j = 7;
-            let txAmt = tx_values[7];
-            if (txAmt.startsWith('"')) {
-              while (!tx_values[j].endsWith('"')) {
-                j++;
-                txAmt += tx_values[j];
-              }
-              txAmt = txAmt.replace(/\"/g, '');
+            if (!description?.length && description2?.length) {
+              description = description2;
             }
 
             await insert_transaction_node(
@@ -2068,7 +2092,7 @@ ipcMain.on(
               txAmt,
               txDate,
               description,
-              ''
+              refNum
             );
             event.sender.send(channels.UPLOAD_PROGRESS, (i * 100) / totalNodes);
           }
