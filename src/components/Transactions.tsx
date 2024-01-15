@@ -21,7 +21,6 @@ import { EditText } from 'react-edit-text';
 
 /*
   TODO:
-  - after uploading transactions, make sure table re-renders.
   - better way to pass in parameters?
   - better default parameter values (vs using -1, etc)
   - consolidate tx filter local storage
@@ -82,6 +81,10 @@ export const Transactions: React.FC = () => {
   const [filename, setFilename] = useState('');
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = React.useState(0);
+
+  // Export 
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = React.useState(0);
 
   // Transaction data
   const [txData, setTxData] = useState<any[]>([]);
@@ -326,6 +329,33 @@ export const Transactions: React.FC = () => {
     return () => {
       ipcRenderer.removeAllListeners(channels.DONE_ADD_TX);
     };
+  }
+
+  const handleExport = async () => {
+    // TODO: Add logic to export transactions.
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.EXPORT_TX, 
+      { filterStartDate : filterStartDate?.format('YYYY-MM-DD'),
+        filterEndDate: filterEndDate?.format('YYYY-MM-DD'),
+        filterCatID: filterCatID,
+        filterEnvID: filterEnvID,
+        filterAccID: filterAccID,
+        filterDesc: filterDesc,
+        filterAmount: filterAmount });
+        
+    setExportProgress(0);
+    setExporting(true);
+
+    // Listen for progress updates
+    ipcRenderer.on(channels.EXPORT_PROGRESS, (data) => {
+      setExportProgress(data);
+      
+      if (data >= 100) {
+        ipcRenderer.removeAllListeners(channels.EXPORT_PROGRESS);
+        setExporting(false);
+      }
+    });
   }
 
   const handleImport = async () => {
@@ -645,6 +675,19 @@ export const Transactions: React.FC = () => {
               {uploading && 
                 <Box sx={{ width: '100%' }}>
                   <LinearProgressWithLabel value={progress} />
+                </Box>
+              }
+            </div>
+            <br/>
+            <div>
+              <span className="bold">Export Current Transaction List:</span>
+              <button 
+                onClick={handleExport}>
+                  <FontAwesomeIcon icon={faFileImport} />
+              </button>
+              {exporting && 
+                <Box sx={{ width: '100%' }}>
+                  <LinearProgressWithLabel value={exportProgress} />
                 </Box>
               }
             </div>

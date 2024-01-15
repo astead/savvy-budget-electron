@@ -1390,8 +1390,6 @@ ipcMain.on(
       filterAmount
     );
 
-    console.log('Is startDate valid: ' + (filterStartDate ? 'true' : 'false'));
-
     if (knex) {
       let query = knex
         .select(
@@ -1484,6 +1482,166 @@ ipcMain.on(
           event.sender.send(channels.LIST_TX_DATA, data);
         })
         .catch((err) => console.log(err));
+    }
+  }
+);
+
+ipcMain.on(
+  channels.EXPORT_TX,
+  async (
+    event,
+    {
+      filterStartDate,
+      filterEndDate,
+      filterCatID,
+      filterEnvID,
+      filterAccID,
+      filterDesc,
+      filterAmount,
+    }
+  ) => {
+    console.log(
+      channels.EXPORT_TX,
+      filterStartDate,
+      filterEndDate,
+      filterCatID,
+      filterEnvID,
+      filterAccID,
+      filterDesc,
+      filterAmount
+    );
+
+    if (knex) {
+      let query = knex
+        .select(
+          'transaction.id as txID',
+          'envelope.categoryID as catID',
+          'transaction.envelopeID as envID',
+          'category.category as category',
+          'envelope.envelope as envelope',
+          'transaction.accountID as accountID',
+          'account.account as account',
+          'transaction.txDate as txDate',
+          'transaction.txAmt as txAmt',
+          'transaction.description as description',
+          'keyword.envelopeID as keywordEnvID',
+          'transaction.isDuplicate as isDuplicate',
+          'transaction.isVisible as isVisible',
+          'transaction.isSplit as isSplit'
+        )
+        .from('transaction')
+        .leftJoin('envelope', function () {
+          this.on('envelope.id', '=', 'transaction.envelopeID');
+        })
+        .leftJoin('category', function () {
+          this.on('category.id', '=', 'envelope.categoryID');
+        })
+        .leftJoin('account', function () {
+          this.on('account.id', '=', 'transaction.accountID');
+        })
+        .leftJoin('keyword', function () {
+          //this.on('keyword.description', '=', 'transaction.description');
+          /*
+          TODO: This is pulling in multiple instances on multiple keyword matches
+          Right now that could happen on a keyword rename.
+          Keyword insert is disabled if a keyword already matches.
+          */
+          this.on(
+            'transaction.description',
+            'like',
+            'keyword.description'
+          ).andOn(function () {
+            this.onVal('keyword.account', '=', 'All').orOn(
+              'keyword.account',
+              'account.account'
+            );
+          });
+        })
+        .where({ isBudget: 0 })
+        .orderBy('transaction.txDate', 'desc');
+
+      if (parseInt(filterEnvID) > -2) {
+        query = query.andWhere('transaction.envelopeID', filterEnvID);
+      } else {
+        if (parseInt(filterEnvID) > -3) {
+          query = query.andWhere(function () {
+            this.where('transaction.envelopeID', -1).orWhere(
+              'envelope.isActive',
+              0
+            );
+          });
+        }
+      }
+      if (parseInt(filterCatID) > -1) {
+        query = query.andWhere('envelope.categoryID', filterCatID);
+      }
+      if (filterAccID !== -1 && filterAccID !== '-1' && filterAccID !== 'All') {
+        query = query.andWhere('account.account', filterAccID);
+      }
+      if (filterDesc?.length) {
+        filterDesc = '%' + filterDesc + '%';
+        query = query.andWhereRaw(
+          `'transaction'.description LIKE ?`,
+          filterDesc
+        );
+      }
+      if (filterStartDate) {
+        query = query.andWhereRaw(`'transaction'.txDate >= ?`, filterStartDate);
+      }
+      if (filterEndDate) {
+        query = query.andWhereRaw(`'transaction'.txDate <= ?`, filterEndDate);
+      }
+      if (filterAmount?.length) {
+        query = query.andWhereRaw(
+          `'transaction'.txAmt = ?`,
+          parseFloat(filterAmount)
+        );
+      }
+
+      await query
+        .then(async (data) => {
+          const { filePath } = await dialog.showSaveDialog({
+            title: 'Export CSV File',
+            filters: [{ name: 'CSV File', extensions: ['csv'] }],
+          });
+
+          if (filePath) {
+            let total_records = data?.length;
+            let writer = fs.createWriteStream(filePath);
+
+            // Write the headers
+            writer.write('Date,');
+            writer.write('Account,');
+            writer.write('Description,');
+            writer.write('Amount,');
+            writer.write('Category : Envelope,');
+            writer.write('isSplit,');
+            writer.write('isDuplicate,');
+            writer.write('isVisible');
+            writer.write('\n');
+
+            data.forEach((item, i) => {
+              // Write the content
+              writer.write(item.txDate + ',');
+              writer.write(item.account + ',');
+              writer.write(item.description + ',');
+              writer.write(item.txAmt.toString() + ',');
+              writer.write(item.category + ' : ' + item.envelope + ',');
+              writer.write(item.isSplit.toString() + ',');
+              writer.write(item.isDuplicate.toString() + ',');
+              writer.write(item.isVisible.toString());
+              writer.write('\n');
+              event.sender.send(
+                channels.EXPORT_PROGRESS,
+                (i * 100) / total_records
+              );
+            });
+            event.sender.send(channels.EXPORT_PROGRESS, 100);
+          }
+        })
+        .catch((err) => console.log(err));
+
+      event.sender.send(channels.EXPORT_PROGRESS, 100);
     }
   }
 );
