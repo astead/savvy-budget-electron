@@ -2011,18 +2011,17 @@ ipcMain.on(
               }
               description = description.replace(/\"/g, '');
             }
-            // TODO: Need a better way to determine who the account owner is.
             let txFrom = tx_values[j + 1];
             let txTo = tx_values[j + 2];
-            description =
-              (txFrom !== 'Alan Stead' ? txFrom : txTo) + ' : ' + description;
-
-            let txAmt = tx_values[j + 3]
+            let txAmt_str = tx_values[j + 3]
               .replace(/\"/g, '')
               .replace(/\+/g, '')
               .replace(/\$/g, '')
               .replace(/\ /g, '')
               .trim();
+            let txAmt = parseFloat(txAmt_str);
+
+            description = (txAmt > 0 ? txFrom : txTo) + ' : ' + description;
 
             insert_transaction_node(
               accountID,
