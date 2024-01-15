@@ -1423,7 +1423,9 @@ ipcMain.on(
         .leftJoin('keyword', function () {
           //this.on('keyword.description', '=', 'transaction.description');
           /*
-          TODO: This is pulling in multiple instances.
+          TODO: This is pulling in multiple instances on multiple keyword matches
+          Right now that could happen on a keyword rename.
+          Keyword insert is disabled if a keyword already matches.
           */
           this.on(
             'transaction.description',
