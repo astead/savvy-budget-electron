@@ -1,12 +1,11 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const isDev = require('electron-is-dev'); // To check if electron is in development mode
 const path = require('path');
-const initializeKnexInstance = require('./db/db.js');
 const { channels } = require('../src/shared/constants.js');
 const dayjs = require('dayjs');
 const { BankTransferList, Ofx } = require('ofx-convert');
 const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
-const { Knex } = require('knex');
+const knex = require('knex');
 
 const { GoogleAuth, auth, OAuth2Client } = require('google-auth-library');
 const { authenticate } = require('@google-cloud/local-auth');
@@ -108,6 +107,152 @@ process.on('uncaughtException', (error) => {
   console.log(`Exception: ${error}`);
   if (process.platform !== 'darwin') {
     app.quit();
+  }
+});
+
+// In this file you can include the rest of your app's specific main process
+// code. You can also put them in separate files and require them here.
+
+let dbPath = '';
+let db = null;
+
+ipcMain.on(channels.SET_DB_PATH, async (event, { DBPath }) => {
+  if (DBPath === dbPath && db) {
+    //console.log('db connection is already set to the same file. ignoring.');
+    return;
+  }
+  if (db) {
+    await db.destroy();
+    db = null;
+  }
+  if (!db) {
+    dbPath = DBPath;
+
+    // Re-initialize knexInstance with the new path
+    db = knex({
+      client: 'sqlite3',
+      connection: {
+        filename: dbPath,
+      },
+      useNullAsDefault: true,
+    });
+  }
+});
+
+ipcMain.on(channels.CREATE_DB, async (event) => {
+  console.log(channels.CREATE_DB);
+
+  const { filePath } = await dialog.showSaveDialog({
+    title: 'Save Database',
+    filters: [{ name: 'SQLite Databases', extensions: ['db'] }],
+  });
+
+  if (filePath) {
+    // If we were already using a DB, need to close
+    // that connection.
+    if (db) {
+      await db.destroy();
+      db = null;
+    }
+
+    // Create our new connection
+    //console.log('Setting DB to: ', filePath);
+    db = await knex({
+      client: 'sqlite3',
+      connection: {
+        filename: filePath,
+      },
+      useNullAsDefault: true,
+    });
+
+    // Create Account Table
+    await db.schema.createTable('account', function (table) {
+      table.increments('id').primary();
+      table.text('account');
+      table.text('refNumber');
+      table.text('plaid_id');
+      table.integer('isActive');
+    });
+
+    // Create Category Table
+    await db.schema.createTable('category', function (table) {
+      table.increments('id').primary();
+      table.text('category');
+    });
+
+    // Create Envelope Table
+    await db.schema.createTable('envelope', function (table) {
+      table.increments('id').primary();
+      table.text('envelope');
+      table.integer('categoryID');
+      table.real('balance');
+      table.integer('isActive');
+    });
+
+    // Create Keyword Table
+    await db.schema.createTable('keyword', function (table) {
+      table.increments('id').primary();
+      table.integer('envelopeID');
+      table.text('description');
+      table.text('account');
+    });
+
+    // Create Transaction Table
+    await db.schema.createTable('transaction', function (table) {
+      table.increments('id').primary();
+      table.integer('envelopeID');
+      table.real('txAmt');
+      table.integer('txDate');
+      table.text('description');
+      table.text('refNumber');
+      table.integer('isBudget');
+      table.integer('origTxID');
+      table.integer('isDuplicate');
+      table.integer('isSplit');
+      table.integer('accountID');
+      table.integer('isVisible');
+    });
+
+    // Create PLAID key table
+    await db.schema.createTable('plaid', function (table) {
+      table.text('client_id');
+      table.text('secret');
+      table.text('environment');
+    });
+
+    // Create PLAID account Table
+    await db.schema.createTable('plaid_account', function (table) {
+      table.increments('id').primary();
+      table.text('institution');
+      table.text('account_id');
+      table.text('mask');
+      table.text('account_name');
+      table.text('account_subtype');
+      table.text('account_type');
+      table.text('verification_status');
+      table.text('item_id');
+      table.text('access_token');
+      table.integer('cursor');
+    });
+
+    // Create Version Table
+    await db.schema.createTable('version', function (table) {
+      table.integer('version');
+    });
+
+    // Set the version to 1
+    db('version').insert({ version: 4 }).then();
+
+    // Add the Income Category
+    db('category').insert({ category: 'Uncategorized' }).then();
+    db('category').insert({ category: 'Income' }).then();
+
+    // Add blank plaid info
+    db('plaid').insert({ client_id: '', secret: '', environment: '' }).then();
+
+    // Now let the renderer know about the new filename
+    //console.log('Send this back to the renderer.');
+    event.sender.send(channels.LIST_NEW_DB_FILENAME, filePath);
   }
 });
 
@@ -216,7 +361,7 @@ ipcMain.on(
       const itemID = response.data.item_id;
 
       metadata.accounts.forEach((account, index) => {
-        knex('account')
+        db('account')
           .insert({
             account:
               metadata.institution.name +
@@ -234,7 +379,7 @@ ipcMain.on(
             isActive: 1,
           })
           .then(() => {
-            knex('plaid_account')
+            db('plaid_account')
               .insert({
                 institution: metadata.institution.name,
                 account_id: account.id,
@@ -391,7 +536,7 @@ ipcMain.on(
     }
 
     // Update cursor
-    knex('plaid_account')
+    db('plaid_account')
       .where('access_token', access_token)
       .update('cursor', cursor)
       .catch((err) => console.log('Error: ' + err));
@@ -714,7 +859,7 @@ ipcMain.on(
 
 ipcMain.on(channels.DEL_TX_LIST, async (event, { del_tx_list }) => {
   console.log(channels.DEL_TX_LIST);
-  if (knex) {
+  if (db) {
     console.log(del_tx_list);
     for (let t of del_tx_list) {
       if (t.isChecked) {
@@ -729,9 +874,9 @@ ipcMain.on(channels.DEL_TX_LIST, async (event, { del_tx_list }) => {
 
 ipcMain.on(channels.SPLIT_TX, async (event, { txID, split_tx_list }) => {
   console.log(channels.SPLIT_TX);
-  if (knex) {
+  if (db) {
     // Lets use a transaction for this
-    await knex
+    await db
       .transaction(async (trx) => {
         // Get some info on the original
         await trx
@@ -806,9 +951,8 @@ ipcMain.on(channels.SPLIT_TX, async (event, { txID, split_tx_list }) => {
 
 ipcMain.on(channels.PLAID_GET_KEYS, (event) => {
   console.log(channels.PLAID_GET_KEYS);
-  if (knex) {
-    knex
-      .select('client_id', 'secret', 'environment')
+  if (db) {
+    db.select('client_id', 'secret', 'environment')
       .from('plaid')
       .then((data) => {
         PLAID_CLIENT_ID = data[0].client_id.trim();
@@ -840,20 +984,19 @@ ipcMain.on(
     client.configuration.baseOptions.headers['PLAID-SECRET'] = PLAID_SECRET;
     client.configuration.basePath = PlaidEnvironments[PLAID_ENV];
 
-    if (knex) {
-      knex
-        .select('client_id')
+    if (db) {
+      db.select('client_id')
         .from('plaid')
         .then((rows) => {
           if (rows?.length) {
-            knex('plaid')
+            db('plaid')
               .update('client_id', client_id)
               .update('secret', secret)
               .update('environment', environment)
               .then()
               .catch((err) => console.log(err));
           } else {
-            knex('plaid')
+            db('plaid')
               .insert({
                 client_id: client_id,
                 secret: secret,
@@ -870,21 +1013,20 @@ ipcMain.on(
 
 ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
   console.log(channels.PLAID_GET_ACCOUNTS);
-  if (knex) {
-    knex
-      .select(
-        'plaid_account.id',
-        'plaid_account.institution',
-        'plaid_account.account_id',
-        'plaid_account.mask',
-        'plaid_account.account_name',
-        'plaid_account.account_subtype',
-        'plaid_account.account_type',
-        'plaid_account.verification_status',
-        'plaid_account.item_id',
-        'plaid_account.access_token',
-        'plaid_account.cursor'
-      )
+  if (db) {
+    db.select(
+      'plaid_account.id',
+      'plaid_account.institution',
+      'plaid_account.account_id',
+      'plaid_account.mask',
+      'plaid_account.account_name',
+      'plaid_account.account_subtype',
+      'plaid_account.account_type',
+      'plaid_account.verification_status',
+      'plaid_account.item_id',
+      'plaid_account.access_token',
+      'plaid_account.cursor'
+    )
       .max({ lastTx: 'txDate' })
       .from('plaid_account')
       .join('account', 'plaid_account.account_id', 'account.plaid_id')
@@ -915,45 +1057,10 @@ ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
   }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-let knex = null;
-
-// Initialize the knexInstance with the initial dbPath
-initializeKnexInstance((instance) => {
-  //console.log(
-  //  'standalone initialize to: ',
-  //  instance.context.client.connectionSettings.filename
-  //);
-  knex = instance;
-  // Continue with other code that depends on knexInstance
-});
-
-ipcMain.on(channels.SET_DB_PATH, (event, { DBPath }) => {
-  if (!knex) {
-    //console.log(
-    //  'No Knex yet, changing db path in main, setting up nested initialize.'
-    //);
-
-    // Continue with other code that doesn't depend on knexInstance immediately
-    // Initialize the knexInstance with the new path
-    initializeKnexInstance((instance) => {
-      //console.log(
-      //  'nested arrow initialize to: ',
-      //  instance.context.client.connectionSettings.filename
-      //);
-      knex = instance;
-      // Continue with other code that depends on knexInstance
-    });
-    //} else {
-    //  console.log('Already have knex, changing db path in main, do nothing.');
-  }
-});
-
 ipcMain.on(channels.ADD_ENVELOPE, async (event, { categoryID }) => {
   console.log(channels.ADD_ENVELOPE, categoryID);
 
-  await knex('envelope')
+  await db('envelope')
     .insert({
       categoryID: categoryID,
       envelope: 'New Envelope',
@@ -971,7 +1078,7 @@ ipcMain.on(channels.ADD_ENVELOPE, async (event, { categoryID }) => {
 ipcMain.on(channels.ADD_CATEGORY, async (event, { name }) => {
   console.log(channels.ADD_CATEGORY, name);
 
-  await knex('category')
+  await db('category')
     .insert({ category: name })
     .then()
     .catch((err) => {
@@ -987,11 +1094,11 @@ ipcMain.on(channels.DEL_CATEGORY, async (event, { id }) => {
   // Move any sub-envelopes to Uncategorized
   const uncategorizedID = await lookup_uncategorized();
 
-  await knex('envelope')
+  await db('envelope')
     .where('categoryID', id)
     .update('categoryID', uncategorizedID)
     .then(async () => {
-      await knex('category')
+      await db('category')
         .where({ id: id })
         .del()
         .then()
@@ -1005,7 +1112,7 @@ ipcMain.on(channels.DEL_CATEGORY, async (event, { id }) => {
 ipcMain.on(channels.DEL_ENVELOPE, async (event, { id }) => {
   console.log(channels.DEL_ENVELOPE, id);
 
-  await knex('envelope')
+  await db('envelope')
     .where({ id: id })
     .delete()
     .then()
@@ -1013,7 +1120,7 @@ ipcMain.on(channels.DEL_ENVELOPE, async (event, { id }) => {
       console.log('Error: ' + err);
     });
 
-  await knex('transaction')
+  await db('transaction')
     .where({ envelopeID: id })
     .update({ envelopeID: -1 })
     .then()
@@ -1021,7 +1128,7 @@ ipcMain.on(channels.DEL_ENVELOPE, async (event, { id }) => {
       console.log('Error: ' + err);
     });
 
-  await knex('keyword')
+  await db('keyword')
     .where({ envelopeID: id })
     .delete()
     .then()
@@ -1035,7 +1142,7 @@ ipcMain.on(channels.DEL_ENVELOPE, async (event, { id }) => {
 ipcMain.on(channels.HIDE_ENVELOPE, async (event, { id }) => {
   console.log(channels.HIDE_ENVELOPE, id);
 
-  await knex('envelope')
+  await db('envelope')
     .where({ id: id })
     .update({ isActive: 0 })
     .then()
@@ -1049,7 +1156,7 @@ ipcMain.on(channels.HIDE_ENVELOPE, async (event, { id }) => {
 ipcMain.on(channels.REN_CATEGORY, async (event, { id, name }) => {
   console.log(channels.REN_CATEGORY, id, name);
 
-  await knex('category')
+  await db('category')
     .where({ id: id })
     .update({ category: name })
     .then(() => {
@@ -1065,7 +1172,7 @@ ipcMain.on(channels.REN_CATEGORY, async (event, { id, name }) => {
 ipcMain.on(channels.REN_ENVELOPE, (event, { id, name }) => {
   console.log(channels.REN_ENVELOPE, id, name);
 
-  knex('envelope')
+  db('envelope')
     .where({ id: id })
     .update({ envelope: name })
     .then(() => {
@@ -1079,7 +1186,7 @@ ipcMain.on(channels.REN_ENVELOPE, (event, { id, name }) => {
 ipcMain.on(channels.MOV_ENVELOPE, (event, { id, newCatID }) => {
   console.log(channels.MOV_ENVELOPE, id, newCatID);
 
-  knex('envelope')
+  db('envelope')
     .where({ id: id })
     .update({ categoryID: newCatID })
     .then(() => {
@@ -1111,7 +1218,7 @@ ipcMain.on(
 );
 
 async function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
-  return await knex('transaction')
+  return await db('transaction')
     .select('id', 'txAmt')
     .where('envelopeID', newEnvelopeID)
     .andWhere('txDate', newtxDate)
@@ -1119,7 +1226,7 @@ async function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
     .then(async function (rows) {
       if (rows.length === 0) {
         // no matching records found
-        return await knex('transaction')
+        return await db('transaction')
           .insert({
             envelopeID: newEnvelopeID,
             txDate: newtxDate,
@@ -1129,7 +1236,7 @@ async function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
             isVisible: 1,
           })
           .then(async () => {
-            await knex.raw(
+            await db.raw(
               `UPDATE 'envelope' SET balance = balance + ` +
                 newtxAmt +
                 ` WHERE id = ` +
@@ -1141,7 +1248,7 @@ async function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
           });
       } else {
         // Already exist
-        await knex
+        await db
           .raw(
             `UPDATE 'envelope' SET balance = balance + ` +
               (newtxAmt - rows[0].txAmt) +
@@ -1149,7 +1256,7 @@ async function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
               newEnvelopeID
           )
           .then(async () => {
-            await knex('transaction')
+            await db('transaction')
               .update({ txAmt: newtxAmt })
               .where('id', rows[0].id)
               .then(() => {
@@ -1172,7 +1279,7 @@ async function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
 ipcMain.on(channels.UPDATE_BALANCE, (event, { id, newAmt }) => {
   console.log(channels.UPDATE_BALANCE, id, newAmt);
 
-  knex('envelope')
+  db('envelope')
     .update({ balance: newAmt })
     .where({ id: id })
     .then()
@@ -1184,29 +1291,25 @@ ipcMain.on(channels.UPDATE_BALANCE, (event, { id, newAmt }) => {
 ipcMain.on(channels.MOVE_BALANCE, (event, { transferAmt, fromID, toID }) => {
   console.log(channels.MOVE_BALANCE, transferAmt, fromID, toID);
 
-  knex
-    .raw(
-      `update 'envelope' set balance = balance - ` +
-        transferAmt +
-        ` where id = ` +
-        fromID
-    )
-    .then();
+  db.raw(
+    `update 'envelope' set balance = balance - ` +
+      transferAmt +
+      ` where id = ` +
+      fromID
+  ).then();
 
-  knex
-    .raw(
-      `update 'envelope' set balance = balance + ` +
-        transferAmt +
-        ` where id = ` +
-        toID
-    )
-    .then();
+  db.raw(
+    `update 'envelope' set balance = balance + ` +
+      transferAmt +
+      ` where id = ` +
+      toID
+  ).then();
 });
 
 ipcMain.on(channels.GET_CAT_ENV, (event, { onlyActive }) => {
   console.log(channels.GET_CAT_ENV);
-  if (knex) {
-    let query = knex
+  if (db) {
+    let query = db
       .select(
         'category.id as catID',
         'category.category',
@@ -1235,15 +1338,14 @@ ipcMain.on(channels.GET_CAT_ENV, (event, { onlyActive }) => {
 
 ipcMain.on(channels.GET_BUDGET_ENV, (event) => {
   console.log(channels.GET_BUDGET_ENV);
-  if (knex) {
-    knex
-      .select(
-        'category.id as catID',
-        'category.category',
-        'envelope.id as envID',
-        'envelope.envelope',
-        'envelope.balance as currBalance'
-      )
+  if (db) {
+    db.select(
+      'category.id as catID',
+      'category.category',
+      'envelope.id as envID',
+      'envelope.envelope',
+      'envelope.balance as currBalance'
+    )
       .from('envelope')
       .leftJoin('category', function () {
         this.on('category.id', '=', 'envelope.categoryID');
@@ -1259,8 +1361,7 @@ ipcMain.on(channels.GET_BUDGET_ENV, (event) => {
 
 ipcMain.on(channels.GET_PREV_BUDGET, (event, { find_date }) => {
   console.log(channels.GET_PREV_BUDGET);
-  knex
-    .select('envelopeID', 'txAmt')
+  db.select('envelopeID', 'txAmt')
     .from('transaction')
     .orderBy('envelopeID')
     .where({ isBudget: 1 })
@@ -1273,8 +1374,7 @@ ipcMain.on(channels.GET_PREV_BUDGET, (event, { find_date }) => {
 
 ipcMain.on(channels.GET_CUR_BUDGET, (event, { find_date }) => {
   console.log(channels.GET_CUR_BUDGET, find_date);
-  knex
-    .select('envelopeID', 'txAmt')
+  db.select('envelopeID', 'txAmt')
     .from('transaction')
     .orderBy('envelopeID')
     .where({ isBudget: 1 })
@@ -1291,8 +1391,7 @@ ipcMain.on(channels.GET_PREV_ACTUAL, (event, { find_date }) => {
   const month = dayjs(new Date(find_date)).format('MM');
   const year = dayjs(new Date(find_date)).format('YYYY');
 
-  knex
-    .select('envelopeID')
+  db.select('envelopeID')
     .sum({ totalAmt: 'txAmt' })
     .from('transaction')
     .orderBy('envelopeID')
@@ -1314,8 +1413,7 @@ ipcMain.on(channels.GET_CUR_ACTUAL, (event, { find_date }) => {
   const month = dayjs(new Date(find_date)).format('MM');
   const year = dayjs(new Date(find_date)).format('YYYY');
 
-  knex
-    .select('envelopeID')
+  db.select('envelopeID')
     .sum({ totalAmt: 'txAmt' })
     .from('transaction')
     .where({ isBudget: 0 })
@@ -1334,8 +1432,7 @@ ipcMain.on(channels.GET_CUR_ACTUAL, (event, { find_date }) => {
 ipcMain.on(channels.GET_CURR_BALANCE, (event) => {
   console.log(channels.GET_CURR_BALANCE);
 
-  knex
-    .select('id', 'balance')
+  db.select('id', 'balance')
     .from('envelope')
     .orderBy('id')
     .then((data) => {
@@ -1347,8 +1444,7 @@ ipcMain.on(channels.GET_CURR_BALANCE, (event) => {
 ipcMain.on(channels.GET_MONTHLY_AVG, (event, { find_date }) => {
   console.log(channels.GET_MONTHLY_AVG);
 
-  knex
-    .select('envelopeID')
+  db.select('envelopeID')
     .sum({ totalAmt: 'txAmt' })
     .min({ firstDate: 'txDate' })
     .from('transaction')
@@ -1390,8 +1486,8 @@ ipcMain.on(
       filterAmount
     );
 
-    if (knex) {
-      let query = knex
+    if (db) {
+      let query = db
         .select(
           'transaction.id as txID',
           'envelope.categoryID as catID',
@@ -1511,8 +1607,8 @@ ipcMain.on(
       filterAmount
     );
 
-    if (knex) {
-      let query = knex
+    if (db) {
+      let query = db
         .select(
           'transaction.id as txID',
           'envelope.categoryID as catID',
@@ -1665,7 +1761,7 @@ ipcMain.on(channels.ADD_TX, async (event, { data }) => {
   };
 
   // Insert the node
-  await knex('transaction').insert(myNode);
+  await db('transaction').insert(myNode);
 
   // Update the envelope balance
   await update_env_balance(data.txEnvID, data.txAmt);
@@ -1676,8 +1772,8 @@ ipcMain.on(channels.ADD_TX, async (event, { data }) => {
 ipcMain.on(channels.GET_ENV_LIST, (event, { onlyActive }) => {
   console.log(channels.GET_ENV_LIST);
 
-  if (knex) {
-    let query = knex
+  if (db) {
+    let query = db
       .select(
         'envelope.id as envID',
         'category.category as category',
@@ -1702,14 +1798,14 @@ ipcMain.on(channels.GET_ENV_LIST, (event, { onlyActive }) => {
 });
 
 async function update_tx_env(txID, envID) {
-  await knex
+  await db
     .select('id', 'txAmt', 'envelopeID')
     .from('transaction')
     .where({ id: txID })
     .then(async (rows) => {
       if (rows?.length) {
         if (rows[0].envelopeID > 0) {
-          await knex
+          await db
             .raw(
               `update 'envelope' set balance = balance - ` +
                 rows[0].txAmt +
@@ -1722,7 +1818,7 @@ async function update_tx_env(txID, envID) {
             });
         }
 
-        await knex
+        await db
           .raw(
             `update 'envelope' set balance = balance + ` +
               rows[0].txAmt +
@@ -1739,7 +1835,7 @@ async function update_tx_env(txID, envID) {
       console.log('Error: ' + err);
     });
 
-  await knex('transaction')
+  await db('transaction')
     .where({ id: txID })
     .update({ envelopeID: envID })
     .then(() => {
@@ -1759,7 +1855,7 @@ ipcMain.on(channels.UPDATE_TX_ENV, async (event, { txID, envID }) => {
 ipcMain.on(channels.UPDATE_TX_DESC, async (event, { txID, new_value }) => {
   console.log(channels.UPDATE_TX_DESC, txID, new_value);
 
-  knex('transaction')
+  db('transaction')
     .where({ id: txID })
     .update({ description: new_value })
     .then()
@@ -1771,8 +1867,7 @@ ipcMain.on(channels.UPDATE_TX_DESC, async (event, { txID, new_value }) => {
 ipcMain.on(channels.SAVE_KEYWORD, (event, { acc, envID, description }) => {
   console.log(channels.SAVE_KEYWORD, acc, envID, description);
 
-  knex
-    .from('keyword')
+  db.from('keyword')
     .delete()
     .where({ description: description })
     .then(() => {
@@ -1782,7 +1877,7 @@ ipcMain.on(channels.SAVE_KEYWORD, (event, { acc, envID, description }) => {
         description: description,
       };
 
-      knex('keyword')
+      db('keyword')
         .insert(node)
         .then()
         .catch((err) => {
@@ -1795,7 +1890,7 @@ ipcMain.on(channels.SAVE_KEYWORD, (event, { acc, envID, description }) => {
 });
 
 async function adjust_balance(txID, add_or_remove) {
-  await knex
+  await db
     .select('envelopeID', 'txAmt')
     .from('transaction')
     .where({ id: txID })
@@ -1812,7 +1907,7 @@ async function adjust_balance(txID, add_or_remove) {
 ipcMain.on(channels.SET_DUPLICATE, async (event, { txID, isDuplicate }) => {
   console.log(channels.SET_DUPLICATE, txID, isDuplicate);
 
-  await knex('transaction')
+  await db('transaction')
     .update({ isDuplicate: isDuplicate })
     .where({ id: txID })
     .catch((err) => {
@@ -1828,7 +1923,7 @@ ipcMain.on(channels.SET_DUPLICATE, async (event, { txID, isDuplicate }) => {
 ipcMain.on(channels.SET_VISIBILITY, async (event, { txID, isVisible }) => {
   console.log(channels.SET_VISIBILITY, txID, isVisible);
 
-  await knex('transaction')
+  await db('transaction')
     .update({ isVisible: isVisible })
     .where({ id: txID })
     .catch((err) => {
@@ -1846,7 +1941,7 @@ async function lookup_account(account) {
 
   // Lookup if we've already use this one
   if (account?.length) {
-    await knex
+    await db
       .select('id', 'account', 'refNumber')
       .from('account')
       .orderBy('account')
@@ -1857,7 +1952,7 @@ async function lookup_account(account) {
           accountID = data[0].id;
         } else {
           // If we haven't, lets store this one
-          await knex('account')
+          await db('account')
             .insert({ account: 'New Account', refNumber: account, isActive: 1 })
             .then((result) => {
               if (result?.length) {
@@ -1880,7 +1975,7 @@ async function lookup_plaid_account(account) {
 
   // Lookup if we've already use this one
   if (account?.length) {
-    await knex
+    await db
       .select('id', 'account', 'refNumber')
       .from('account')
       .orderBy('account')
@@ -1891,7 +1986,7 @@ async function lookup_plaid_account(account) {
           accountID = data[0].id;
         } else {
           // If we haven't, lets store this one
-          await knex('account')
+          await db('account')
             .insert({
               account: 'New Account',
               refNumber: account,
@@ -1919,7 +2014,7 @@ async function lookup_envelope(envelope, defaultCategoryID) {
 
   // Lookup if we've already use this one
   if (envelope?.length) {
-    await knex
+    await db
       .select('id', 'envelope')
       .from('envelope')
       .orderBy('id')
@@ -1930,7 +2025,7 @@ async function lookup_envelope(envelope, defaultCategoryID) {
           envelopeID = data[0].id;
         } else {
           // If we haven't, lets store this one
-          await knex('envelope')
+          await db('envelope')
             .insert({
               envelope: envelope,
               categoryID: defaultCategoryID,
@@ -1956,7 +2051,7 @@ async function lookup_envelope(envelope, defaultCategoryID) {
 async function lookup_uncategorized() {
   let categoryID = -1;
 
-  await knex
+  await db
     .select('id')
     .from('category')
     .where('category', 'Uncategorized')
@@ -1975,13 +2070,13 @@ async function lookup_keyword(accountID, description) {
   let envID = -1;
 
   if (description?.length) {
-    let query = knex('keyword')
+    let query = db('keyword')
       .select('envelopeID')
       .whereRaw(`? LIKE description`, description);
 
     query = query.andWhere(function () {
       this.where('account', 'All').orWhere({
-        account: knex('account').select('account').where('id', accountID),
+        account: db('account').select('account').where('id', accountID),
       });
     });
 
@@ -2007,7 +2102,7 @@ async function lookup_if_duplicate(
   if (refNumber?.length) {
     //console.log('Checking by refNumber');
 
-    await knex('transaction')
+    await db('transaction')
       .select('id')
       .andWhereRaw(`accountID = ?`, accountID)
       .andWhereRaw(`refNumber = ?`, refNumber)
@@ -2019,7 +2114,7 @@ async function lookup_if_duplicate(
       });
   } else {
     //console.log('Checking by other stuff');
-    await knex('transaction')
+    await db('transaction')
       .select('id')
       .where({ txAmt: txAmt })
       .andWhereRaw(`accountID = ?`, accountID)
@@ -2036,7 +2131,7 @@ async function lookup_if_duplicate(
 }
 
 async function update_env_balance(envID, amt) {
-  await knex
+  await db
     .raw(
       `UPDATE 'envelope' SET balance = balance + ` +
         amt +
@@ -2449,7 +2544,7 @@ async function basic_insert_transaction_node(
   };
 
   // Insert the node
-  await knex('transaction').insert(myNode);
+  await db('transaction').insert(myNode);
 
   // Update the envelope balance
   if (envID !== -1) {
@@ -2460,13 +2555,13 @@ async function basic_insert_transaction_node(
 }
 
 async function remove_transaction(txID) {
-  await knex
+  await db
     .select('id', 'envelopeID', 'txAmt', 'isDuplicate', 'isVisible')
     .from('transaction')
     .where({ id: txID })
     .then(async (data) => {
       if (data?.length) {
-        await knex('transaction').delete().where({ id: data[0].id });
+        await db('transaction').delete().where({ id: data[0].id });
         if (data[0].isVisible && !data[0].isDuplicate) {
           await update_env_balance(data[0].envelopeID, -1 * data[0].txAmt);
         }
@@ -2476,12 +2571,11 @@ async function remove_transaction(txID) {
 }
 
 async function basic_remove_transaction_node(access_token, refNumber) {
-  knex
-    .select(
-      'transaction.id as id',
-      'transaction.envelopeID as envelopeID',
-      'transaction.txAmt as txAmt'
-    )
+  db.select(
+    'transaction.id as id',
+    'transaction.envelopeID as envelopeID',
+    'transaction.txAmt as txAmt'
+  )
     .from('plaid_account')
     .join('account', 'account.plaid_id', 'plaid_account.account_id')
     .join('transaction', 'transaction.account_id', 'account.id')
@@ -2489,7 +2583,7 @@ async function basic_remove_transaction_node(access_token, refNumber) {
     .andWhere('transaction.refNumber', '=', refNumber)
     .then(async (data) => {
       if (data?.length) {
-        await knex('transaction').delete().where({ id: data[0].id });
+        await db('transaction').delete().where({ id: data[0].id });
         await update_env_balance(data[0].envelopeID, -1 * data[0].txAmt);
       }
     })
@@ -2544,7 +2638,7 @@ async function insert_transaction_node(
   };
 
   // Insert the node
-  await knex('transaction').insert(myNode);
+  await db('transaction').insert(myNode);
 
   // Update the envelope balance
   if (envID !== -1 && isDuplicate !== 1) {
@@ -2554,16 +2648,15 @@ async function insert_transaction_node(
 
 ipcMain.on(channels.GET_KEYWORDS, (event) => {
   console.log(channels.GET_KEYWORDS);
-  if (knex) {
-    knex
-      .select(
-        'keyword.id',
-        'keyword.envelopeID',
-        'description',
-        'category',
-        'envelope',
-        'account'
-      )
+  if (db) {
+    db.select(
+      'keyword.id',
+      'keyword.envelopeID',
+      'description',
+      'category',
+      'envelope',
+      'account'
+    )
       .from('keyword')
       .leftJoin('envelope', function () {
         this.on('keyword.envelopeID', '=', 'envelope.id');
@@ -2580,9 +2673,8 @@ ipcMain.on(channels.GET_KEYWORDS, (event) => {
 
 ipcMain.on(channels.GET_ACCOUNT_NAMES, (event) => {
   console.log(channels.GET_ACCOUNT_NAMES);
-  if (knex) {
-    knex
-      .select('account')
+  if (db) {
+    db.select('account')
       .from('account')
       .orderBy('account')
       .groupBy('account')
@@ -2595,9 +2687,8 @@ ipcMain.on(channels.GET_ACCOUNT_NAMES, (event) => {
 
 ipcMain.on(channels.GET_ACCOUNTS, (event) => {
   console.log(channels.GET_ACCOUNTS);
-  if (knex) {
-    knex
-      .select('account.id', 'account.refNumber', 'account', 'isActive')
+  if (db) {
+    db.select('account.id', 'account.refNumber', 'account', 'isActive')
       .max({ lastTx: 'txDate' })
       .from('account')
       .leftJoin('transaction', function () {
@@ -2617,7 +2708,7 @@ ipcMain.on(channels.GET_ACCOUNTS, (event) => {
 
 ipcMain.on(channels.UPDATE_KEYWORD_ENV, (event, { id, new_value }) => {
   console.log(channels.GET_KEYWORDS, { id, new_value });
-  knex('keyword')
+  db('keyword')
     .update({ envelopeID: new_value })
     .where({ id: id })
     .catch((err) => console.log(err));
@@ -2625,7 +2716,7 @@ ipcMain.on(channels.UPDATE_KEYWORD_ENV, (event, { id, new_value }) => {
 
 ipcMain.on(channels.UPDATE_KEYWORD_ACC, (event, { id, new_value }) => {
   console.log(channels.UPDATE_KEYWORD_ACC, { id, new_value });
-  knex('keyword')
+  db('keyword')
     .update({ account: new_value })
     .where({ id: id })
     .catch((err) => console.log(err));
@@ -2634,18 +2725,17 @@ ipcMain.on(channels.UPDATE_KEYWORD_ACC, (event, { id, new_value }) => {
 ipcMain.on(channels.SET_ALL_KEYWORD, (event, { id, force }) => {
   console.log(channels.SET_ALL_KEYWORD, { id });
 
-  knex
-    .select('envelopeID', 'description', 'account')
+  db.select('envelopeID', 'description', 'account')
     .from('keyword')
     .where({ id: id })
     .then((data) => {
-      let query = knex('transaction')
+      let query = db('transaction')
         .update({ envelopeID: data[0].envelopeID })
         .whereRaw(`description LIKE ?`, data[0].description);
 
       if (data[0].account !== 'All') {
         query = query.andWhere({
-          accountID: knex('account')
+          accountID: db('account')
             .select('id')
             .where('account', data[0].account),
         });
@@ -2662,7 +2752,7 @@ ipcMain.on(channels.SET_ALL_KEYWORD, (event, { id, force }) => {
 ipcMain.on(channels.DEL_KEYWORD, async (event, { id }) => {
   console.log(channels.DEL_KEYWORD, { id });
 
-  await knex('keyword')
+  await db('keyword')
     .delete()
     .where({ id: id })
     .catch((err) => console.log(err));
@@ -2672,7 +2762,7 @@ ipcMain.on(channels.DEL_KEYWORD, async (event, { id }) => {
 
 ipcMain.on(channels.UPDATE_KEYWORD, (event, { id, new_value }) => {
   console.log(channels.UPDATE_KEYWORD, { id, new_value });
-  knex('keyword')
+  db('keyword')
     .update({ description: new_value })
     .where({ id: id })
     .catch((err) => console.log(err));
@@ -2680,7 +2770,7 @@ ipcMain.on(channels.UPDATE_KEYWORD, (event, { id, new_value }) => {
 
 ipcMain.on(channels.UPDATE_ACCOUNT, (event, { id, new_value }) => {
   console.log(channels.UPDATE_ACCOUNT, { id, new_value });
-  knex('account')
+  db('account')
     .update({ account: new_value })
     .where({ id: id })
     .catch((err) => console.log(err));
@@ -2688,7 +2778,7 @@ ipcMain.on(channels.UPDATE_ACCOUNT, (event, { id, new_value }) => {
 
 ipcMain.on(channels.DEL_ACCOUNT, async (event, { id, value }) => {
   console.log(channels.DEL_ACCOUNT, { id, value });
-  await knex('account')
+  await db('account')
     .update({ isActive: value })
     .where({ id: id })
     .catch((err) => console.log(err));
@@ -2706,9 +2796,9 @@ ipcMain.on(
     const filterType = filterEnvID.substr(0, 3);
     const envID = filterEnvID.substr(3);
 
-    let query = knex('transaction')
+    let query = db('transaction')
       .select({
-        month: knex.raw(`strftime("%Y/%m", txDate)`),
+        month: db.raw(`strftime("%Y/%m", txDate)`),
         isBudget: 'isBudget',
       })
       .sum({ totalAmt: 'txAmt' })
@@ -2758,8 +2848,8 @@ ipcMain.on(
 
 ipcMain.on(channels.GET_DB_VER, (event) => {
   console.log(channels.GET_DB_VER);
-  if (knex) {
-    knex('version')
+  if (db) {
+    db('version')
       .select('version')
       .then((data) => {
         event.sender.send(channels.LIST_DB_VER, data);
