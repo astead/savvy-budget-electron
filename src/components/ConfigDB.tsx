@@ -26,13 +26,15 @@ export const ConfigDB = () => {
   const [secret, setSecret] = useState('');
   const [secretTemp, setSecretTemp] = useState('');
   const [driveFileId, setDriveFileId] = useState<any>(null);
-  const [driveFile, setDriveFile] = useState('');
   const [lockFileExists, setLockFileExists] = useState(false);
 
  
   const check_database_file = (my_databaseFile) => {
     //console.log("Checking DB file: ", my_databaseFile);
     if (my_databaseFile?.length) {
+      setDatabaseExists(false);
+      setDatabaseVersion('');
+
       // Check if the database exists
       const ipcRenderer = (window as any).ipcRenderer;
       const fs = ipcRenderer.require('fs')
@@ -48,11 +50,7 @@ export const ConfigDB = () => {
         ipcRenderer.send(channels.SET_DB_PATH, { DBPath: my_databaseFile });
 
         get_db_version();
-      } else {
-        //console.log("file does not exist");
-        setDatabaseExists(false);
-        setDatabaseVersion('');
-      }
+      } 
     }
   };
 
@@ -87,11 +85,22 @@ export const ConfigDB = () => {
     setUsingGoogleDrive(useDrive);
     if (useDrive) {
       // Setup everything.
-      if (!client) {
-        handleAuthClick();
-      } else {
-        handleGetFile();
+      if (credentials) {
+        if (!client) {
+          handleAuthClick();
+        } else {
+          handleGetFile();
+        }
       }
+    } else {
+      // TODO: Need to communicate this down to the main thread
+      // so it doesn't try and upload upon close.
+      const ipcRenderer = (window as any).ipcRenderer;
+      ipcRenderer.send(channels.DRIVE_STOP_USING);
+      
+      localStorage.setItem('databaseFile', JSON.stringify(''));
+      localStorage.setItem('drive-file', JSON.stringify(''));
+      setDatabaseFile('');
     }
   }
 
@@ -121,7 +130,6 @@ export const ConfigDB = () => {
   };
   
   const handleDeleteLock = async () => {
-    console.log("handleDeleteLock");
     if (client) {
         const ipcRenderer = (window as any).ipcRenderer;
         ipcRenderer.send(channels.DRIVE_DELETE_LOCK, { credentials: credentials, tokens: client});
@@ -138,20 +146,30 @@ export const ConfigDB = () => {
       ipcRenderer.send(channels.DRIVE_GET_FILE, { credentials: credentials, tokens: client });
       
       // Receive the data
-      ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, (return_obj) => {
-        if (return_obj.fileName) {
-          console.log("We got the file");
-          check_database_file(return_obj.fileName);
-          setDriveFile(return_obj.fileName);
+      ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, ({fileName, error}) => {
+        //let removeListeners = true;
+        if (fileName) {
+
+          localStorage.setItem('databaseFile', JSON.stringify(fileName));
+          setDatabaseFile(fileName);
+
+
+          console.log("We got the file: ", fileName);
+          check_database_file(fileName);
         }
-        if (return_obj.error) {
-          console.log("Error getting the file: " + return_obj.error);
-          if (return_obj.error.startsWith('Lock file already exists')) {
+        if (error) {
+          console.log("Error getting the file: " + error);
+          if (error.startsWith('Lock file already exists')) {
             setLockFileExists(true);
           }
+          //if (error.startsWith('Another thread is trying to get the DB file')) {
+          //  removeListeners = false;
+          //}
         }
 
-        ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
+        //if (removeListeners) {
+          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
+        //}
       });
 
       // Clean the listener after the component is dismounted
@@ -174,9 +192,9 @@ export const ConfigDB = () => {
       ipcRenderer.on(channels.DRIVE_DONE_LIST_FILES, ({file_list}) => {
         console.log(file_list);
         if (file_list?.length > 0) {
-          setDriveFileId(file_list[0]);
+          //setDriveFileId(file_list[0]);
         }
-        localStorage.setItem('drive-file', JSON.stringify({ fileId: file_list[0] }));
+        
         ipcRenderer.removeAllListeners(channels.DRIVE_DONE_LIST_FILES);
       });
 
@@ -190,7 +208,7 @@ export const ConfigDB = () => {
   
   const handleAuthClick = async () => {
     if (!credentials) {
-      console.error('Please upload the credentials file.');
+      console.log('Please upload the credentials file.');
       return;
     }
     
@@ -206,7 +224,7 @@ export const ConfigDB = () => {
       setClient(return_creds);
       localStorage.setItem('drive-client', JSON.stringify({ client: return_creds }));
 
-      handleListFiles();
+      //handleListFiles();
       ipcRenderer.removeAllListeners(channels.DRIVE_DONE_AUTH);
     });
 
@@ -289,14 +307,6 @@ export const ConfigDB = () => {
       }
     }
 
-    const drive_file_str = localStorage.getItem('drive-file');
-    if (drive_file_str?.length) {
-      const drive_file = JSON.parse(drive_file_str);
-      if (drive_file) {
-        setDriveFile(drive_file.fileId);
-      }
-    }
-
     const using_Drive_str = localStorage.getItem('use-Google-Drive');
     if (using_Drive_str?.length) {
       const using_Drive = JSON.parse(using_Drive_str);
@@ -369,7 +379,7 @@ export const ConfigDB = () => {
       </td>
       <td className="Table TC Left">
         <button 
-          className="textButton"
+          className="textButton GDrive"
           style={{ height: 'minHeight', paddingTop: '0px', paddingBottom: '0px', minHeight:''}}
           onClick={() => {
             const ipcRenderer = (window as any).ipcRenderer;
@@ -397,12 +407,17 @@ export const ConfigDB = () => {
     </tr>
     <tr className="TR">
       <td className="Table TC Right">
-        <span>Google Drive:</span>
+        <span>Google Drive:</span><br/><br/>
+        To use Google Drive, you should have<br/>
+        a Google API project setup.<br/>
+        Go to '<a href='https://console.cloud.google.com'>Google Cloud Console</a>' in order to do this.<br/>
+        Your return URL in the JSON<br/>
+        should be set to: http://127.0.0.1:3001
       </td>
       <td className="Table TC Left">
         <button onClick={() => {
           handleUseDrive(usingGoogleDrive ? false : true);
-          }} className="textButton">
+          }} className="textButton GDrive">
           { usingGoogleDrive ? "Stop Using Google Drive" : "Use Google Drive" }
         </button>
         { usingGoogleDrive &&
@@ -444,9 +459,13 @@ export const ConfigDB = () => {
               </tr>
             </tbody></table>
             <br/>
-            <button onClick={handleAuthClick} className="textButton">Authorize Google Drive</button>
-            <br/>
-            <button onClick={handleGetFile} className="textButton">Get DB from Google Drive</button>
+            <button onClick={handleAuthClick} className="textButton GDrive">Authorize Google Drive</button>
+            { client && 
+              <>
+                <br/>
+                <button onClick={handleGetFile} className="textButton GDrive">Get DB from Google Drive</button>
+              </>
+            }
             { lockFileExists && 
               <>
                 <br/>
@@ -454,15 +473,17 @@ export const ConfigDB = () => {
                 If you are confident no one is using the database, <br/>
                 delete the lock files with the button below and <br/>
                 try getting the database again.<br/>
-                <button onClick={handleDeleteLock} className="textButton">Delete Lock File</button>
+                <button onClick={handleDeleteLock} className="textButton GDrive">Delete Lock File</button>
               </>
             }
-            { driveFile && databaseVersion &&
+            { databaseFile && databaseVersion &&
               <>
                 <br/>
-                <button onClick={handlePushFile} className="textButton">Upload File</button>
+                <button onClick={handlePushFile} className="textButton GDrive">Upload DB back to Google Drive</button>
               </>
             }
+            <br/>databaseFile: |{ databaseFile }|
+            <br/>databaseVersion: |{ databaseVersion }|
           </>
         }
       </td>

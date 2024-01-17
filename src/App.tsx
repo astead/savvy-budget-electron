@@ -43,13 +43,15 @@ export const App: React.FC = () => {
         ipcRenderer.send(channels.DRIVE_GET_FILE, { credentials: credentials, tokens: client });
         
         // Receive the data
-        ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, (return_obj) => {
-          if (return_obj.fileName) {
-            console.log("We got the file");
-            check_database_file(return_obj.fileName);
+        ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, ({fileName, error}) => {
+          if (fileName) {
+            console.log("We got the file: ", fileName);
+            localStorage.setItem('databaseFile', JSON.stringify(fileName));
+    
+            check_database_file(fileName);
           }
-          if (return_obj.error) {
-            console.log("Error getting the file: " + return_obj.error);
+          if (error) {
+            console.log("Error getting the file: " + error);
           }
 
           ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);

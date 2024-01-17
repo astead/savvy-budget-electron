@@ -286,6 +286,10 @@ button.textButton {
   padding-right: 4px;
 }
 
+button.GDrive {
+  width: 250px;
+}
+
 button.TabButton {
 
 }

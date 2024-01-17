@@ -27,6 +27,7 @@ let googleClient = null;
 let googleFileID = null;
 let haveGoogleDriveFile = false;
 let googleGettingFile = false;
+let googleDrivefileName = null;
 
 /*
   TODO:
@@ -587,7 +588,7 @@ const drive_authenticate = async (credentials) => {
     idToken: oAuth2Client.credentials.id_token,
     audience: credentials.installed.client_id,
   });
-  console.log('ticket:' + ticket);
+  console.log('got token:' + ticket);
 
   // After acquiring an access_token, you may want to check on the audience, expiration,
   // or original scopes requested.  You can do that with the `getTokenInfo` method.
@@ -794,6 +795,7 @@ const push_GDrive_file = async () => {
     googleClient = null;
     googleFileID = null;
     haveGoogleDriveFile = false;
+    googleDrivefileName = null;
     await db.destroy();
   } catch (err) {
     // TODO(developer) - Handle error
@@ -809,6 +811,7 @@ const get_GDrive_file = async () => {
 
     if (!googleAuth) {
       googleGettingFile = false;
+      console.log('We could not get the google authorization');
       return {
         error: 'We could not get the google authorization',
         fileName: '',
@@ -816,6 +819,7 @@ const get_GDrive_file = async () => {
     }
     if (!googleClient) {
       googleGettingFile = false;
+      console.log('We do not have the google service running');
       return {
         error: 'We do not have the google service running',
         fileName: '',
@@ -886,6 +890,8 @@ const get_GDrive_file = async () => {
           // Use the DB
           set_db(fileName);
 
+          googleDrivefileName = fileName;
+
           // Create a lock file
           await create_lock_file();
 
@@ -893,15 +899,18 @@ const get_GDrive_file = async () => {
           haveGoogleDriveFile = true;
           googleGettingFile = false;
 
+          console.log('Success return!');
           return { fileName: fileName, error: '' };
         } catch (err) {
           // TODO(developer) - Handle error
           console.log(err);
           googleGettingFile = false;
+          console.log('Try catch error:', err);
           return { error: err, fileName: '' };
         }
       } else {
         googleGettingFile = false;
+        console.log('Lock file already exists');
         return {
           error:
             'Lock file already exists (found ' +
@@ -912,11 +921,19 @@ const get_GDrive_file = async () => {
       }
     } else {
       googleGettingFile = false;
+      console.log('We could not get the fileId');
       return {
         error: 'We could not get the fileId',
         fileName: '',
       };
     }
+  } else {
+    googleGettingFile = false;
+    console.log('We already have the file');
+    return {
+      error: '',
+      fileName: googleDrivefileName,
+    };
   }
 };
 
@@ -950,12 +967,25 @@ ipcMain.on(channels.DRIVE_GET_FILE, async (event, { credentials, tokens }) => {
       await get_GDrive_file(credentials, tokens)
     );
   } else {
-    console.log('Getting the drive file is already running.');
-    event.sender.send(channels.DRIVE_DONE_GET_FILE, {
-      error: 'Getting drive file already running.',
-      fileName: '',
-    });
+    console.log('Another thread is trying to get the DB file.');
+    //event.sender.send(channels.DRIVE_DONE_GET_FILE, {
+    //  error: 'Another thread is trying to get the DB file.',
+    //  fileName: '',
+    //});
   }
+});
+
+ipcMain.on(channels.DRIVE_STOP_USING, async (event) => {
+  console.log(channels.DRIVE_STOP_USING);
+  await delete_lock_file();
+  usingGoogleDrive = false;
+  googleCredentials = null;
+  googleTokens = null;
+  googleAuth = null;
+  googleClient = null;
+  googleFileID = null;
+  haveGoogleDriveFile = false;
+  googleDrivefileName = null;
 });
 
 ipcMain.on(
@@ -1015,7 +1045,7 @@ function getAuthenticatedClient(credentials) {
           //console.log('index is  > -1');
 
           // acquire the code from the querystring, and close the web server.
-          const qs = new url.URL(req.url, 'http://localhost:3001').searchParams;
+          const qs = new url.URL(req.url, 'http://127.0.0.1:3001').searchParams;
           const code = qs.get('code');
           console.log(`Code is ${code}`);
           res.end('Authentication successful! Please close this window.');
@@ -3058,6 +3088,8 @@ ipcMain.on(channels.GET_DB_VER, (event) => {
       .then((data) => {
         event.sender.send(channels.LIST_DB_VER, data);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        event.sender.send(channels.LIST_DB_VER, null);
+      });
   }
 });

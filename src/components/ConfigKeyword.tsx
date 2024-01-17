@@ -174,6 +174,7 @@ export const ConfigKeyword = () => {
     load_keywords();
     load_account_list();
     load_envelope_list();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!keywordData?.length) {
