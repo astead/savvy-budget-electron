@@ -47,8 +47,13 @@ export const ConfigAccount = () => {
     load_accounts();
   }, []);
 
+  if (!accountData?.length) {
+    return (
+      <></>
+    );
+  }
+
   return (
-        
     <table className="Table" cellSpacing={0} cellPadding={0}>
     <thead>
       <tr className="Table THR">

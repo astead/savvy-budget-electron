@@ -564,7 +564,7 @@ export const Envelopes: React.FC = () => {
         {<Header currTab="Envelopes"/>}
       </header>
       <div className="mainContent">
-        {gotMonthData &&
+        {gotMonthData && loaded &&
           <MonthSelector numMonths="10" startMonth={myStartMonth} curIndex={myCurIndex} parentCallback={monthSelectorCallback} />
         }
         <br/>

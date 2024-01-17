@@ -365,7 +365,7 @@ export const Charts: React.FC = () => {
             />
           </div>
         }
-        {filterTimeFrameLoaded &&
+        {filterTimeFrameLoaded && filterEnvListLoaded &&
           <div className="chart-filter-container">
             <span>Time: </span>
             <DropDown 

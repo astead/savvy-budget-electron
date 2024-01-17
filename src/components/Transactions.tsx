@@ -552,7 +552,8 @@ export const Transactions: React.FC = () => {
         {<Header currTab="Transactions"/>}
       </header>
       <div className="mainContent">
-        <Accordion>
+        { newTxEnvListLoaded && newTxAccListLoaded &&
+          <Accordion>
           <AccordionSummary
             expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
             aria-controls="filter-content"
@@ -562,7 +563,6 @@ export const Transactions: React.FC = () => {
             Add / Import / Export
           </AccordionSummary>
           <AccordionDetails sx={{textAlign: 'left'}}>
-            {newTxEnvListLoaded && newTxAccListLoaded &&
             <>
             <div>
               <span className="bold">Add Transaction:</span><br/>
@@ -657,8 +657,6 @@ export const Transactions: React.FC = () => {
               }
             </div>
             <br/>
-            </>
-            }
             <div>
               <span className="bold">Import Transactions:</span><br/>
               <input
@@ -691,8 +689,10 @@ export const Transactions: React.FC = () => {
                 </Box>
               }
             </div>
+            </>
           </AccordionDetails>
           </Accordion>
+        }
         {filterEnvListLoaded && filterAccListLoaded && filterCatListLoaded &&
           <Accordion>
           <AccordionSummary

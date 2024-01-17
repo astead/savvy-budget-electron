@@ -176,6 +176,12 @@ export const ConfigKeyword = () => {
     load_envelope_list();
   }, []);
 
+  if (!keywordData?.length) {
+    return (
+      <></>
+    );
+  }
+
   return (
     <table className="Table" cellSpacing={0} cellPadding={0}>
       <thead>

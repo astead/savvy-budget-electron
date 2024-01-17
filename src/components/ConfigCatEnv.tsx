@@ -24,7 +24,9 @@ export const ConfigCatEnv = () => {
       const sortedData = Object.values(groupedData).sort(compareCategory);
 
       setCatData([...sortedData]);
-      setLoaded(true);
+      if (sortedData?.length) {
+        setLoaded(true);
+      }
 
       ipcRenderer.removeAllListeners(channels.LIST_CAT_ENV);
     });
@@ -201,6 +203,10 @@ export const ConfigCatEnv = () => {
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!loaded) {
+    return (<></>);
+  }
 
   return (
     <>
