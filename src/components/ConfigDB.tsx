@@ -28,7 +28,7 @@ export const ConfigDB = () => {
   const [driveFileId, setDriveFileId] = useState<any>(null);
   const [lockFileExists, setLockFileExists] = useState(false);
 
- 
+
   const check_database_file = (my_databaseFile) => {
     //console.log("Checking DB file: ", my_databaseFile);
     if (my_databaseFile?.length) {
@@ -38,7 +38,7 @@ export const ConfigDB = () => {
       // Check if the database exists
       const ipcRenderer = (window as any).ipcRenderer;
       const fs = ipcRenderer.require('fs')
-      
+
       if (fs.existsSync(my_databaseFile)) {
         //console.log("file exists");
         setDatabaseFile(my_databaseFile);
@@ -50,7 +50,7 @@ export const ConfigDB = () => {
         ipcRenderer.send(channels.SET_DB_PATH, { DBPath: my_databaseFile });
 
         get_db_version();
-      } 
+      }
     }
   };
 
@@ -75,12 +75,12 @@ export const ConfigDB = () => {
       ipcRenderer.removeAllListeners(channels.LIST_DB_VER);
     };
   };
-  
+
   const handleUseDrive = async (useDrive) => {
-    
+
     localStorage.setItem(
-      'use-Google-Drive', 
-      JSON.stringify({useGDrive: useDrive})
+      'use-Google-Drive',
+      JSON.stringify({ useGDrive: useDrive })
     );
     setUsingGoogleDrive(useDrive);
     if (useDrive) {
@@ -97,7 +97,7 @@ export const ConfigDB = () => {
       // so it doesn't try and upload upon close.
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.DRIVE_STOP_USING);
-      
+
       localStorage.setItem('databaseFile', JSON.stringify(''));
       localStorage.setItem('drive-file', JSON.stringify(''));
       setDatabaseFile('');
@@ -109,7 +109,7 @@ export const ConfigDB = () => {
       if (driveFileId) {
         const ipcRenderer = (window as any).ipcRenderer;
         ipcRenderer.send(channels.DRIVE_PUSH_FILE, { credentials: credentials, tokens: client, fileId: driveFileId.id });
-        
+
         // Receive the data
         ipcRenderer.on(channels.DRIVE_DONE_PUSH_FILE, () => {
           console.log("Done pushing the file");
@@ -128,25 +128,25 @@ export const ConfigDB = () => {
       console.log("Don't have client");
     }
   };
-  
+
   const handleDeleteLock = async () => {
     if (client) {
-        const ipcRenderer = (window as any).ipcRenderer;
-        ipcRenderer.send(channels.DRIVE_DELETE_LOCK, { credentials: credentials, tokens: client});
-        setLockFileExists(false);
+      const ipcRenderer = (window as any).ipcRenderer;
+      ipcRenderer.send(channels.DRIVE_DELETE_LOCK, { credentials: credentials, tokens: client });
+      setLockFileExists(false);
     } else {
       console.log("Don't have client");
     }
   };
-  
+
   const handleGetFile = async () => {
     if (client) {
       setLockFileExists(false);
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.DRIVE_GET_FILE, { credentials: credentials, tokens: client });
-      
+
       // Receive the data
-      ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, ({fileName, error}) => {
+      ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, ({ fileName, error }) => {
         //let removeListeners = true;
         if (fileName) {
 
@@ -168,7 +168,7 @@ export const ConfigDB = () => {
         }
 
         //if (removeListeners) {
-          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
+        ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
         //}
       });
 
@@ -178,7 +178,7 @@ export const ConfigDB = () => {
       };
     }
   };
-  
+
   const handleListFiles = async () => {
     if (client) {
 
@@ -187,14 +187,14 @@ export const ConfigDB = () => {
 
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.DRIVE_LIST_FILES, { credentials: credentials, tokens: client });
-      
+
       // Receive the data
-      ipcRenderer.on(channels.DRIVE_DONE_LIST_FILES, ({file_list}) => {
+      ipcRenderer.on(channels.DRIVE_DONE_LIST_FILES, ({ file_list }) => {
         console.log(file_list);
         if (file_list?.length > 0) {
           //setDriveFileId(file_list[0]);
         }
-        
+
         ipcRenderer.removeAllListeners(channels.DRIVE_DONE_LIST_FILES);
       });
 
@@ -204,22 +204,22 @@ export const ConfigDB = () => {
       };
     }
   };
-  
-  
+
+
   const handleAuthClick = async () => {
     if (!credentials) {
       console.log('Please upload the credentials file.');
       return;
     }
-    
+
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.DRIVE_AUTH, {
-      privateCreds: { clientEmail: clientID, privateKey: secret}, 
+      privateCreds: { clientEmail: clientID, privateKey: secret },
       credentials: credentials
     });
-    
-     // Receive the data
-     ipcRenderer.on(channels.DRIVE_DONE_AUTH, ({ return_creds }) => {
+
+    // Receive the data
+    ipcRenderer.on(channels.DRIVE_DONE_AUTH, ({ return_creds }) => {
       console.log(return_creds);
       setClient(return_creds);
       localStorage.setItem('drive-client', JSON.stringify({ client: return_creds }));
@@ -257,10 +257,10 @@ export const ConfigDB = () => {
     const fs = ipcRenderer.require('fs')
     fs.readFile(credentialsFile, 'utf8', (err, data) => {
       if (err) throw err;
-      
+
       const tmpCreds = JSON.parse(data.trim());
       setCredentials(tmpCreds);
-      
+
       localStorage.setItem('drive-info', JSON.stringify({ clientID: clientID, secret: secret, creds: tmpCreds }));
     });
   }
@@ -280,7 +280,7 @@ export const ConfigDB = () => {
         // Check if the database exists
         const ipcRenderer = (window as any).ipcRenderer;
         const fs = ipcRenderer.require('fs')
-        
+
         if (fs.existsSync(my_databaseFile)) {
           setDatabaseFile(my_databaseFile);
           setDatabaseExists(true);
@@ -319,179 +319,177 @@ export const ConfigDB = () => {
 
   return (
     <>
-    <table className="Table" cellSpacing={0} cellPadding={0}>
-      <tbody>
-    {databaseFile &&
-      <tr className="TR">
-        <td className="Table TC Right">Database:</td>
-        <td className="Table TC Left">{databaseFile}</td>
-      </tr>
-    }
-    {databaseFile && !databaseExists &&
-      <tr className="TR">
-        <td className="Table TC Right">Status:</td>
-        <td className="Table TC Left">The database file does not exist.</td>
-      </tr>
-    }
-    {databaseFile && databaseExists && !databaseVersion &&
-      <tr className="TR">
-        <td className="Table TC Right">Status:</td>
-        <td className="Table TC Left">Could not read from the database, try getting it again or selecting a new one.</td>
-      </tr>
-    }
-    {databaseFile && databaseExists && databaseVersion &&
-      <tr className="TR">
-        <td className="Table TC Right">Status:</td>
-        <td className="Table TC Left">Database version: {databaseVersion}</td>
-      </tr>
-    }
-    </tbody>
-    </table>
-    {databaseFile && <><br/><br/></>}
-    <table className="Table" cellSpacing={0} cellPadding={0}><tbody>
-    <tr className="TR">
-      <td className="Table TC Right">
-        {!databaseFile && 
-          <span>Select local database file:</span>
-        }
-        {databaseFile && 
-          <span>Select a different local database file:</span>
-        }
-      </td>
-      <td className="Table TC Left">
-        <input
-          type="file"
-          name="file"
-          className="import-file"
-          onChange={(e) => {
-            if (e.target.files) {
-              // TODO: in this case should we upload back to Drive what we were using if we were?
-              handleUseDrive(false);
-              check_database_file(e.target.files[0].path);
+      <table className="Table" cellSpacing={0} cellPadding={0}>
+        <tbody>
+          {databaseFile &&
+            <tr className="TR">
+              <td className="Table TC Right">Database:</td>
+              <td className="Table TC Left">{databaseFile}</td>
+            </tr>
+          }
+          {databaseFile && !databaseExists &&
+            <tr className="TR">
+              <td className="Table TC Right">Status:</td>
+              <td className="Table TC Left">The database file does not exist.</td>
+            </tr>
+          }
+          {databaseFile && databaseExists && !databaseVersion &&
+            <tr className="TR">
+              <td className="Table TC Right">Status:</td>
+              <td className="Table TC Left">Could not read from the database, try getting it again or selecting a new one.</td>
+            </tr>
+          }
+          {databaseFile && databaseExists && databaseVersion &&
+            <tr className="TR">
+              <td className="Table TC Right">Status:</td>
+              <td className="Table TC Left">Database version: {databaseVersion}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      {databaseFile && <><br /><br /></>}
+      <table className="Table" cellSpacing={0} cellPadding={0}><tbody>
+        <tr className="TR">
+          <td className="Table TC Right">
+            {!databaseFile &&
+              <span>Select local database file:</span>
             }
-          }}          
-        />
-      </td>
-    </tr>
-    <tr className="TR">
-      <td className="Table TC Right">
-        <span>Create a new local database file:</span>
-      </td>
-      <td className="Table TC Left">
-        <button 
-          className="textButton GDrive"
-          style={{ height: 'minHeight', paddingTop: '0px', paddingBottom: '0px', minHeight:''}}
-          onClick={() => {
-            const ipcRenderer = (window as any).ipcRenderer;
-            ipcRenderer.send(channels.CREATE_DB);
+            {databaseFile &&
+              <span>Select a different local database file:</span>
+            }
+          </td>
+          <td className="Table TC Left">
+            <input
+              type="file"
+              name="file"
+              className="import-file"
+              onChange={(e) => {
+                if (e.target.files) {
+                  // TODO: in this case should we upload back to Drive what we were using if we were?
+                  handleUseDrive(false);
+                  check_database_file(e.target.files[0].path);
+                }
+              }}
+            />
+          </td>
+        </tr>
+        <tr className="TR">
+          <td className="Table TC Right">
+            <span>Create a new local database file:</span>
+          </td>
+          <td className="Table TC Left">
+            <button
+              className="textButton GDrive"
+              style={{ height: 'minHeight', paddingTop: '0px', paddingBottom: '0px', minHeight: '' }}
+              onClick={() => {
+                const ipcRenderer = (window as any).ipcRenderer;
+                ipcRenderer.send(channels.CREATE_DB);
 
-            // Receive the new filename
-            ipcRenderer.on(channels.LIST_NEW_DB_FILENAME, (arg) => {
-              if (arg?.length > 0) {
-                // TODO: in this case should we upload back to Drive what we were using if we were?
-                handleUseDrive(false);
-                check_database_file(arg);
-              }
+                // Receive the new filename
+                ipcRenderer.on(channels.LIST_NEW_DB_FILENAME, (arg) => {
+                  if (arg?.length > 0) {
+                    // TODO: in this case should we upload back to Drive what we were using if we were?
+                    handleUseDrive(false);
+                    check_database_file(arg);
+                  }
 
-              ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
-            });
+                  ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
+                });
 
-            // Clean the listener after the component is dismounted
-            return () => {
-              ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
-            };
-          }}>
-            Create New
-        </button>
-      </td>
-    </tr>
-    <tr className="TR">
-      <td className="Table TC Right">
-        <span>Google Drive:</span><br/><br/>
-        To use Google Drive, you should have<br/>
-        a Google API project setup.<br/>
-        Go to '<a href='https://console.cloud.google.com'>Google Cloud Console</a>' in order to do this.<br/>
-        Your return URL in the JSON<br/>
-        should be set to: http://127.0.0.1:3001
-      </td>
-      <td className="Table TC Left">
-        <button onClick={() => {
-          handleUseDrive(usingGoogleDrive ? false : true);
-          }} className="textButton GDrive">
-          { usingGoogleDrive ? "Stop Using Google Drive" : "Use Google Drive" }
-        </button>
-        { usingGoogleDrive &&
-          <>
-            <br/>
-            <input type="file" accept=".json" onChange={handleFileChange} />
-          </>
-        }
-        { usingGoogleDrive && credentials &&
-          <>
-            <table><tbody>
-              <tr>
-                <td className="txFilterLabelCell">
-                  Client Email:
-                </td>
-                <td className="txFilterCell">
-                  <input
-                    name="DRIVEClient"
-                    defaultValue={clientID}
-                    onChange={(e) => setClientTemp(e.target.value)}
-                    onBlur={handleClientChange}
-                    className="filterSize"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td className="txFilterLabelCell">
-                  Secret:
-                </td>
-                <td className="txFilterCell">
-                  <input
-                    name="DRIVESecret"
-                    defaultValue={secret}
-                    onChange={(e) => setSecretTemp(e.target.value)}
-                    onBlur={handleSecretChange}
-                    className="filterSize"
-                  />
-                </td>
-              </tr>
-            </tbody></table>
-            <br/>
-            <button onClick={handleAuthClick} className="textButton GDrive">Authorize Google Drive</button>
-            { client && 
+                // Clean the listener after the component is dismounted
+                return () => {
+                  ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
+                };
+              }}>
+              Create New
+            </button>
+          </td>
+        </tr>
+        <tr className="TR">
+          <td className="Table TC Right">
+            <span>Google Drive:</span><br /><br />
+            To use Google Drive, you should have<br />
+            a Google API project setup.<br />
+            Go to '<a href='https://console.cloud.google.com'>Google Cloud Console</a>' in order to do this.<br />
+            Your return URL in the JSON<br />
+            should be set to: http://127.0.0.1:3001
+          </td>
+          <td className="Table TC Left">
+            <button onClick={() => {
+              handleUseDrive(usingGoogleDrive ? false : true);
+            }} className="textButton GDrive">
+              {usingGoogleDrive ? "Stop Using Google Drive" : "Use Google Drive"}
+            </button>
+            {usingGoogleDrive &&
               <>
-                <br/>
-                <button onClick={handleGetFile} className="textButton GDrive">Get DB from Google Drive</button>
+                <br />
+                <input type="file" accept=".json" onChange={handleFileChange} />
               </>
             }
-            { lockFileExists && 
+            {usingGoogleDrive && credentials &&
               <>
-                <br/>
-                Lock files found, someone may be using the database. <br/>
-                If you are confident no one is using the database, <br/>
-                delete the lock files with the button below and <br/>
-                try getting the database again.<br/>
-                <button onClick={handleDeleteLock} className="textButton GDrive">Delete Lock File</button>
+                <table><tbody>
+                  <tr>
+                    <td className="txFilterLabelCell">
+                      Client Email:
+                    </td>
+                    <td className="txFilterCell">
+                      <input
+                        name="DRIVEClient"
+                        defaultValue={clientID}
+                        onChange={(e) => setClientTemp(e.target.value)}
+                        onBlur={handleClientChange}
+                        className="filterSize"
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="txFilterLabelCell">
+                      Secret:
+                    </td>
+                    <td className="txFilterCell">
+                      <input
+                        name="DRIVESecret"
+                        defaultValue={secret}
+                        onChange={(e) => setSecretTemp(e.target.value)}
+                        onBlur={handleSecretChange}
+                        className="filterSize"
+                      />
+                    </td>
+                  </tr>
+                </tbody></table>
+                <br />
+                <button onClick={handleAuthClick} className="textButton GDrive">Authorize Google Drive</button>
+                {client &&
+                  <>
+                    <br />
+                    <button onClick={handleGetFile} className="textButton GDrive">Get DB from Google Drive</button>
+                  </>
+                }
+                {lockFileExists &&
+                  <>
+                    <br />
+                    Lock files found, someone may be using the database. <br />
+                    If you are confident no one is using the database, <br />
+                    delete the lock files with the button below and <br />
+                    try getting the database again.<br />
+                    <button onClick={handleDeleteLock} className="textButton GDrive">Delete Lock File</button>
+                  </>
+                }
+                {databaseFile && databaseVersion &&
+                  <>
+                    <br />
+                    <button onClick={handlePushFile} className="textButton GDrive">Upload DB back to Google Drive</button>
+                  </>
+                }
               </>
             }
-            { databaseFile && databaseVersion &&
-              <>
-                <br/>
-                <button onClick={handlePushFile} className="textButton GDrive">Upload DB back to Google Drive</button>
-              </>
-            }
-            <br/>databaseFile: |{ databaseFile }|
-            <br/>databaseVersion: |{ databaseVersion }|
-          </>
-        }
-      </td>
-    </tr>
+          </td>
+        </tr>
 
-    </tbody>
-  </table>
-  </>
+      </tbody>
+      </table>
+    </>
   );
 };
 
