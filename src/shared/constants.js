@@ -116,5 +116,6 @@ module.exports = {
     DRIVE_DONE_PUSH_FILE: 'drive_done_push_file',
     DRIVE_USE_FILE: 'drive_use_file',
     DRIVE_DONE_USE_FILE: 'drive_done_use_file',
+    DRIVE_DELETE_LOCK: 'drive_delete_lock',
   },
 };

@@ -17,16 +17,17 @@ export const ConfigDB = () => {
   const [databaseVersion, setDatabaseVersion] = useState('');
 
   // Google Drive
+  const [usingGoogleDrive, setUsingGoogleDrive] = useState(false);
   const [credentialsFile, setCredentialsFile] = useState<string>("");
-  const [token, setToken] = useState<string>("");
   const [credentials, setCredentials] = useState<any>(null);
-
   const [client, setClient] = useState<any>(null);
   const [clientID, setClientID] = useState('');
   const [clientTemp, setClientTemp] = useState('');
   const [secret, setSecret] = useState('');
   const [secretTemp, setSecretTemp] = useState('');
-  const [driveFile, setDriveFile] = useState<any>(null);
+  const [driveFileId, setDriveFileId] = useState<any>(null);
+  const [driveFile, setDriveFile] = useState('');
+  const [lockFileExists, setLockFileExists] = useState(false);
 
  
   const check_database_file = (my_databaseFile) => {
@@ -77,36 +78,28 @@ export const ConfigDB = () => {
     };
   };
   
-  const handleUseDriveFile = async () => {
-    if (client) {
-      if (driveFile) {
-        const ipcRenderer = (window as any).ipcRenderer;
-        ipcRenderer.send(channels.DRIVE_USE_FILE, { credentials: credentials, tokens: client, fileId: driveFile.id });
-        
-        // Receive the data
-        ipcRenderer.on(channels.DRIVE_DONE_USE_FILE, ({fileName}) => {
-          check_database_file(fileName);
-
-          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_USE_FILE);
-        });
-
-        // Clean the listener after the component is dismounted
-        return () => {
-          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_USE_FILE);
-        };
+  const handleUseDrive = async (useDrive) => {
+    
+    localStorage.setItem(
+      'use-Google-Drive', 
+      JSON.stringify({useGDrive: useDrive})
+    );
+    setUsingGoogleDrive(useDrive);
+    if (useDrive) {
+      // Setup everything.
+      if (!client) {
+        handleAuthClick();
       } else {
-        console.log("Don't have driveFile");
+        handleGetFile();
       }
-    } else {
-      console.log("Don't have client");
     }
   }
-  
+
   const handlePushFile = async () => {
     if (client) {
-      if (driveFile) {
+      if (driveFileId) {
         const ipcRenderer = (window as any).ipcRenderer;
-        ipcRenderer.send(channels.DRIVE_PUSH_FILE, { credentials: credentials, tokens: client, fileId: driveFile.id });
+        ipcRenderer.send(channels.DRIVE_PUSH_FILE, { credentials: credentials, tokens: client, fileId: driveFileId.id });
         
         // Receive the data
         ipcRenderer.on(channels.DRIVE_DONE_PUSH_FILE, () => {
@@ -120,8 +113,19 @@ export const ConfigDB = () => {
           ipcRenderer.removeAllListeners(channels.DRIVE_DONE_PUSH_FILE);
         };
       } else {
-        console.log("Don't have driveFile");
+        console.log("Don't have driveFileId");
       }
+    } else {
+      console.log("Don't have client");
+    }
+  };
+  
+  const handleDeleteLock = async () => {
+    console.log("handleDeleteLock");
+    if (client) {
+        const ipcRenderer = (window as any).ipcRenderer;
+        ipcRenderer.send(channels.DRIVE_DELETE_LOCK, { credentials: credentials, tokens: client});
+        setLockFileExists(false);
     } else {
       console.log("Don't have client");
     }
@@ -129,26 +133,31 @@ export const ConfigDB = () => {
   
   const handleGetFile = async () => {
     if (client) {
-      if (driveFile) {
-        console.log("creds: ", credentials);
-        console.log("token: ", client);
-
-        const ipcRenderer = (window as any).ipcRenderer;
-        ipcRenderer.send(channels.DRIVE_GET_FILE, { credentials: credentials, tokens: client, fileId: driveFile.id });
-        
-        // Receive the data
-        ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, ({fileName}) => {
+      setLockFileExists(false);
+      const ipcRenderer = (window as any).ipcRenderer;
+      ipcRenderer.send(channels.DRIVE_GET_FILE, { credentials: credentials, tokens: client });
+      
+      // Receive the data
+      ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, (return_obj) => {
+        if (return_obj.fileName) {
           console.log("We got the file");
-          check_database_file(fileName);
+          check_database_file(return_obj.fileName);
+          setDriveFile(return_obj.fileName);
+        }
+        if (return_obj.error) {
+          console.log("Error getting the file: " + return_obj.error);
+          if (return_obj.error.startsWith('Lock file already exists')) {
+            setLockFileExists(true);
+          }
+        }
 
-          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
-        });
+        ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
+      });
 
-        // Clean the listener after the component is dismounted
-        return () => {
-          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
-        };
-      }
+      // Clean the listener after the component is dismounted
+      return () => {
+        ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);
+      };
     }
   };
   
@@ -165,7 +174,7 @@ export const ConfigDB = () => {
       ipcRenderer.on(channels.DRIVE_DONE_LIST_FILES, ({file_list}) => {
         console.log(file_list);
         if (file_list?.length > 0) {
-          setDriveFile(file_list[0]);
+          setDriveFileId(file_list[0]);
         }
         localStorage.setItem('drive-file', JSON.stringify({ fileId: file_list[0] }));
         ipcRenderer.removeAllListeners(channels.DRIVE_DONE_LIST_FILES);
@@ -196,6 +205,8 @@ export const ConfigDB = () => {
       console.log(return_creds);
       setClient(return_creds);
       localStorage.setItem('drive-client', JSON.stringify({ client: return_creds }));
+
+      handleListFiles();
       ipcRenderer.removeAllListeners(channels.DRIVE_DONE_AUTH);
     });
 
@@ -286,6 +297,14 @@ export const ConfigDB = () => {
       }
     }
 
+    const using_Drive_str = localStorage.getItem('use-Google-Drive');
+    if (using_Drive_str?.length) {
+      const using_Drive = JSON.parse(using_Drive_str);
+      if (using_Drive) {
+        setUsingGoogleDrive(using_Drive.useGDrive);
+      }
+    }
+
   }, []);
 
   return (
@@ -307,7 +326,7 @@ export const ConfigDB = () => {
     {databaseFile && databaseExists && !databaseVersion &&
       <tr className="TR">
         <td className="Table TC Right">Status:</td>
-        <td className="Table TC Left">The database appears to be corrupted.</td>
+        <td className="Table TC Left">Could not read from the database, try getting it again or selecting a new one.</td>
       </tr>
     }
     {databaseFile && databaseExists && databaseVersion &&
@@ -336,6 +355,8 @@ export const ConfigDB = () => {
           className="import-file"
           onChange={(e) => {
             if (e.target.files) {
+              // TODO: in this case should we upload back to Drive what we were using if we were?
+              handleUseDrive(false);
               check_database_file(e.target.files[0].path);
             }
           }}          
@@ -357,6 +378,8 @@ export const ConfigDB = () => {
             // Receive the new filename
             ipcRenderer.on(channels.LIST_NEW_DB_FILENAME, (arg) => {
               if (arg?.length > 0) {
+                // TODO: in this case should we upload back to Drive what we were using if we were?
+                handleUseDrive(false);
                 check_database_file(arg);
               }
 
@@ -377,8 +400,18 @@ export const ConfigDB = () => {
         <span>Google Drive:</span>
       </td>
       <td className="Table TC Left">
-        <input type="file" accept=".json" onChange={handleFileChange} />
-        {credentials &&
+        <button onClick={() => {
+          handleUseDrive(usingGoogleDrive ? false : true);
+          }} className="textButton">
+          { usingGoogleDrive ? "Stop Using Google Drive" : "Use Google Drive" }
+        </button>
+        { usingGoogleDrive &&
+          <>
+            <br/>
+            <input type="file" accept=".json" onChange={handleFileChange} />
+          </>
+        }
+        { usingGoogleDrive && credentials &&
           <>
             <table><tbody>
               <tr>
@@ -413,13 +446,23 @@ export const ConfigDB = () => {
             <br/>
             <button onClick={handleAuthClick} className="textButton">Authorize Google Drive</button>
             <br/>
-            <button onClick={handleListFiles} className="textButton">Find Google Drive File</button>
-            <br/>
-            <button onClick={handleGetFile} className="textButton">Download File</button>
-            <br/>
-            <button onClick={handleUseDriveFile} className="textButton">Use File</button>
-            <br/>
-            <button onClick={handlePushFile} className="textButton">Upload File</button>
+            <button onClick={handleGetFile} className="textButton">Get DB from Google Drive</button>
+            { lockFileExists && 
+              <>
+                <br/>
+                Lock files found, someone may be using the database. <br/>
+                If you are confident no one is using the database, <br/>
+                delete the lock files with the button below and <br/>
+                try getting the database again.<br/>
+                <button onClick={handleDeleteLock} className="textButton">Delete Lock File</button>
+              </>
+            }
+            { driveFile && databaseVersion &&
+              <>
+                <br/>
+                <button onClick={handlePushFile} className="textButton">Upload File</button>
+              </>
+            }
           </>
         }
       </td>

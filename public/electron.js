@@ -7,7 +7,7 @@ const { BankTransferList, Ofx } = require('ofx-convert');
 const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
 const knex = require('knex');
 
-const { GoogleAuth, auth, OAuth2Client } = require('google-auth-library');
+const { auth, OAuth2Client } = require('google-auth-library');
 const { authenticate } = require('@google-cloud/local-auth');
 const { google } = require('googleapis');
 
@@ -18,6 +18,15 @@ const destroyer = require('server-destroy');
 
 const fs = require('fs');
 const readline = require('readline');
+
+let usingGoogleDrive = false;
+let googleCredentials = null;
+let googleTokens = null;
+let googleAuth = null;
+let googleClient = null;
+let googleFileID = null;
+let haveGoogleDriveFile = false;
+let googleGettingFile = false;
 
 /*
   TODO:
@@ -87,9 +96,18 @@ app.whenReady().then(createWindow);
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
   if (process.platform !== 'darwin') {
+    if (usingGoogleDrive && haveGoogleDriveFile) {
+      await push_GDrive_file();
+    }
     app.quit();
+  }
+});
+
+app.on('before-quit', async (e) => {
+  if (usingGoogleDrive && haveGoogleDriveFile) {
+    await push_GDrive_file();
   }
 });
 
@@ -103,9 +121,12 @@ app.on('activate', () => {
 });
 
 // Logging any exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', async (error) => {
   console.log(`Exception: ${error}`);
   if (process.platform !== 'darwin') {
+    if (usingGoogleDrive && haveGoogleDriveFile) {
+      await push_GDrive_file();
+    }
     app.quit();
   }
 });
@@ -116,7 +137,7 @@ process.on('uncaughtException', (error) => {
 let dbPath = '';
 let db = null;
 
-ipcMain.on(channels.SET_DB_PATH, async (event, { DBPath }) => {
+const set_db = async (DBPath) => {
   if (DBPath === dbPath && db) {
     //console.log('db connection is already set to the same file. ignoring.');
     return;
@@ -137,6 +158,10 @@ ipcMain.on(channels.SET_DB_PATH, async (event, { DBPath }) => {
       useNullAsDefault: true,
     });
   }
+};
+
+ipcMain.on(channels.SET_DB_PATH, async (event, { DBPath }) => {
+  set_db(DBPath);
 });
 
 ipcMain.on(channels.CREATE_DB, async (event) => {
@@ -546,218 +571,399 @@ ipcMain.on(
 );
 
 ipcMain.on(
-  channels.DRIVE_AUTH,
-  async (event, { privateCreds, credentials }) => {
-    console.log(channels.DRIVE_AUTH);
-
-    /* This may not be necessory?
-    ---------------------------------------------------------
-    */
-    const clientEmail = privateCreds.clientEmail;
-    const privateKey = privateCreds.privateKey;
-    if (!clientEmail || !privateKey) {
-      throw new Error(`
-      The CLIENT_EMAIL and PRIVATE_KEY environment variables are required for
-      this sample.
-    `);
-    }
-    console.log('Trying OAuth2Client');
-    const auth = new GoogleAuth({
-      credentials: {
-        client_email: clientEmail,
-        private_key: privateKey,
-      },
-      scopes: 'https://www.googleapis.com/auth/drive',
-    });
-    console.log('auth: ' + auth);
-
-    console.log('Trying to get client');
-    const client = await auth.getClient();
-    console.log('client: ' + client);
-    /* This may not be necessory?
-    ---------------------------------------------------------
-    */
-
-    console.log('calling getAuthenticatedClient');
-    const oAuth2Client = await getAuthenticatedClient(credentials.installed);
-
-    // Verify the id_token, and access the claims.
-    const ticket = await oAuth2Client.verifyIdToken({
-      idToken: oAuth2Client.credentials.id_token,
-      audience: credentials.installed.client_id,
-    });
-    console.log('ticket:' + ticket);
-
-    // After acquiring an access_token, you may want to check on the audience, expiration,
-    // or original scopes requested.  You can do that with the `getTokenInfo` method.
-    const tokenInfo = await oAuth2Client.getTokenInfo(
-      oAuth2Client.credentials.access_token
-    );
-    console.log('token info: ' + tokenInfo);
-
-    event.sender.send(channels.DRIVE_DONE_AUTH, {
-      return_creds: oAuth2Client.credentials,
-    });
+  channels.DRIVE_DELETE_LOCK,
+  async (event, { credentials, tokens }) => {
+    console.log(channels.DRIVE_DELETE_LOCK);
+    delete_lock_file();
   }
 );
 
-ipcMain.on(
-  channels.DRIVE_LIST_FILES,
-  async (event, { credentials, tokens }) => {
-    console.log(channels.DRIVE_LIST_FILES, credentials, tokens);
+const drive_authenticate = async (credentials) => {
+  console.log('calling getAuthenticatedClient');
+  const oAuth2Client = await getAuthenticatedClient(credentials.installed);
+
+  // Verify the id_token, and access the claims.
+  const ticket = await oAuth2Client.verifyIdToken({
+    idToken: oAuth2Client.credentials.id_token,
+    audience: credentials.installed.client_id,
+  });
+  console.log('ticket:' + ticket);
+
+  // After acquiring an access_token, you may want to check on the audience, expiration,
+  // or original scopes requested.  You can do that with the `getTokenInfo` method.
+  const tokenInfo = await oAuth2Client.getTokenInfo(
+    oAuth2Client.credentials.access_token
+  );
+  console.log('token info: ' + tokenInfo);
+  return oAuth2Client.credentials;
+};
+
+const drive_find_DB = async () => {
+  console.log('querying list of files');
+  if (googleClient) {
     let file_list = null;
-    console.log('Creating oAuth2Client');
-    const { client_secret, client_id, redirect_uris } = credentials.installed;
-    const oAuth2Client = new OAuth2Client(
-      client_id,
-      client_secret,
-      redirect_uris[0]
-    );
-    console.log('setting tokens');
-    oAuth2Client.setCredentials(tokens);
 
-    console.log('querying list of files');
-
-    const service = google.drive({ version: 'v3', auth: oAuth2Client });
     try {
-      const res = await service.files.list({
+      const res = await googleClient.files.list({
         q: "name='SavvyBudget.db'",
         fields: 'nextPageToken, files(id, name)',
         spaces: 'drive',
       });
       file_list = res.data.files;
       console.log('Got ' + file_list?.length + ' files.');
-      event.sender.send(channels.DRIVE_DONE_LIST_FILES, {
-        file_list: file_list,
-      });
+      return { file_list: file_list };
     } catch (err) {
       // TODO(developer) - Handle error
       console.log(err);
-      event.sender.send(channels.DRIVE_DONE_LIST_FILES, {});
+      return {};
     }
+  } else {
+    console.log(
+      'Was trying to look up DB on Google Drive but googleClient is null.'
+    );
+    return {};
   }
-);
+};
 
-ipcMain.on(
-  channels.DRIVE_GET_FILE,
-  async (event, { credentials, tokens, fileId }) => {
-    console.log(channels.DRIVE_GET_FILE);
+const delete_lock_file = async () => {
+  console.log('delete_lock_file');
+  if (googleClient) {
+    let file_list = null;
+    try {
+      const res = await googleClient.files.list({
+        q: "name='SavvyBudget.db.lock'",
+        fields: 'nextPageToken, files(id, name)',
+        spaces: 'drive',
+      });
+      file_list = res.data.files;
+      console.log('Found ' + file_list?.length + ' lock files.');
+      for (const item of file_list) {
+        console.log('deleting: ', item.id);
+        await googleClient.files.delete({
+          fileId: item.id,
+        });
+      }
+    } catch (err) {
+      // TODO(developer) - Handle error
+      console.log('Error in delete_lock_file: ', err);
+    }
+  } else {
+    console.log(
+      'Was trying to delete the lock file on Google Drive but googleClient is null.'
+    );
+  }
+};
 
+const create_lock_file = async () => {
+  console.log('create_lock_file');
+  if (googleClient) {
+    try {
+      const requestBody = {
+        name: 'SavvyBudget.db.lock',
+        fields: 'id',
+      };
+      const media = {
+        mimeType: 'text/plain',
+        body: '1',
+      };
+
+      const res = await googleClient.files.create({
+        requestBody,
+        media: media,
+      });
+
+      console.log(res.data);
+    } catch (err) {
+      // TODO(developer) - Handle error
+      console.log(err);
+    }
+  } else {
+    console.log(
+      'Was trying to create the lock file on Google Drive but googleClient is null.'
+    );
+  }
+};
+
+const find_lock_file = async () => {
+  console.log('find_lock_file');
+  if (googleClient) {
+    let file_list = null;
+    try {
+      const res = await googleClient.files.list({
+        q: "name='SavvyBudget.db.lock' and trashed=false",
+        fields: 'nextPageToken, files(id, name)',
+        spaces: 'drive',
+      });
+      file_list = res.data.files;
+      console.log('Found ' + file_list?.length + ' active lock files.');
+      return file_list?.length;
+    } catch (err) {
+      // TODO(developer) - Handle error
+      console.log(err);
+      return -1;
+    }
+  } else {
+    console.log(
+      'Was trying to search for the lock file on Google Drive but googleClient is null.'
+    );
+  }
+};
+
+const set_google_auth = async () => {
+  if (!googleAuth) {
+    console.log('splitting out googleCredentials: ', googleCredentials);
+    const { client_secret, client_id, redirect_uris } = googleCredentials;
     console.log('Creating oAuth2Client');
-    const { client_secret, client_id, redirect_uris } = credentials.installed;
-    const oAuth2Client = new OAuth2Client(
+    const oAuth2Client = await new OAuth2Client(
       client_id,
       client_secret,
       redirect_uris[0]
     );
     console.log('setting tokens');
-    oAuth2Client.setCredentials(tokens);
+    await oAuth2Client.setCredentials(googleTokens);
+    googleAuth = oAuth2Client;
+  }
+};
 
-    console.log('getting the file');
+const set_google_service = async () => {
+  if (!googleAuth) {
+    await set_google_auth();
+  }
+  if (googleAuth && !googleClient) {
+    googleClient = await google.drive({ version: 'v3', auth: googleAuth });
+  }
+};
 
-    const fileName = isDev
-      ? path.join(app.getAppPath(), './public/SavvyBudget.db')
-      : path.join(app.getAppPath(), './build/SavvyBudget.db');
-    const service = google.drive({ version: 'v3', auth: oAuth2Client });
-    try {
-      const file = await service.files
-        .get(
-          {
-            fileId: fileId,
-            alt: 'media',
-          },
-          { responseType: 'stream' }
-        )
-        .then((res) => {
-          return new Promise((resolve, reject) => {
-            console.log(`writing to ${fileName}`);
-            const dest = fs.createWriteStream(fileName);
-            let progress = 0;
+const push_GDrive_file = async () => {
+  console.log('push_GDrive_file');
 
-            res.data
-              .on('end', () => {
-                console.log('Done downloading file.');
-                resolve(fileName);
-              })
-              .on('error', (err) => {
-                console.error('Error downloading file.');
-                reject(err);
-              })
-              .on('data', (d) => {
-                progress += d.length;
-                if (process.stdout.isTTY) {
-                  process.stdout.clearLine();
-                  process.stdout.cursorTo(0);
-                  process.stdout.write(`Downloaded ${progress} bytes`);
-                }
-              })
-              .pipe(dest);
-          });
-        });
-      console.log(file);
+  await set_google_service();
 
-      event.sender.send(channels.DRIVE_DONE_GET_FILE, { fileName });
-    } catch (err) {
-      // TODO(developer) - Handle error
-      console.log(err);
-      event.sender.send(channels.DRIVE_DONE_GET_FILE, {});
+  if (!googleClient) {
+    console.log("Error: We don't have the google service.");
+  }
+
+  console.log('pushing the file');
+  const fileName = isDev
+    ? path.join(app.getAppPath(), './public/SavvyBudget.db')
+    : path.join(app.getAppPath(), './build/SavvyBudget.db');
+
+  if (!googleFileID) {
+    const { file_list } = await drive_find_DB();
+    console.log('drive_find_DB returned: ', file_list);
+    if (file_list?.length) {
+      googleFileID = file_list[0].id;
     }
   }
+
+  try {
+    const fileSize = fs.statSync(fileName).size;
+    const res = await googleClient.files.update(
+      {
+        uploadType: 'media',
+        fileId: googleFileID,
+        requestBody: {
+          // a requestBody element is required if you want to use multipart
+        },
+        media: {
+          body: fs.createReadStream(fileName),
+        },
+      },
+      {
+        // Use the `onUploadProgress` event from Axios to track the
+        // number of bytes uploaded to this point.
+        onUploadProgress: (evt) => {
+          const progress = (evt.bytesRead / fileSize) * 100;
+          readline.clearLine(process.stdout, 0);
+          readline.cursorTo(process.stdout, 0);
+          process.stdout.write(`${Math.round(progress)}% complete`);
+        },
+      }
+    );
+    console.log(res.data);
+
+    // Delete lock file
+    await delete_lock_file();
+
+    // Disconnect local DB?
+    console.log('clearing google variables');
+    usingGoogleDrive = false;
+    googleCredentials = null;
+    googleTokens = null;
+    googleAuth = null;
+    googleClient = null;
+    googleFileID = null;
+    haveGoogleDriveFile = false;
+    await db.destroy();
+  } catch (err) {
+    // TODO(developer) - Handle error
+    console.log('Error in push_GDrive_file: ', err);
+  }
+};
+
+const get_GDrive_file = async () => {
+  console.log('electron: get_GDrive_file: ENTER');
+
+  if (!haveGoogleDriveFile) {
+    console.log("We don't have the GDrive file, need to get it");
+
+    if (!googleAuth) {
+      googleGettingFile = false;
+      return {
+        error: 'We could not get the google authorization',
+        fileName: '',
+      };
+    }
+    if (!googleClient) {
+      googleGettingFile = false;
+      return {
+        error: 'We do not have the google service running',
+        fileName: '',
+      };
+    }
+
+    console.log('Find the DB file on GDrive');
+    const { file_list } = await drive_find_DB();
+    console.log('drive_find_DB returned: ', file_list);
+    let fileId = null;
+    if (file_list?.length) {
+      fileId = file_list[0].id;
+    }
+
+    if (fileId) {
+      console.log('We have the fileId: ', fileId);
+      usingGoogleDrive = true;
+      googleFileID = fileId;
+
+      console.log('getting the file');
+
+      const fileName = isDev
+        ? path.join(app.getAppPath(), './public/SavvyBudget.db')
+        : path.join(app.getAppPath(), './build/SavvyBudget.db');
+
+      // Check if a lock file exists
+      const have_lock_file = await find_lock_file();
+
+      // Get the DB file
+      if (!have_lock_file) {
+        try {
+          const file = await googleClient.files
+            .get(
+              {
+                fileId: fileId,
+                alt: 'media',
+              },
+              { responseType: 'stream' }
+            )
+            .then((res) => {
+              return new Promise((resolve, reject) => {
+                console.log(`writing to ${fileName}`);
+                const dest = fs.createWriteStream(fileName);
+                let progress = 0;
+
+                res.data
+                  .on('end', () => {
+                    console.log('Done downloading file.');
+                    resolve(fileName);
+                  })
+                  .on('error', (err) => {
+                    console.error('Error downloading file.');
+                    reject(err);
+                  })
+                  .on('data', (d) => {
+                    progress += d.length;
+                    if (process.stdout.isTTY) {
+                      process.stdout.clearLine();
+                      process.stdout.cursorTo(0);
+                      process.stdout.write(`Downloaded ${progress} bytes`);
+                    }
+                  })
+                  .pipe(dest);
+              });
+            });
+          console.log(file);
+
+          // Use the DB
+          set_db(fileName);
+
+          // Create a lock file
+          await create_lock_file();
+
+          console.log('Set that we now have the GDrive DB file.');
+          haveGoogleDriveFile = true;
+          googleGettingFile = false;
+
+          return { fileName: fileName, error: '' };
+        } catch (err) {
+          // TODO(developer) - Handle error
+          console.log(err);
+          googleGettingFile = false;
+          return { error: err, fileName: '' };
+        }
+      } else {
+        googleGettingFile = false;
+        return {
+          error:
+            'Lock file already exists (found ' +
+            have_lock_file +
+            ' lock file[s])',
+          fileName: '',
+        };
+      }
+    } else {
+      googleGettingFile = false;
+      return {
+        error: 'We could not get the fileId',
+        fileName: '',
+      };
+    }
+  }
+};
+
+ipcMain.on(channels.DRIVE_AUTH, async (event, { credentials }) => {
+  console.log(channels.DRIVE_AUTH);
+  event.sender.send(channels.DRIVE_DONE_AUTH, {
+    return_creds: await drive_authenticate(credentials),
+  });
+});
+
+ipcMain.on(
+  channels.DRIVE_LIST_FILES,
+  async (event, { credentials, tokens }) => {
+    console.log(channels.DRIVE_LIST_FILES, credentials, tokens);
+    event.sender.send(channels.DRIVE_DONE_LIST_FILES, await drive_find_DB());
+  }
 );
+
+ipcMain.on(channels.DRIVE_GET_FILE, async (event, { credentials, tokens }) => {
+  console.log(channels.DRIVE_GET_FILE);
+  if (!googleGettingFile) {
+    googleGettingFile = true;
+    googleCredentials = credentials.installed;
+    googleTokens = tokens;
+    await set_google_auth();
+    await set_google_service();
+    googleClient = await google.drive({ version: 'v3', auth: googleAuth });
+
+    event.sender.send(
+      channels.DRIVE_DONE_GET_FILE,
+      await get_GDrive_file(credentials, tokens)
+    );
+  } else {
+    console.log('Getting the drive file is already running.');
+    event.sender.send(channels.DRIVE_DONE_GET_FILE, {
+      error: 'Getting drive file already running.',
+      fileName: '',
+    });
+  }
+});
 
 ipcMain.on(
   channels.DRIVE_PUSH_FILE,
   async (event, { credentials, tokens, fileId }) => {
     console.log(channels.DRIVE_PUSH_FILE);
-
-    console.log('Creating oAuth2Client');
-    const { client_secret, client_id, redirect_uris } = credentials.installed;
-    const oAuth2Client = new OAuth2Client(
-      client_id,
-      client_secret,
-      redirect_uris[0]
-    );
-    console.log('setting tokens');
-    oAuth2Client.setCredentials(tokens);
-
-    console.log('pushing the file');
-    const fileName = isDev
-      ? path.join(app.getAppPath(), './public/SavvyBudget.db')
-      : path.join(app.getAppPath(), './build/SavvyBudget.db');
-
-    const service = google.drive({ version: 'v3', auth: oAuth2Client });
-    try {
-      const fileSize = fs.statSync(fileName).size;
-      const res = await service.files.update(
-        {
-          uploadType: 'media',
-          fileId: fileId,
-          requestBody: {
-            // a requestBody element is required if you want to use multipart
-          },
-          media: {
-            body: fs.createReadStream(fileName),
-          },
-        },
-        {
-          // Use the `onUploadProgress` event from Axios to track the
-          // number of bytes uploaded to this point.
-          onUploadProgress: (evt) => {
-            const progress = (evt.bytesRead / fileSize) * 100;
-            readline.clearLine(process.stdout, 0);
-            readline.cursorTo(process.stdout, 0);
-            process.stdout.write(`${Math.round(progress)}% complete`);
-          },
-        }
-      );
-      console.log(res.data);
-
-      event.sender.send(channels.DRIVE_DONE_PUSH_FILE);
-    } catch (err) {
-      // TODO(developer) - Handle error
-      console.log(err);
-      event.sender.send(channels.DRIVE_DONE_PUSH_FILE);
-    }
+    await push_GDrive_file();
+    event.sender.send(channels.DRIVE_DONE_PUSH_FILE);
   }
 );
 
@@ -765,11 +971,9 @@ ipcMain.on(
   channels.DRIVE_USE_FILE,
   async (event, { credentials, tokens, fileId }) => {
     console.log(channels.DRIVE_USE_FILE);
-
     const fileName = isDev
       ? path.join(app.getAppPath(), './public/SavvyBudget.db')
       : path.join(app.getAppPath(), './build/SavvyBudget.db');
-
     event.sender.send(channels.DRIVE_DONE_USE_FILE, { fileName });
   }
 );
