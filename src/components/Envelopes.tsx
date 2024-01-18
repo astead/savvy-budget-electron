@@ -11,7 +11,6 @@ import InputText from '../helpers/InputText.tsx';
 
 /*
   TODO:
-  - Color based on how healthy the envelope is
   - Don't really like how this is loading everything sequentially
 */
 

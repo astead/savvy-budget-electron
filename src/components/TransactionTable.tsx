@@ -13,7 +13,7 @@ import { EditText } from 'react-edit-text';
 
 /*
  TODO:
-  - modify description? date?
+  - modify date?
   - popup window to add notes, tags, etc and edit item
 */
 

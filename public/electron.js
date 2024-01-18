@@ -649,7 +649,6 @@ const delete_lock_file = async () => {
         });
       }
     } catch (err) {
-      // TODO(developer) - Handle error
       console.log('Error in delete_lock_file: ', err);
     }
   } else {
@@ -679,7 +678,6 @@ const create_lock_file = async () => {
 
       console.log(res.data);
     } catch (err) {
-      // TODO(developer) - Handle error
       console.log(err);
     }
   } else {
@@ -703,7 +701,6 @@ const find_lock_file = async () => {
       console.log('Found ' + file_list?.length + ' active lock files.');
       return file_list?.length;
     } catch (err) {
-      // TODO(developer) - Handle error
       console.log(err);
       return -1;
     }
@@ -802,7 +799,6 @@ const push_GDrive_file = async () => {
     googleDrivefileName = null;
     await db.destroy();
   } catch (err) {
-    // TODO(developer) - Handle error
     console.log('Error in push_GDrive_file: ', err);
   }
 };
@@ -972,7 +968,6 @@ const get_GDrive_file = async () => {
           console.log('Success return!');
           return { fileName: fileName, error: '' };
         } catch (err) {
-          // TODO(developer) - Handle error
           console.log(err);
           googleGettingFile = false;
           console.log('Try catch error:', err);

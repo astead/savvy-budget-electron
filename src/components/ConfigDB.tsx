@@ -4,9 +4,21 @@ import { channels } from '../shared/constants.js';
 
 /* 
   TODO:
-  - allow DB file to be on Google Drive?
-    Not sure we if need to do anything special here if we have a local copy of the file.
   - Show more DB data? transaction dates, # transactions, # accounts?
+  - Allow DB on Azure?
+      knex({
+        client : 'mssql',
+        connection: {
+          server : 'myserver.database.windows.net',
+          user : 'myuser',
+          password : 'mypass',
+          database : 'mydatabase',
+          options: {
+              port: 1433,
+              encrypt: true
+          }
+        }
+      });
 */
 
 export const ConfigDB = () => {
@@ -102,7 +114,7 @@ export const ConfigDB = () => {
         }
       }
     } else {
-      // TODO: Need to communicate this down to the main thread
+      // Communicate this down to the main thread
       // so it doesn't try and upload upon close.
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.DRIVE_STOP_USING);
@@ -349,7 +361,6 @@ export const ConfigDB = () => {
               className="import-file"
               onChange={(e) => {
                 if (e.target.files) {
-                  // TODO: in this case should we upload back to Drive what we were using if we were?
                   handleUseDrive(false);
                   check_database_file(e.target.files[0].path);
                 }
@@ -372,7 +383,6 @@ export const ConfigDB = () => {
                 // Receive the new filename
                 ipcRenderer.on(channels.LIST_NEW_DB_FILENAME, (arg) => {
                   if (arg?.length > 0) {
-                    // TODO: in this case should we upload back to Drive what we were using if we were?
                     handleUseDrive(false);
                     check_database_file(arg);
                   }

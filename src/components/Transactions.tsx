@@ -24,7 +24,6 @@ import { EditText } from 'react-edit-text';
   - better way to pass in parameters?
   - better default parameter values (vs using -1, etc)
   - consolidate tx filter local storage
-  - export transactions
 */
 
 export const Transactions: React.FC = () => {
@@ -332,7 +331,6 @@ export const Transactions: React.FC = () => {
   }
 
   const handleExport = async () => {
-    // TODO: Add logic to export transactions.
     // Signal we want to get data
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.EXPORT_TX, 

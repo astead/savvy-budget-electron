@@ -7,8 +7,8 @@ import { EditText } from 'react-edit-text';
 
 /*
   TODO:
-  - Allow keyword to be tied to an account
-  - Show keyword conflicts? 
+  - Show keyword duplicate matches?
+  - don't allow renaming to cause duplicate matches.
 */
 
 interface KeywordList {
