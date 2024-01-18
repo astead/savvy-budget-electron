@@ -45,7 +45,7 @@ export const App: React.FC = () => {
         // Receive the data
         ipcRenderer.on(channels.DRIVE_DONE_GET_FILE, ({fileName, error}) => {
           if (fileName) {
-            console.log("We got the file: ", fileName);
+            //console.log("We got the file: ", fileName);
             localStorage.setItem('databaseFile', JSON.stringify(fileName));
     
             check_database_file(fileName);
