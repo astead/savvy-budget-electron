@@ -162,17 +162,11 @@ const set_db = async (DBPath) => {
 };
 
 ipcMain.on(channels.SET_DB_PATH, async (event, { DBPath }) => {
-  set_db(DBPath);
+  await set_db(DBPath);
+  event.sender.send(channels.DONE_SET_DB_PATH);
 });
 
-ipcMain.on(channels.CREATE_DB, async (event) => {
-  console.log(channels.CREATE_DB);
-
-  const { filePath } = await dialog.showSaveDialog({
-    title: 'Save Database',
-    filters: [{ name: 'SQLite Databases', extensions: ['db'] }],
-  });
-
+const create_local_db = async (filePath) => {
   if (filePath) {
     // If we were already using a DB, need to close
     // that connection.
@@ -275,11 +269,22 @@ ipcMain.on(channels.CREATE_DB, async (event) => {
 
     // Add blank plaid info
     db('plaid').insert({ client_id: '', secret: '', environment: '' }).then();
-
-    // Now let the renderer know about the new filename
-    //console.log('Send this back to the renderer.');
-    event.sender.send(channels.LIST_NEW_DB_FILENAME, filePath);
   }
+};
+
+ipcMain.on(channels.CREATE_DB, async (event) => {
+  console.log(channels.CREATE_DB);
+
+  const { filePath } = await dialog.showSaveDialog({
+    title: 'Save Database',
+    filters: [{ name: 'SQLite Databases', extensions: ['db'] }],
+  });
+
+  await create_local_db(filePath);
+
+  // Now let the renderer know about the new filename
+  //console.log('Send this back to the renderer.');
+  event.sender.send(channels.LIST_NEW_DB_FILENAME, filePath);
 });
 
 const {
@@ -606,7 +611,7 @@ const drive_find_DB = async () => {
 
     try {
       const res = await googleClient.files.list({
-        q: "name='SavvyBudget.db'",
+        q: "name='SavvyBudget.db' and trashed=false",
         fields: 'nextPageToken, files(id, name)',
         spaces: 'drive',
       });
@@ -614,7 +619,6 @@ const drive_find_DB = async () => {
       console.log('Got ' + file_list?.length + ' files.');
       return { file_list: file_list };
     } catch (err) {
-      // TODO(developer) - Handle error
       console.log(err);
       return {};
     }
@@ -747,7 +751,7 @@ const push_GDrive_file = async () => {
   console.log('pushing the file');
   const fileName = isDev
     ? path.join(app.getAppPath(), './public/SavvyBudget.db')
-    : path.join(app.getAppPath(), './build/SavvyBudget.db');
+    : path.join(process.resourcesPath, './SavvyBudget.db');
 
   if (!googleFileID) {
     const { file_list } = await drive_find_DB();
@@ -826,12 +830,80 @@ const get_GDrive_file = async () => {
       };
     }
 
+    const fileName = isDev
+      ? path.join(app.getAppPath(), './public/SavvyBudget.db')
+      : path.join(process.resourcesPath, './SavvyBudget.db');
+
     console.log('Find the DB file on GDrive');
     const { file_list } = await drive_find_DB();
     console.log('drive_find_DB returned: ', file_list);
     let fileId = null;
     if (file_list?.length) {
       fileId = file_list[0].id;
+    }
+
+    let already_downloaded_file = false;
+
+    if (!fileId) {
+      // We did not find the DB file
+
+      let localDBFile = '';
+
+      // Were we already using a DB file?
+      if (dbPath) {
+        localDBFile = dbPath;
+      } else {
+        // If not, let's create a new local DB
+        // Check if a local file with the same name exists
+        if (!fs.existsSync(fileName)) {
+          await create_local_db(fileName);
+        }
+        localDBFile = fileName;
+      }
+
+      // Now that we have a local DB, let's upload
+      // this DB to Drive and get the fileId
+      const fileSize = fs.statSync(localDBFile).size;
+      const requestBody = {
+        name: 'SavvyBudget.db',
+        fields: 'id',
+      };
+      const media = {
+        body: fs.createReadStream(fileName),
+      };
+
+      const res = await googleClient.files.create(
+        {
+          uploadType: 'media',
+          requestBody,
+          media: media,
+        },
+        {
+          // Use the `onUploadProgress` event from Axios to track the
+          // number of bytes uploaded to this point.
+          onUploadProgress: (evt) => {
+            const progress = (evt.bytesRead / fileSize) * 100;
+            readline.clearLine(process.stdout, 0);
+            readline.cursorTo(process.stdout, 0);
+            process.stdout.write(`${Math.round(progress)}% complete`);
+          },
+        }
+      );
+      console.log(res.data);
+      if (res?.data?.id) {
+        fileId = res.data.id;
+      }
+
+      // if we still don't have a fileId return an error
+      if (!fileId) {
+        googleGettingFile = false;
+        console.log('We could not get the fileId');
+        return {
+          error: 'We could not get the fileId',
+          fileName: '',
+        };
+      }
+      already_downloaded_file = true;
     }
 
     if (fileId) {
@@ -841,51 +913,49 @@ const get_GDrive_file = async () => {
 
       console.log('getting the file');
 
-      const fileName = isDev
-        ? path.join(app.getAppPath(), './public/SavvyBudget.db')
-        : path.join(app.getAppPath(), './build/SavvyBudget.db');
-
       // Check if a lock file exists
       const have_lock_file = await find_lock_file();
 
       // Get the DB file
       if (!have_lock_file) {
         try {
-          const file = await googleClient.files
-            .get(
-              {
-                fileId: fileId,
-                alt: 'media',
-              },
-              { responseType: 'stream' }
-            )
-            .then((res) => {
-              return new Promise((resolve, reject) => {
-                console.log(`writing to ${fileName}`);
-                const dest = fs.createWriteStream(fileName);
-                let progress = 0;
+          if (!already_downloaded_file) {
+            const file = await googleClient.files
+              .get(
+                {
+                  fileId: fileId,
+                  alt: 'media',
+                },
+                { responseType: 'stream' }
+              )
+              .then((res) => {
+                return new Promise((resolve, reject) => {
+                  console.log(`writing to ${fileName}`);
+                  const dest = fs.createWriteStream(fileName);
+                  let progress = 0;
 
-                res.data
-                  .on('end', () => {
-                    console.log('Done downloading file.');
-                    resolve(fileName);
-                  })
-                  .on('error', (err) => {
-                    console.error('Error downloading file.');
-                    reject(err);
-                  })
-                  .on('data', (d) => {
-                    progress += d.length;
-                    if (process.stdout.isTTY) {
-                      process.stdout.clearLine();
-                      process.stdout.cursorTo(0);
-                      process.stdout.write(`Downloaded ${progress} bytes`);
-                    }
-                  })
-                  .pipe(dest);
+                  res.data
+                    .on('end', () => {
+                      console.log('Done downloading file.');
+                      resolve(fileName);
+                    })
+                    .on('error', (err) => {
+                      console.error('Error downloading file.');
+                      reject(err);
+                    })
+                    .on('data', (d) => {
+                      progress += d.length;
+                      if (process.stdout.isTTY) {
+                        process.stdout.clearLine();
+                        process.stdout.cursorTo(0);
+                        process.stdout.write(`Downloaded ${progress} bytes`);
+                      }
+                    })
+                    .pipe(dest);
+                });
               });
-            });
-          console.log(file);
+            console.log(file);
+          }
 
           // Use the DB
           set_db(fileName);
@@ -919,13 +989,6 @@ const get_GDrive_file = async () => {
           fileName: '',
         };
       }
-    } else {
-      googleGettingFile = false;
-      console.log('We could not get the fileId');
-      return {
-        error: 'We could not get the fileId',
-        fileName: '',
-      };
     }
   } else {
     googleGettingFile = false;
@@ -988,25 +1051,19 @@ ipcMain.on(channels.DRIVE_STOP_USING, async (event) => {
   googleDrivefileName = null;
 });
 
-ipcMain.on(
-  channels.DRIVE_PUSH_FILE,
-  async (event, { credentials, tokens, fileId }) => {
-    console.log(channels.DRIVE_PUSH_FILE);
-    await push_GDrive_file();
-    event.sender.send(channels.DRIVE_DONE_PUSH_FILE);
-  }
-);
+ipcMain.on(channels.DRIVE_PUSH_FILE, async (event) => {
+  console.log(channels.DRIVE_PUSH_FILE);
+  await push_GDrive_file();
+  event.sender.send(channels.DRIVE_DONE_PUSH_FILE);
+});
 
-ipcMain.on(
-  channels.DRIVE_USE_FILE,
-  async (event, { credentials, tokens, fileId }) => {
-    console.log(channels.DRIVE_USE_FILE);
-    const fileName = isDev
-      ? path.join(app.getAppPath(), './public/SavvyBudget.db')
-      : path.join(app.getAppPath(), './build/SavvyBudget.db');
-    event.sender.send(channels.DRIVE_DONE_USE_FILE, { fileName });
-  }
-);
+ipcMain.on(channels.DRIVE_USE_FILE, async (event) => {
+  console.log(channels.DRIVE_USE_FILE);
+  const fileName = isDev
+    ? path.join(app.getAppPath(), './public/SavvyBudget.db')
+    : path.join(process.resourcesPath, './SavvyBudget.db');
+  event.sender.send(channels.DRIVE_DONE_USE_FILE, { fileName });
+});
 
 /**
  * Create a new OAuth2Client, and go through the OAuth2 content

@@ -25,7 +25,6 @@ export const ConfigDB = () => {
   const [clientTemp, setClientTemp] = useState('');
   const [secret, setSecret] = useState('');
   const [secretTemp, setSecretTemp] = useState('');
-  const [driveFileId, setDriveFileId] = useState<any>(null);
   const [lockFileExists, setLockFileExists] = useState(false);
 
 
@@ -49,7 +48,17 @@ export const ConfigDB = () => {
         const ipcRenderer = (window as any).ipcRenderer;
         ipcRenderer.send(channels.SET_DB_PATH, { DBPath: my_databaseFile });
 
-        get_db_version();
+        // Receive the data
+        ipcRenderer.on(channels.DONE_SET_DB_PATH, () => {
+          get_db_version();
+
+          ipcRenderer.removeAllListeners(channels.DONE_SET_DB_PATH);
+        });
+
+        // Clean the listener after the component is dismounted
+        return () => {
+          ipcRenderer.removeAllListeners(channels.DONE_SET_DB_PATH);
+        };
       }
     }
   };
@@ -106,26 +115,22 @@ export const ConfigDB = () => {
 
   const handlePushFile = async () => {
     if (client) {
-      if (driveFileId) {
-        const ipcRenderer = (window as any).ipcRenderer;
-        ipcRenderer.send(channels.DRIVE_PUSH_FILE, { credentials: credentials, tokens: client, fileId: driveFileId.id });
+      const ipcRenderer = (window as any).ipcRenderer;
+      ipcRenderer.send(channels.DRIVE_PUSH_FILE);
 
-        // Receive the data
-        ipcRenderer.on(channels.DRIVE_DONE_PUSH_FILE, () => {
-          console.log("Done pushing the file");
+      // Receive the data
+      ipcRenderer.on(channels.DRIVE_DONE_PUSH_FILE, () => {
+        //console.log("Done pushing the file");
 
-          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_PUSH_FILE);
-        });
+        ipcRenderer.removeAllListeners(channels.DRIVE_DONE_PUSH_FILE);
+      });
 
-        // Clean the listener after the component is dismounted
-        return () => {
-          ipcRenderer.removeAllListeners(channels.DRIVE_DONE_PUSH_FILE);
-        };
-      } else {
-        console.log("Don't have driveFileId");
-      }
+      // Clean the listener after the component is dismounted
+      return () => {
+        ipcRenderer.removeAllListeners(channels.DRIVE_DONE_PUSH_FILE);
+      };
     } else {
-      console.log("Don't have client");
+      //console.log("Don't have client");
     }
   };
 
@@ -135,7 +140,7 @@ export const ConfigDB = () => {
       ipcRenderer.send(channels.DRIVE_DELETE_LOCK, { credentials: credentials, tokens: client });
       setLockFileExists(false);
     } else {
-      console.log("Don't have client");
+      //console.log("Don't have client");
     }
   };
 
@@ -154,11 +159,11 @@ export const ConfigDB = () => {
           setDatabaseFile(fileName);
 
 
-          console.log("We got the file: ", fileName);
+          //console.log("We got the file: ", fileName);
           check_database_file(fileName);
         }
         if (error) {
-          console.log("Error getting the file: " + error);
+          //console.log("Error getting the file: " + error);
           if (error.startsWith('Lock file already exists')) {
             setLockFileExists(true);
           }
@@ -179,33 +184,6 @@ export const ConfigDB = () => {
     }
   };
 
-  const handleListFiles = async () => {
-    if (client) {
-
-      console.log("creds: ", credentials);
-      console.log("token: ", client);
-
-      const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send(channels.DRIVE_LIST_FILES, { credentials: credentials, tokens: client });
-
-      // Receive the data
-      ipcRenderer.on(channels.DRIVE_DONE_LIST_FILES, ({ file_list }) => {
-        console.log(file_list);
-        if (file_list?.length > 0) {
-          //setDriveFileId(file_list[0]);
-        }
-
-        ipcRenderer.removeAllListeners(channels.DRIVE_DONE_LIST_FILES);
-      });
-
-      // Clean the listener after the component is dismounted
-      return () => {
-        ipcRenderer.removeAllListeners(channels.DRIVE_DONE_LIST_FILES);
-      };
-    }
-  };
-
-
   const handleAuthClick = async () => {
     if (!credentials) {
       console.log('Please upload the credentials file.');
@@ -220,7 +198,7 @@ export const ConfigDB = () => {
 
     // Receive the data
     ipcRenderer.on(channels.DRIVE_DONE_AUTH, ({ return_creds }) => {
-      console.log(return_creds);
+      //console.log(return_creds);
       setClient(return_creds);
       localStorage.setItem('drive-client', JSON.stringify({ client: return_creds }));
 
@@ -242,14 +220,18 @@ export const ConfigDB = () => {
   };
 
   const handleClientChange = () => {
-    console.log("setting client to: ", clientTemp);
+    //console.log("setting client to: ", clientTemp);
     setClientID(clientTemp);
     localStorage.setItem('drive-info', JSON.stringify({ clientID: clientTemp, secret: secret, creds: credentials }));
+    setClient(null);
+    localStorage.setItem('drive-client', JSON.stringify({}));
   };
   const handleSecretChange = () => {
-    console.log("setting secret to: ", secretTemp);
+    //console.log("setting secret to: ", secretTemp);
     setSecret(secretTemp);
     localStorage.setItem('drive-info', JSON.stringify({ clientID: clientID, secret: secretTemp, creds: credentials }));
+    setClient(null);
+    localStorage.setItem('drive-client', JSON.stringify({}));
   };
 
   const readCredentialsFile = () => {
@@ -260,6 +242,8 @@ export const ConfigDB = () => {
 
       const tmpCreds = JSON.parse(data.trim());
       setCredentials(tmpCreds);
+      setClient(null);
+      localStorage.setItem('drive-client', JSON.stringify({}));
 
       localStorage.setItem('drive-info', JSON.stringify({ clientID: clientID, secret: secret, creds: tmpCreds }));
     });
@@ -458,15 +442,19 @@ export const ConfigDB = () => {
                     </td>
                   </tr>
                 </tbody></table>
-                <br />
-                <button onClick={handleAuthClick} className="textButton GDrive">Authorize Google Drive</button>
+                {!client && 
+                  <>
+                    <br />
+                    <button onClick={handleAuthClick} className="textButton GDrive">Authorize Google Drive</button>
+                  </>
+                }
                 {client &&
                   <>
                     <br />
                     <button onClick={handleGetFile} className="textButton GDrive">Get DB from Google Drive</button>
                   </>
                 }
-                {lockFileExists &&
+                {client && lockFileExists &&
                   <>
                     <br />
                     Lock files found, someone may be using the database. <br />
@@ -476,7 +464,7 @@ export const ConfigDB = () => {
                     <button onClick={handleDeleteLock} className="textButton GDrive">Delete Lock File</button>
                   </>
                 }
-                {databaseFile && databaseVersion &&
+                {client && databaseFile && databaseVersion &&
                   <>
                     <br />
                     <button onClick={handlePushFile} className="textButton GDrive">Upload DB back to Google Drive</button>
