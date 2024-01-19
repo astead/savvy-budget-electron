@@ -60,7 +60,7 @@ export const ConfigAccount = () => {
         <th className="Table THR THRC">{'Account'}</th>
         <th className="Table THR THRC">{'Name'}</th>
         <th className="Table THR THRC">{'Last Transaction'}</th>
-        <th className="Table THR THRC">{'    '}</th>
+        <th className="Table THR THRC">{'Vis'}</th>
       </tr>
     </thead>
 

@@ -210,7 +210,7 @@ export const ConfigKeyword = () => {
                 <FontAwesomeIcon icon={faChevronDown} className="sortIcon" />
             }
           </th>
-          <th className="Table THR THRC">{' '}</th>
+          <th className="Table THR THRC">{'Del'}</th>
           <th className="Table THR THRC">{'Set'}</th>
           <th className="Table THR THRC">{'Force'}</th>
         </tr>
