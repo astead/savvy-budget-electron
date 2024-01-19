@@ -685,7 +685,8 @@ ipcMain.on(
   channels.DRIVE_DELETE_LOCK,
   async (event, { credentials, tokens }) => {
     console.log(channels.DRIVE_DELETE_LOCK);
-    delete_lock_file();
+    await delete_lock_file();
+    event.sender.send(channels.DRIVE_DONE_DELETE_LOCK);
   }
 );
 

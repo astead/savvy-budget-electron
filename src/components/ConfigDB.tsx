@@ -168,6 +168,19 @@ export const ConfigDB = () => {
       ipcRenderer.send(channels.DRIVE_DELETE_LOCK, { credentials: credentials, tokens: client });
       setLockFileExists(false);
       localStorage.setItem('LockFileExists', JSON.stringify(false));
+      
+      // Receive the data
+      ipcRenderer.on(channels.DRIVE_DONE_DELETE_LOCK, () => {
+        // Since we were deleting the keys, we likely want to get the database
+        handleGetFile();
+
+        ipcRenderer.removeAllListeners(channels.DRIVE_DONE_DELETE_LOCK);
+      });
+
+      // Clean the listener after the component is dismounted
+      return () => {
+        ipcRenderer.removeAllListeners(channels.DRIVE_DONE_DELETE_LOCK);
+      };
     } else {
       //console.log("Don't have client");
     }
