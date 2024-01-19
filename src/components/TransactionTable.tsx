@@ -245,6 +245,11 @@ export const TransactionTable = ({data, envList, callback}) => {
     set_checkbox_array(tmpData);
     setTxData(tmpData);
     
+    // If we have new data, reset to page 1
+    // If we were only toggling something we likely don't want to do that.
+    // In those cases we shouldn't refresh the data.
+    setPagingCurPage(1);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
