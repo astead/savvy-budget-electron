@@ -385,9 +385,6 @@ export const ConfigPlaid = () => {
                           const only_dates = filtered.map((a) => new Date(a.lastTx + 'T00:00:00').getTime());
                           const max_date = Math.max(...only_dates);
                           const max_date_str = dayjs(max_date).format('YYYY-MM-DD');
-                          console.log("max Date:", max_date_str);
-                          // TODO: What id we don't have a valid date?
-                          console.log("cur Date:", dayjs().format("YYYY-MM-DD"));
                           if (max_date_str) {
                             setGetStart(max_date_str);
                           } else {

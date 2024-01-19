@@ -1412,6 +1412,7 @@ ipcMain.on(
               .update('client_id', client_id)
               .update('secret', secret)
               .update('environment', environment)
+              .update('token', '')
               .then()
               .catch((err) => console.log(err));
           } else {
