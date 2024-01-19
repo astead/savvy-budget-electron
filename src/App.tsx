@@ -20,6 +20,7 @@ export const App: React.FC = () => {
   const [usingGoogleDrive, setUsingGoogleDrive] = useState(false);
   const [doneLoading, setDoneLoading] = useState(false);
   const [doneLoadingDB, setDoneLoadingDB] = useState(false);
+  const [lockFileExists, setLockFileExists] = useState(false);
 
   const check_database_file = (my_databaseFile) => {
     //console.log("Checking DB file: ", my_databaseFile);
@@ -52,6 +53,11 @@ export const App: React.FC = () => {
           }
           if (error) {
             console.log("Error getting the file: " + error);
+            if (error.startsWith('Lock file already exists')) {
+              setLockFileExists(true);
+              localStorage.setItem('LockFileExists', JSON.stringify(true));
+            }
+
           }
 
           ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);

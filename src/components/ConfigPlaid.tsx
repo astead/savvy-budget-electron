@@ -52,6 +52,10 @@ export const ConfigPlaid = () => {
         setSecretTemp(data[0].secret);
         setEnvironment(data[0].environment);
         setEnvironmentTemp(data[0].environment);
+
+        if (data[0].token) {
+          setToken(data[0].token);
+        }
         
         setLoading(false);
       }
@@ -274,13 +278,15 @@ export const ConfigPlaid = () => {
     <div><br/>{link_Error}</div>
   }
   <>
-    <div>
-      <button 
-        className='textButton'
-        onClick={() => createLinkToken()} >
-        Get Link Token
-      </button>
-    </div>
+    {!token && 
+      <div>
+        <button 
+          className='textButton'
+          onClick={() => createLinkToken()} >
+          Get Link Token
+        </button>
+      </div>
+    }
     {token &&
       <div>
         <div>

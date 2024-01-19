@@ -26,7 +26,8 @@ export const ConfigDB = () => {
   // Database filename
   const [databaseFile, setDatabaseFile] = useState('');
   const [databaseExists, setDatabaseExists] = useState(false);
-  const [databaseVersion, setDatabaseVersion] = useState('');
+  const [databaseVersion, setDatabaseVersion] = useState(null);
+  const [latestDatabaseVersion, setLatestDatabaseVersion] = useState(null);
 
   // Google Drive
   const [usingGoogleDrive, setUsingGoogleDrive] = useState(false);
@@ -44,7 +45,7 @@ export const ConfigDB = () => {
     //console.log("Checking DB file: ", my_databaseFile);
     if (my_databaseFile?.length) {
       setDatabaseExists(false);
-      setDatabaseVersion('');
+      setDatabaseVersion(null);
 
       // Check if the database exists
       const ipcRenderer = (window as any).ipcRenderer;
@@ -81,19 +82,34 @@ export const ConfigDB = () => {
     ipcRenderer.send(channels.GET_DB_VER);
 
     // Receive the data
-    ipcRenderer.on(channels.LIST_DB_VER, (arg) => {
-      if (arg?.length > 0) {
-        setDatabaseVersion(arg[0].version);
-      } else {
-        setDatabaseVersion('');
-      }
-
+    ipcRenderer.on(channels.LIST_DB_VER, ({ version, latest }) => {
+      setDatabaseVersion(version);
+      setLatestDatabaseVersion(latest);
+      
       ipcRenderer.removeAllListeners(channels.LIST_DB_VER);
     });
 
     // Clean the listener after the component is dismounted
     return () => {
       ipcRenderer.removeAllListeners(channels.LIST_DB_VER);
+    };
+  };
+
+  const handleUpdateDB = () => {
+    // Signal we want to get data
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.UPDATE_DB);
+
+    // Receive the data
+    ipcRenderer.on(channels.DONE_UPDATE_DB, () => {
+      get_db_version();
+
+      ipcRenderer.removeAllListeners(channels.DONE_UPDATE_DB);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_UPDATE_DB);
     };
   };
 
@@ -151,6 +167,7 @@ export const ConfigDB = () => {
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.DRIVE_DELETE_LOCK, { credentials: credentials, tokens: client });
       setLockFileExists(false);
+      localStorage.setItem('LockFileExists', JSON.stringify(false));
     } else {
       //console.log("Don't have client");
     }
@@ -159,6 +176,7 @@ export const ConfigDB = () => {
   const handleGetFile = async () => {
     if (client) {
       setLockFileExists(false);
+      localStorage.setItem('LockFileExists', JSON.stringify(false));
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.DRIVE_GET_FILE, { credentials: credentials, tokens: client });
 
@@ -178,6 +196,7 @@ export const ConfigDB = () => {
           //console.log("Error getting the file: " + error);
           if (error.startsWith('Lock file already exists')) {
             setLockFileExists(true);
+            localStorage.setItem('LockFileExists', JSON.stringify(false));
           }
           //if (error.startsWith('Another thread is trying to get the DB file')) {
           //  removeListeners = false;
@@ -311,6 +330,14 @@ export const ConfigDB = () => {
       }
     }
 
+    const lock_str = localStorage.getItem('LockFileExists');
+    if (lock_str?.length) {
+      const lock_exists = JSON.parse(lock_str);
+      if (lock_exists) {
+        setLockFileExists(true);
+      }
+    }
+
   }, []);
 
   return (
@@ -329,10 +356,19 @@ export const ConfigDB = () => {
               <td className="Table TC Left">The database file does not exist.</td>
             </tr>
           }
-          {databaseFile && databaseExists && !databaseVersion &&
+          {databaseFile && databaseExists && !databaseVersion && !lockFileExists &&
             <tr className="TR">
               <td className="Table TC Right">Status:</td>
               <td className="Table TC Left">Could not read from the database, try getting it again or selecting a new one.</td>
+            </tr>
+          }
+          {databaseFile && databaseExists && !databaseVersion && lockFileExists &&
+            <tr className="TR">
+              <td className="Table TC Right">Status:</td>
+              <td className="Table TC Left">
+                Looks like someone is using the database on Google Drive,<br/>
+                delete the lock files and try downloading the database again.
+              </td>
             </tr>
           }
           {databaseFile && databaseExists && databaseVersion &&
@@ -343,6 +379,12 @@ export const ConfigDB = () => {
           }
         </tbody>
       </table>
+      {databaseFile && databaseExists && databaseVersion && (databaseVersion !== latestDatabaseVersion) &&
+        <>
+          <br />
+          <button onClick={handleUpdateDB} className="textButton GDrive">Update DB to ver {latestDatabaseVersion}</button>
+        </>
+      }
       {databaseFile && <><br /><br /></>}
       <table className="Table" cellSpacing={0} cellPadding={0}><tbody>
         <tr className="TR">

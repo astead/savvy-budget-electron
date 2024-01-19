@@ -19,6 +19,8 @@ const destroyer = require('server-destroy');
 const fs = require('fs');
 const readline = require('readline');
 
+const latest_DB_version = 5;
+
 let usingGoogleDrive = false;
 let googleCredentials = null;
 let googleTokens = null;
@@ -238,6 +240,7 @@ const create_local_db = async (filePath) => {
       table.text('client_id');
       table.text('secret');
       table.text('environment');
+      table.text('token');
     });
 
     // Create PLAID account Table
@@ -261,7 +264,7 @@ const create_local_db = async (filePath) => {
     });
 
     // Set the version to 1
-    db('version').insert({ version: 4 }).then();
+    db('version').insert({ version: 5 }).then();
 
     // Add the Income Category
     db('category').insert({ category: 'Uncategorized' }).then();
@@ -287,12 +290,40 @@ ipcMain.on(channels.CREATE_DB, async (event) => {
   event.sender.send(channels.LIST_NEW_DB_FILENAME, filePath);
 });
 
+const update_local_db = async () => {
+  if (db) {
+    let cur_ver = await get_db_ver();
+
+    if (cur_ver && cur_ver.toString() === '4') {
+      // Need to add the token column to the plaid table
+      await db.schema.table('plaid', (table) => {
+        table.string('token');
+      });
+
+      // update version to 5
+      await db('version').update({ version: 5 }).then();
+      cur_ver = '5';
+    }
+  }
+};
+
+ipcMain.on(channels.UPDATE_DB, async (event) => {
+  console.log(channels.UPDATE_DB);
+
+  await update_local_db();
+
+  // Now let the renderer know about the new filename
+  //console.log('Send this back to the renderer.');
+  event.sender.send(channels.DONE_UPDATE_DB);
+});
+
 const {
   Configuration,
   PlaidApi,
   Products,
   PlaidEnvironments,
 } = require('plaid');
+const { LogExit } = require('concurrently');
 
 const APP_PORT = process.env.APP_PORT || 8000;
 let PLAID_CLIENT_ID = '';
@@ -358,23 +389,6 @@ if (PLAID_REDIRECT_URI !== '') {
 if (PLAID_ANDROID_PACKAGE_NAME !== '') {
   configs.android_package_name = PLAID_ANDROID_PACKAGE_NAME;
 }
-
-ipcMain.on(channels.PLAID_GET_TOKEN, async (event) => {
-  console.log('Try getting PLAID link token');
-  if (PLAID_CLIENT_ID?.length) {
-    try {
-      const createTokenResponse = await client.linkTokenCreate(configs);
-      event.sender.send(channels.PLAID_LIST_TOKEN, createTokenResponse.data);
-    } catch (error) {
-      console.log(error);
-      // handle error
-      console.log('Error: ', error.response.data.error_message);
-      event.sender.send(channels.PLAID_LIST_TOKEN, error.response.data);
-    }
-  } else {
-    event.sender.send(channels.PLAID_LIST_TOKEN, null);
-  }
-});
 
 ipcMain.on(
   channels.PLAID_SET_ACCESS_TOKEN,
@@ -1238,7 +1252,7 @@ ipcMain.on(channels.SPLIT_TX, async (event, { txID, split_tx_list }) => {
 ipcMain.on(channels.PLAID_GET_KEYS, (event) => {
   console.log(channels.PLAID_GET_KEYS);
   if (db) {
-    db.select('client_id', 'secret', 'environment')
+    db.select('client_id', 'secret', 'environment', 'token')
       .from('plaid')
       .then((data) => {
         PLAID_CLIENT_ID = data[0].client_id.trim();
@@ -1253,6 +1267,31 @@ ipcMain.on(channels.PLAID_GET_KEYS, (event) => {
         event.sender.send(channels.PLAID_LIST_KEYS, data);
       })
       .catch((err) => console.log(err));
+  }
+});
+
+ipcMain.on(channels.PLAID_GET_TOKEN, async (event) => {
+  console.log('Try getting PLAID link token');
+  if (PLAID_CLIENT_ID?.length) {
+    try {
+      const createTokenResponse = await client.linkTokenCreate(configs);
+
+      if (db) {
+        db('plaid')
+          .update('token', createTokenResponse.data.link_token)
+          .then()
+          .catch((err) => console.log(err));
+      }
+
+      event.sender.send(channels.PLAID_LIST_TOKEN, createTokenResponse.data);
+    } catch (error) {
+      console.log(error);
+      // handle error
+      console.log('Error: ', error.response.data.error_message);
+      event.sender.send(channels.PLAID_LIST_TOKEN, error.response.data);
+    }
+  } else {
+    event.sender.send(channels.PLAID_LIST_TOKEN, null);
   }
 });
 
@@ -3132,16 +3171,29 @@ ipcMain.on(
   }
 );
 
-ipcMain.on(channels.GET_DB_VER, (event) => {
-  console.log(channels.GET_DB_VER);
+const get_db_ver = async () => {
+  //console.log('get_db_ver');
+  let ver = null;
   if (db) {
-    db('version')
+    await db('version')
       .select('version')
       .then((data) => {
-        event.sender.send(channels.LIST_DB_VER, data);
+        ver = data[0].version;
       })
       .catch((err) => {
-        event.sender.send(channels.LIST_DB_VER, null);
+        console.log('Error getting DB version.');
       });
   }
+  //console.log('returning version: ', ver);
+  return ver;
+};
+
+ipcMain.on(channels.GET_DB_VER, async (event) => {
+  console.log(channels.GET_DB_VER);
+  const ver = await get_db_ver();
+  //console.log('got version: ', ver);
+  event.sender.send(channels.LIST_DB_VER, {
+    version: ver,
+    latest: latest_DB_version,
+  });
 });

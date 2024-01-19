@@ -95,6 +95,8 @@ module.exports = {
     LIST_DB_VER: 'list_db_ver',
     CREATE_DB: 'create_db',
     LIST_NEW_DB_FILENAME: 'list_new_db_filename',
+    UPDATE_DB: 'update_db',
+    DONE_UPDATE_DB: 'done_update_db',
 
     PLAID_GET_KEYS: 'plaid_get_keys',
     PLAID_LIST_KEYS: 'plaid_list_keys',
