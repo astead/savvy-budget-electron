@@ -85,6 +85,8 @@ module.exports = {
     UPDATE_ACCOUNT: 'update_account',
     DEL_ACCOUNT: 'del_account',
     DONE_DEL_ACCOUNT: 'done_del_account',
+    VIS_ACCOUNT: 'vis_account',
+    DONE_VIS_ACCOUNT: 'done_vis_account',
 
     GET_ENV_CHART_DATA: 'get_env_chart_data',
     LIST_ENV_CHART_DATA: 'list_env_chart_data',

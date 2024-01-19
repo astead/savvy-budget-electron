@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { faEyeSlash, faTrash } from "@fortawesome/free-solid-svg-icons";
 import * as dayjs from 'dayjs';
 import { EditText } from 'react-edit-text';
 import { channels } from '../shared/constants.js';
@@ -26,10 +26,10 @@ export const ConfigAccount = () => {
     };
   }
 
-  const handleAccountDelete = (id, isActive) => {
+  const handleAccountDelete = (id) => {
     // Request we delete the account in the DB
     const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.DEL_ACCOUNT, {id, value: (isActive===0?1:0)});
+    ipcRenderer.send(channels.DEL_ACCOUNT, {id});
 
     // Receive the data
     ipcRenderer.on(channels.DONE_DEL_ACCOUNT, (arg) => {
@@ -40,6 +40,24 @@ export const ConfigAccount = () => {
     // Clean the listener after the component is dismounted
     return () => {
       ipcRenderer.removeAllListeners(channels.DONE_DEL_ACCOUNT);
+    };
+  };
+
+
+  const handleAccountVisibility = (id, isActive) => {
+    // Request we delete the account in the DB
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.VIS_ACCOUNT, {id, value: (isActive===0?1:0)});
+
+    // Receive the data
+    ipcRenderer.on(channels.DONE_VIS_ACCOUNT, (arg) => {
+      load_accounts();
+      ipcRenderer.removeAllListeners(channels.DONE_VIS_ACCOUNT);
+    });
+
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.DONE_VIS_ACCOUNT);
     };
   };
 
@@ -59,14 +77,16 @@ export const ConfigAccount = () => {
       <tr className="Table THR">
         <th className="Table THR THRC">{'Account'}</th>
         <th className="Table THR THRC">{'Name'}</th>
-        <th className="Table THR THRC">{'Last Transaction'}</th>
+        <th className="Table THR THRC">{'Last Tx'}</th>
+        <th className="Table THR THRC">{'Num Tx'}</th>
         <th className="Table THR THRC">{'Vis'}</th>
+        <th className="Table THR THRC">{'Del'}</th>
       </tr>
     </thead>
 
     <tbody>
       {
-        accountData.map(({ id, refNumber, account, isActive, lastTx }, index) => (
+        accountData.map(({ id, refNumber, account, isActive, lastTx, numTx }, index) => (
           <tr key={"acc-" + id} className="Table TR">
             <td className="Table TC Left">{refNumber}</td>
             <td className="Table TC Left">
@@ -85,12 +105,22 @@ export const ConfigAccount = () => {
               />
             </td>
             <td className="Table TC Right">{lastTx && dayjs(lastTx).format('M/D/YYYY')}</td>
+            <td className="Table TC Right">{numTx}</td>
             <td className="Table TC">
-            <div 
-              className={"Toggle" + (!isActive?" Toggle-active":"")}
-              onClick={() => handleAccountDelete(id, isActive)}>
-                <FontAwesomeIcon icon={faEyeSlash} />
-            </div>
+              <div 
+                className={"Toggle" + (!isActive?" Toggle-active":"")}
+                onClick={() => handleAccountVisibility(id, isActive)}>
+                  <FontAwesomeIcon icon={faEyeSlash} />
+              </div>
+            </td>
+            <td className="Table TC">
+              {!numTx &&
+                <button 
+                  className="trash"
+                  onClick={() => handleAccountDelete(id)}>
+                    <FontAwesomeIcon icon={faTrash} />
+                </button>
+              }
             </td>
           </tr>
         ))

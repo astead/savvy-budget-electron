@@ -3111,6 +3111,7 @@ ipcMain.on(channels.GET_ACCOUNTS, (event) => {
   if (db) {
     db.select('account.id', 'account.refNumber', 'account', 'isActive')
       .max({ lastTx: 'txDate' })
+      .count({ numTx: 'txDate' })
       .from('account')
       .leftJoin('transaction', function () {
         this.on('account.id', '=', 'transaction.accountID')
@@ -3197,10 +3198,20 @@ ipcMain.on(channels.UPDATE_ACCOUNT, (event, { id, new_value }) => {
     .catch((err) => console.log(err));
 });
 
-ipcMain.on(channels.DEL_ACCOUNT, async (event, { id, value }) => {
-  console.log(channels.DEL_ACCOUNT, { id, value });
+ipcMain.on(channels.VIS_ACCOUNT, async (event, { id, value }) => {
+  console.log(channels.VIS_ACCOUNT, { id, value });
   await db('account')
     .update({ isActive: value })
+    .where({ id: id })
+    .catch((err) => console.log(err));
+
+  event.sender.send(channels.DONE_VIS_ACCOUNT);
+});
+
+ipcMain.on(channels.DEL_ACCOUNT, async (event, { id }) => {
+  console.log(channels.DEL_ACCOUNT, { id });
+  await db('account')
+    .delete()
     .where({ id: id })
     .catch((err) => console.log(err));
 
