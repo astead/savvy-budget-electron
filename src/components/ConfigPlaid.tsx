@@ -144,6 +144,41 @@ export const ConfigPlaid = () => {
     };
   };
 
+  const force_get_transactions = (acc : PLAIDAccount, max_date) => {
+    setUploading(true);
+    
+    // Get transactions
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.PLAID_FORCE_TRANSACTIONS, 
+      { access_token: acc.access_token,
+        cursor: acc.cursor,
+        max_date: max_date
+      }
+    );
+
+    // Listen for progress updates
+    ipcRenderer.on(channels.UPLOAD_PROGRESS, (data) => {
+      setProgress(data);
+      if (data >= 100) {
+        ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
+        setUploading(false);
+      }
+    });
+
+    ipcRenderer.on(channels.PLAID_DONE_FORCE_TRANSACTIONS, (data) => {
+      if (data.error_message?.length) {
+        setLink_Error("Error: " + data.error_message);
+      }
+      ipcRenderer.removeAllListeners(channels.PLAID_DONE_FORCE_TRANSACTIONS);
+    });
+      
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
+      ipcRenderer.removeAllListeners(channels.PLAID_LIST_TRANSACTIONS);
+    };
+  };
+
   const onSuccess: PlaidLinkOnSuccess = (public_token, metadata) => {
     //console.log("Success linking: ", public_token, metadata);
     console.log("Calling into main to get access token. ");
@@ -308,7 +343,23 @@ export const ConfigPlaid = () => {
                           get_transactions(acc)
                         }} 
                         disabled={!token}>
-                        Get Transactions
+                        Update
+                      </button>
+                      <button 
+                        className='textButton'
+                        onClick={() => {
+                          // Get the latest transaction date for this account
+                          const filtered = PLAIDAccounts.filter((a) => a.access_token === acc.access_token);
+                          const only_dates = filtered.map((a) => new Date(a.lastTx + 'T00:00:00').getTime());
+                          const max_date = Math.max(...only_dates);
+                          const max_date_str = dayjs(max_date).format('YYYY-MM-DD');
+                          console.log("max Date:", max_date_str);
+                          // TODO: What id we don't have a valid date?
+                          console.log("cur Date:", dayjs().format("YYYY-MM-DD"));
+                          force_get_transactions(acc, max_date_str);
+                        }} 
+                        disabled={!token}>
+                        Force Get
                       </button>
                     </td>
                   </tr>

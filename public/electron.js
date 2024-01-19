@@ -591,6 +591,97 @@ ipcMain.on(
 );
 
 ipcMain.on(
+  channels.PLAID_FORCE_TRANSACTIONS,
+  async (event, { access_token, cursor, max_date }) => {
+    console.log('Try getting plaid account transactions ');
+
+    const cur_date = dayjs().format('YYYY-MM-DD');
+
+    let added = [];
+
+    console.log('Making the call ');
+    let response = null;
+    try {
+      response = await client.transactionsGet({
+        access_token: access_token,
+        start_date: max_date,
+        end_date: cur_date,
+      });
+    } catch (e) {
+      console.log('Error: ', e.response.data.error_message);
+      event.sender.send(channels.UPLOAD_PROGRESS, 100);
+      event.sender.send(channels.PLAID_LIST_TRANSACTIONS, e.response.data);
+      return;
+    }
+    console.log('Response: ' + response);
+    const data = response.data;
+    console.log(' Response: ', data);
+    let transactions = response.data.transactions;
+    const total_transactions = response.data.total_transactions;
+
+    // Add this page of results
+    added = added.concat(transactions);
+
+    while (transactions.length < total_transactions) {
+      const paginatedRequest = {
+        access_token: access_token,
+        start_date: max_date,
+        end_date: cur_date,
+        options: {
+          offset: transactions.length,
+        },
+      };
+
+      const paginatedResponse = await client.transactionsGet(paginatedRequest);
+      added = added.concat(paginatedResponse.data.transactions);
+    }
+
+    console.log('Done getting the data, now processing');
+
+    let total_records = added.length;
+    let cur_record = 0;
+
+    // Apply added
+    const accountArr = [];
+    for (const [i, a] of added.entries()) {
+      let account_str = a.account_id;
+      let accountID = '';
+      if (accountArr?.length) {
+        const found = accountArr.find((e) => e.name === account_str);
+        if (found) {
+          accountID = found.id;
+        } else {
+          accountID = await lookup_plaid_account(account_str);
+          accountArr.push({ name: account_str, id: accountID });
+        }
+      } else {
+        accountID = await lookup_plaid_account(account_str);
+        accountArr.push({ name: account_str, id: accountID });
+      }
+
+      let envID = await lookup_keyword(accountID, a.name);
+
+      await basic_insert_transaction_node(
+        accountID,
+        -1 * a.amount,
+        a.date,
+        a.name,
+        a.transaction_id,
+        envID
+      );
+
+      cur_record++;
+      event.sender.send(
+        channels.UPLOAD_PROGRESS,
+        (cur_record * 100) / total_records
+      );
+    }
+
+    event.sender.send(channels.UPLOAD_PROGRESS, 100);
+  }
+);
+
+ipcMain.on(
   channels.DRIVE_DELETE_LOCK,
   async (event, { credentials, tokens }) => {
     console.log(channels.DRIVE_DELETE_LOCK);
@@ -1264,6 +1355,10 @@ ipcMain.on(channels.PLAID_GET_KEYS, (event) => {
         client.configuration.baseOptions.headers['PLAID-SECRET'] = PLAID_SECRET;
         client.configuration.basePath = PlaidEnvironments[PLAID_ENV];
 
+        if (data[0].token) {
+          client.linkTokenCreate(configs);
+        }
+
         event.sender.send(channels.PLAID_LIST_KEYS, data);
       })
       .catch((err) => console.log(err));
@@ -1376,7 +1471,6 @@ ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
         'plaid_account.access_token',
         'plaid_account.cursor'
       );
-    console.log(query.toSQL().toNative());
     query
       .then((data) => {
         event.sender.send(channels.PLAID_LIST_ACCOUNTS, data);

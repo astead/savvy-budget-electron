@@ -106,6 +106,8 @@ module.exports = {
     PLAID_SET_ACCESS_TOKEN: 'plaid_set_access_token',
     PLAID_GET_TRANSACTIONS: 'plaid_get_transactions',
     PLAID_LIST_TRANSACTIONS: 'plaid_list_transactions',
+    PLAID_FORCE_TRANSACTIONS: 'plaid_force_transactions',
+    PLAID_DONE_FORCE_TRANSACTIONS: 'plaid_done_force_transactions',
     PLAID_GET_ACCOUNTS: 'plaid_get_accounts',
     PLAID_LIST_ACCOUNTS: 'plaid_list_accounts',
 
