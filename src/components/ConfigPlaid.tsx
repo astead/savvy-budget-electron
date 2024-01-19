@@ -294,13 +294,6 @@ export const ConfigPlaid = () => {
         </div>
         <div>
           <table className="Table" cellSpacing={1} cellPadding={1}>
-            <thead>
-              <tr className="Table THR">
-                <th className="Table THR THRC">{'Bank'}</th>
-                <th className="Table THR THRC">{'Last Transaction'}</th>
-                <th className="Table THR THRC">{' '}</th>
-              </tr>
-            </thead>
             <tbody>
             { PLAIDAccounts.map((acc, index, myArray) => (
               <React.Fragment key={index}>
@@ -308,7 +301,6 @@ export const ConfigPlaid = () => {
                   <React.Fragment>
                   <tr className="Table TGHR">
                     <td className="Table THRC">{acc.institution}</td>
-                    <td className="Table THRC">{acc.lastTx && dayjs(acc.lastTx).format('M/D/YYYY')}</td>
                     <td className="Table THRC">
                       <button 
                         className='textButton'
@@ -331,7 +323,12 @@ export const ConfigPlaid = () => {
                   </React.Fragment>
                 )}
                 <tr key={index}>
-                  <td colSpan={3} align='left'>{acc.account_name + '-' + acc.mask}</td>
+                  <td align='left'>
+                    {acc.account_name + '-' + acc.mask}
+                  </td>
+                  <td align='right'>
+                    {acc.lastTx && dayjs(acc.lastTx).format('M/D/YYYY')}
+                  </td>
                 </tr>
               </React.Fragment>
             ))}

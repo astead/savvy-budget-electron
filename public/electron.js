@@ -1339,19 +1339,20 @@ ipcMain.on(
 ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
   console.log(channels.PLAID_GET_ACCOUNTS);
   if (db) {
-    db.select(
-      'plaid_account.id',
-      'plaid_account.institution',
-      'plaid_account.account_id',
-      'plaid_account.mask',
-      'plaid_account.account_name',
-      'plaid_account.account_subtype',
-      'plaid_account.account_type',
-      'plaid_account.verification_status',
-      'plaid_account.item_id',
-      'plaid_account.access_token',
-      'plaid_account.cursor'
-    )
+    let query = db
+      .select(
+        'plaid_account.id',
+        'plaid_account.institution',
+        'plaid_account.account_id',
+        'plaid_account.mask',
+        'plaid_account.account_name',
+        'plaid_account.account_subtype',
+        'plaid_account.account_type',
+        'plaid_account.verification_status',
+        'plaid_account.item_id',
+        'plaid_account.access_token',
+        'plaid_account.cursor'
+      )
       .max({ lastTx: 'txDate' })
       .from('plaid_account')
       .join('account', 'plaid_account.account_id', 'account.plaid_id')
@@ -1374,7 +1375,9 @@ ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
         'plaid_account.item_id',
         'plaid_account.access_token',
         'plaid_account.cursor'
-      )
+      );
+    console.log(query.toSQL().toNative());
+    query
       .then((data) => {
         event.sender.send(channels.PLAID_LIST_ACCOUNTS, data);
       })
