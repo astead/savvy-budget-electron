@@ -2,14 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { channels } from '../shared/constants.js';
 import * as dayjs from 'dayjs';
 import Box from '@mui/material/Box';
+import Modal from '@mui/material/Modal';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import LinearProgressWithLabel from '@mui/material/LinearProgress';
 import { PlaidLink,
   PlaidLinkOnSuccess,
   PlaidLinkOnEvent,
   PlaidLinkOnExit } from 'react-plaid-link';
 
+const style = {
+  position: 'absolute' as 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 'fit-content',
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
 export const ConfigPlaid = () => {
   
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [client, setClient] = useState('');
   const [clientTemp, setClientTemp] = useState('');
@@ -22,6 +39,13 @@ export const ConfigPlaid = () => {
   const [PLAIDAccounts, setPLAIDAccounts] = useState<PLAIDAccount[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = React.useState(0);
+
+  const [getStart, setGetStart] = React.useState('');
+  const [getEnd, setGetEnd] = React.useState('');
+  const [getAcc, setGetAcc] = React.useState<any>(null);
+  
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
   
   interface PLAIDAccount {
@@ -144,15 +168,16 @@ export const ConfigPlaid = () => {
     };
   };
 
-  const force_get_transactions = (acc : PLAIDAccount, max_date) => {
+  const force_get_transactions = (acc : PLAIDAccount, start_date, end_date) => {
     setUploading(true);
-    
+    handleClose();
+
     // Get transactions
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.PLAID_FORCE_TRANSACTIONS, 
       { access_token: acc.access_token,
-        cursor: acc.cursor,
-        max_date: max_date
+        start_date: start_date,
+        end_date: end_date
       }
     );
 
@@ -330,6 +355,13 @@ export const ConfigPlaid = () => {
         <div>
           <table className="Table" cellSpacing={1} cellPadding={1}>
             <tbody>
+            {uploading && 
+              <tr><td colSpan={2}>
+              <Box sx={{ width: '100%' }}>
+                <LinearProgressWithLabel value={progress} />
+              </Box>
+              </td></tr>
+            }
             { PLAIDAccounts.map((acc, index, myArray) => (
               <React.Fragment key={index}>
                 { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
@@ -356,21 +388,21 @@ export const ConfigPlaid = () => {
                           console.log("max Date:", max_date_str);
                           // TODO: What id we don't have a valid date?
                           console.log("cur Date:", dayjs().format("YYYY-MM-DD"));
-                          force_get_transactions(acc, max_date_str);
+                          if (max_date_str) {
+                            setGetStart(max_date_str);
+                          } else {
+                            setGetStart(dayjs().startOf('month').format("YYYY-MM-DD"));
+                          }
+                          setGetEnd(dayjs().format("YYYY-MM-DD"));
+                          setGetAcc(acc);
+                          
+                          handleOpen();
                         }} 
                         disabled={!token}>
                         Force Get
                       </button>
                     </td>
                   </tr>
-                  
-                  {uploading && 
-                    <tr><td colSpan={3}>
-                    <Box sx={{ width: '100%' }}>
-                      <LinearProgressWithLabel value={progress} />
-                    </Box>
-                    </td></tr>
-                  }
                   </React.Fragment>
                 )}
                 <tr key={index}>
@@ -384,6 +416,57 @@ export const ConfigPlaid = () => {
               </React.Fragment>
             ))}
           </tbody></table>
+          <Modal
+            open={open}
+            onClose={handleClose}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+          >
+            <Box sx={style}>
+              Get transactions<br/>
+              <table><tbody>
+              <tr>
+                <td>from:</td>
+                <td>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    value={dayjs(getStart)}
+                    onChange={(newValue) => {
+                      const new_date = newValue ? newValue.format("YYYY-MM-DD") : '';
+                      setGetStart(new_date);
+                    }}
+                    sx={{ width:150, pr:0 }}
+                    />
+                  </LocalizationProvider>
+                </td>
+              </tr>
+              <tr>
+                <td>to:</td>
+                <td>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    value={dayjs(getEnd)}
+                    onChange={(newValue) => {
+                      const new_date = newValue ? newValue.format("YYYY-MM-DD") : '';
+                      setGetEnd(new_date);
+                    }}
+                    sx={{ width:150, pr:0 }}
+                    />
+                  </LocalizationProvider>
+                </td>
+              </tr>
+              </tbody></table>
+              <br/>
+              <button 
+                className='textButton'
+                onClick={() => {
+                  force_get_transactions(getAcc, getStart, getEnd);
+                }} 
+                disabled={!token}>
+                Get Those Transactions!
+              </button>
+            </Box>
+          </Modal>
         </div>
       </div>
     }

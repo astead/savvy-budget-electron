@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { channels } from '../shared/constants.js';
 
-
 /* 
   TODO:
   - Show more DB data? transaction dates, # transactions, # accounts?

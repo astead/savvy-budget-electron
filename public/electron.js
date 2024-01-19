@@ -592,10 +592,8 @@ ipcMain.on(
 
 ipcMain.on(
   channels.PLAID_FORCE_TRANSACTIONS,
-  async (event, { access_token, cursor, max_date }) => {
+  async (event, { access_token, start_date, end_date }) => {
     console.log('Try getting plaid account transactions ');
-
-    const cur_date = dayjs().format('YYYY-MM-DD');
 
     let added = [];
 
@@ -604,8 +602,8 @@ ipcMain.on(
     try {
       response = await client.transactionsGet({
         access_token: access_token,
-        start_date: max_date,
-        end_date: cur_date,
+        start_date: start_date,
+        end_date: end_date,
       });
     } catch (e) {
       console.log('Error: ', e.response.data.error_message);
@@ -625,8 +623,8 @@ ipcMain.on(
     while (transactions.length < total_transactions) {
       const paginatedRequest = {
         access_token: access_token,
-        start_date: max_date,
-        end_date: cur_date,
+        start_date: start_date,
+        end_date: end_date,
         options: {
           offset: transactions.length,
         },
@@ -2949,7 +2947,7 @@ async function basic_insert_transaction_node(
   refNumber,
   envID
 ) {
-  let my_txDate = dayjs(new Date(txDate)).format('YYYY-MM-DD');
+  let my_txDate = dayjs(new Date(txDate + 'T00:00:00')).format('YYYY-MM-DD');
 
   // Prepare the data node
   const myNode = {
@@ -3025,7 +3023,7 @@ async function insert_transaction_node(
 ) {
   let isDuplicate = 0;
 
-  let my_txDate = dayjs(new Date(txDate)).format('YYYY-MM-DD');
+  let my_txDate = dayjs(new Date(txDate + 'T00:00:00')).format('YYYY-MM-DD');
   if (my_txDate === 'Invalid Date') {
     return;
   }
