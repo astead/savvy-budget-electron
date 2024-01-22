@@ -112,6 +112,8 @@ module.exports = {
     PLAID_DONE_FORCE_TRANSACTIONS: 'plaid_done_force_transactions',
     PLAID_GET_ACCOUNTS: 'plaid_get_accounts',
     PLAID_LIST_ACCOUNTS: 'plaid_list_accounts',
+    PLAID_UPDATE_LOGIN: 'plaid_update_login',
+    PLAID_DONE_UPDATE_LOGIN: 'plaid_done_update_login',
 
     DRIVE_AUTH: 'drive_auth',
     DRIVE_DONE_AUTH: 'drive_done_auth',

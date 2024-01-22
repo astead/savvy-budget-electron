@@ -381,8 +381,10 @@ const configuration = new Configuration({
   },
 });
 
+// Used for most PLAID operations
 const client = new PlaidApi(configuration);
 
+// Used to create the link token
 const configs = {
   user: {
     // This should correspond to a unique id for the current user.
@@ -416,6 +418,7 @@ ipcMain.on(
       // associated with the currently signed-in user
       const access_token = response.data.access_token;
       const itemID = response.data.item_id;
+      console.log('itemPublicTokenExchange return:', response.data);
 
       metadata.accounts.forEach((account, index) => {
         db('account')
@@ -840,14 +843,19 @@ const set_google_auth = async () => {
     console.log('setting tokens');
     await oAuth2Client.setCredentials(googleTokens);
     googleAuth = oAuth2Client;
+  } else {
+    console.log('in set_google_auth, but we already have googleAuth');
   }
 };
 
 const set_google_service = async () => {
+  console.log('set_google_service');
   if (!googleAuth) {
+    console.log('calling set_google_auth');
     await set_google_auth();
   }
   if (googleAuth && !googleClient) {
+    console.log('initiating google.drive');
     googleClient = await google.drive({ version: 'v3', auth: googleAuth });
   }
 };
@@ -1132,8 +1140,11 @@ ipcMain.on(channels.DRIVE_GET_FILE, async (event, { credentials, tokens }) => {
     googleGettingFile = true;
     googleCredentials = credentials.installed;
     googleTokens = tokens;
+    console.log('calling set_google_auth');
     await set_google_auth();
+    console.log('calling set_google_service');
     await set_google_service();
+    console.log('calling google.drive to set googleClient');
     googleClient = await google.drive({ version: 'v3', auth: googleAuth });
 
     event.sender.send(
@@ -1142,10 +1153,14 @@ ipcMain.on(channels.DRIVE_GET_FILE, async (event, { credentials, tokens }) => {
     );
   } else {
     console.log('Another thread is trying to get the DB file.');
-    //event.sender.send(channels.DRIVE_DONE_GET_FILE, {
-    //  error: 'Another thread is trying to get the DB file.',
-    //  fileName: '',
-    //});
+    /*
+    If we return this, it will be caught by the thread trying to get the database
+    TODO: Maybe we should add some kind of unique identifier to the channel?
+    event.sender.send(channels.DRIVE_DONE_GET_FILE, {
+      error: 'Another thread is trying to get the DB file.',
+      fileName: '',
+    });
+    */
   }
 });
 
@@ -1354,7 +1369,7 @@ ipcMain.on(channels.SPLIT_TX, async (event, { txID, split_tx_list }) => {
 ipcMain.on(channels.PLAID_GET_KEYS, (event) => {
   console.log(channels.PLAID_GET_KEYS);
   if (db) {
-    db.select('client_id', 'secret', 'environment', 'token')
+    db.select('client_id', 'secret', 'environment', 'token', 'token_expiration')
       .from('plaid')
       .then((data) => {
         PLAID_CLIENT_ID = data[0].client_id.trim();
@@ -1399,6 +1414,36 @@ ipcMain.on(channels.PLAID_GET_TOKEN, async (event) => {
     }
   } else {
     event.sender.send(channels.PLAID_LIST_TOKEN, null);
+  }
+});
+
+ipcMain.on(channels.PLAID_UPDATE_LOGIN, async (event, { access_token }) => {
+  console.log('Switching to update mode');
+  if (PLAID_CLIENT_ID?.length) {
+    try {
+      const linkTokenResponse = await client.linkTokenCreate({
+        ...configs,
+        access_token: access_token,
+      });
+
+      // Use the link_token to initialize Link
+      //console.log(linkTokenResponse);
+      event.sender.send(channels.PLAID_DONE_UPDATE_LOGIN, {
+        link_token: linkTokenResponse.data.link_token,
+        error: '',
+      });
+    } catch (error) {
+      console.log(error);
+      event.sender.send(channels.PLAID_DONE_UPDATE_LOGIN, {
+        link_token: '',
+        error: error,
+      });
+    }
+  } else {
+    event.sender.send(channels.PLAID_DONE_UPDATE_LOGIN, {
+      link_token: '',
+      error: 'PLAID_CLIENT_ID not set.',
+    });
   }
 });
 

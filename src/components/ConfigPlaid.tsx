@@ -7,7 +7,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import LinearProgressWithLabel from '@mui/material/LinearProgress';
-import { PlaidLink,
+import { PlaidLink, PlaidLinkOptions, usePlaidLink, 
   PlaidLinkOnSuccess,
   PlaidLinkOnEvent,
   PlaidLinkOnExit } from 'react-plaid-link';
@@ -44,6 +44,7 @@ export const ConfigPlaid = () => {
   const [getStart, setGetStart] = React.useState('');
   const [getEnd, setGetEnd] = React.useState('');
   const [getAcc, setGetAcc] = React.useState<any>(null);
+  const [updateConfig, setUpdateConfig] = React.useState<any>(null);
   
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -80,6 +81,7 @@ export const ConfigPlaid = () => {
 
         if (data[0].token) {
           setToken(data[0].token);
+          setTokenExpiration(data[0].token_expiration);
         }
         
         setLoading(false);
@@ -107,6 +109,7 @@ export const ConfigPlaid = () => {
         setLink_Error(null);
       }
       if (data.error_message?.length) {
+        console.log(data);
         setLink_Error("Error: " + data.error_message);
       }
 
@@ -136,6 +139,28 @@ export const ConfigPlaid = () => {
     };
   };
 
+  const update_login = (acc : PLAIDAccount) => {
+    const ipcRenderer = (window as any).ipcRenderer;
+    ipcRenderer.send(channels.PLAID_UPDATE_LOGIN, 
+      { access_token: acc.access_token }
+    );
+
+    ipcRenderer.on(channels.PLAID_DONE_UPDATE_LOGIN, ({ link_token, error }) => {
+      if (link_token) {
+        get_updated_login(link_token);
+      }
+      if (error) {
+        setLink_Error(error);
+      }
+      ipcRenderer.removeAllListeners(channels.PLAID_DONE_UPDATE_LOGIN);
+    });
+      
+    // Clean the listener after the component is dismounted
+    return () => {
+      ipcRenderer.removeAllListeners(channels.PLAID_DONE_UPDATE_LOGIN);
+    };
+  }
+
   const get_transactions = (acc : PLAIDAccount) => {
     setUploading(true);
     
@@ -158,6 +183,7 @@ export const ConfigPlaid = () => {
 
     ipcRenderer.on(channels.PLAID_LIST_TRANSACTIONS, (data) => {
       if (data.error_message?.length) {
+        console.log(data);
         setLink_Error("Error: " + data.error_message);
       }
       ipcRenderer.removeAllListeners(channels.PLAID_LIST_TRANSACTIONS);
@@ -194,6 +220,7 @@ export const ConfigPlaid = () => {
 
     ipcRenderer.on(channels.PLAID_DONE_FORCE_TRANSACTIONS, (data) => {
       if (data.error_message?.length) {
+        console.log(data);
         setLink_Error("Error: " + data.error_message);
       }
       ipcRenderer.removeAllListeners(channels.PLAID_DONE_FORCE_TRANSACTIONS);
@@ -207,8 +234,7 @@ export const ConfigPlaid = () => {
   };
 
   const onSuccess: PlaidLinkOnSuccess = (public_token, metadata) => {
-    //console.log("Success linking: ", public_token, metadata);
-    console.log("Calling into main to get access token. ");
+    console.log("Success linking new account. ");
     
     console.log("public token: ", public_token);
     console.log("metadata: ", metadata);
@@ -224,7 +250,7 @@ export const ConfigPlaid = () => {
   const onEvent: PlaidLinkOnEvent = (eventName, metadata) => {
     // log onEvent callbacks from Link
     // https://plaid.com/docs/link/web/#onevent
-    console.log("onEvent:", eventName, metadata);
+    //console.log("onEvent:", eventName, metadata);
   };
 
   const onExit: PlaidLinkOnExit = (error, metadata) => {
@@ -238,21 +264,21 @@ export const ConfigPlaid = () => {
 
   const handleClientChange = () => {
     if (!loading) {
-      console.log("setting client to: ", clientTemp);
+      //console.log("setting client to: ", clientTemp);
       setClient(clientTemp);
       update_PLAID_keys();
     }
   };
   const handleSecretChange = () => {
     if (!loading) {
-      console.log("setting secret to: ", secretTemp);
+      //console.log("setting secret to: ", secretTemp);
       setSecret(secretTemp);
       update_PLAID_keys();
     }
   };
   const handleEnvironmentChange = () => {
     if (!loading) {
-      console.log("setting env to: ", environmentTemp);
+      //console.log("setting env to: ", environmentTemp);
       setEnvironment(environmentTemp);
       update_PLAID_keys();
     }
@@ -266,9 +292,53 @@ export const ConfigPlaid = () => {
     setToken(null);
   };
 
+  const get_updated_login = async (updateToken) => {
+    const updateConfig: PlaidLinkOptions = {
+      token: updateToken,
+      onSuccess: (public_token, metadata) => {
+        // You do not need to repeat the /item/public_token/exchange
+        // process when a user uses Link in update mode.
+        // The Item's access_token has not changed.
+        console.log("Success updating login", public_token, metadata);
+      },
+      onExit: (err, metadata) => {
+        //console.log("onExit: ", metadata);
+        // The user exited the Link flow.
+        if (err != null) {
+          // The user encountered a Plaid API error prior
+          // to exiting.
+          //console.log("Error on exit: ", err);
+          setLink_Error(err.display_message);
+        }
+        // metadata contains the most recent API request ID and the
+        // Link session ID. Storing this information is helpful
+        // for support.
+      },
+    };
+
+    //console.log("created plaid link options: ", updateConfig);
+
+    setUpdateConfig(updateConfig);
+  } 
+
+  const UpdatePlaid = () => {
+    const { open: openUpdate, ready: readyUpdate } = usePlaidLink(updateConfig);
+
+    useEffect(() => {
+      if (readyUpdate) {
+        //console.log("calling plaid link to update login");
+        openUpdate();
+      }
+    }, [readyUpdate, openUpdate]);
+
+    return (
+      <></>
+    );
+  };
+
   const NewPlaid = () => {
     return (
-      <PlaidLink 
+      <PlaidLink  
         className={"textButton" + (!token?" myButton-disabled":"")}
         style={{ cursor: 'pointer' }}
         token={token}
@@ -366,6 +436,7 @@ export const ConfigPlaid = () => {
           <tbody>
             <tr>
               <td colSpan={2} align="left">
+                {updateConfig && <UpdatePlaid/>}
                 <NewPlaid />
               </td>
             </tr>
@@ -383,6 +454,14 @@ export const ConfigPlaid = () => {
                 <tr className="Table TGHR">
                   <td className="Table THRC">{acc.institution}</td>
                   <td className="Table THRC">
+                    <button 
+                      className='textButton'
+                      onClick={() => {
+                        update_login(acc)
+                      }} 
+                      disabled={!token}>
+                      Update Login
+                    </button>
                     <button 
                       className='textButton'
                       onClick={() => {
