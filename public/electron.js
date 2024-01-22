@@ -1389,7 +1389,6 @@ ipcMain.on(channels.PLAID_GET_TOKEN, async (event) => {
           .then()
           .catch((err) => console.log(err));
       }
-      console.log(createTokenResponse.data);
 
       event.sender.send(channels.PLAID_LIST_TOKEN, createTokenResponse.data);
     } catch (error) {

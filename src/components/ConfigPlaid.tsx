@@ -102,7 +102,6 @@ export const ConfigPlaid = () => {
     // Receive the data
     ipcRenderer.on(channels.PLAID_LIST_TOKEN, (data) => {
       if (data.link_token?.length) {
-        console.log(data);
         setToken(data.link_token);
         setTokenExpiration(data.expiration);
         setLink_Error(null);
