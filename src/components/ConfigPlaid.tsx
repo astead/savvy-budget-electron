@@ -35,6 +35,7 @@ export const ConfigPlaid = () => {
   const [environment, setEnvironment] = useState('');
   const [environmentTemp, setEnvironmentTemp] = useState('');
   const [token, setToken] = useState<string | null>(null);
+  const [tokenExpiration, setTokenExpiration] = useState<string | null>(null);
   const [link_Error, setLink_Error] = useState<string | null>(null);
   const [PLAIDAccounts, setPLAIDAccounts] = useState<PLAIDAccount[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -101,7 +102,9 @@ export const ConfigPlaid = () => {
     // Receive the data
     ipcRenderer.on(channels.PLAID_LIST_TOKEN, (data) => {
       if (data.link_token?.length) {
+        console.log(data);
         setToken(data.link_token);
+        setTokenExpiration(data.expiration);
         setLink_Error(null);
       }
       if (data.error_message?.length) {
@@ -294,7 +297,7 @@ export const ConfigPlaid = () => {
       <td className="txFilterLabelCell">
         Client ID:
       </td>
-      <td className="txFilterCell">
+      <td className="txFilterCell" align="left">
         <input
           name="PLAIDClient"
           defaultValue={client}
@@ -308,7 +311,7 @@ export const ConfigPlaid = () => {
       <td className="txFilterLabelCell">
         Secret:
       </td>
-      <td className="txFilterCell">
+      <td className="txFilterCell" align="left">
         <input
           name="PLAIDSecret"
           defaultValue={secret}
@@ -322,7 +325,7 @@ export const ConfigPlaid = () => {
       <td className="txFilterLabelCell">
         Environment:
       </td>
-      <td className="txFilterCell">
+      <td className="txFilterCell" align="left">
         <input
           name="PLAIDEnvironment"
           defaultValue={environment}
@@ -332,139 +335,150 @@ export const ConfigPlaid = () => {
         />
       </td>
     </tr>
-  </tbody></table>
-  <br/>
-  {link_Error && 
-    <div><br/>{link_Error}</div>
-  }
-  <>
-    {!token && 
-      <div>
+    <tr>
+      <td className="txFilterLabelCell">
+        Link Token:
+      </td>
+      <td className="txFilterCell" align="left">
+        {token &&
+          <>
+            {
+              token.substring(0,20) + '... Expires: ' +
+              dayjs(tokenExpiration).toString()
+            }
+          </>
+        }
         <button 
           className='textButton'
           onClick={() => createLinkToken()} >
-          Get Link Token
+          {!token && 'Get'}{token && 'Update'} Link Token
         </button>
-      </div>
-    }
+      </td>
+    </tr>
+  </tbody></table>
+  <br/>
+  {link_Error && 
+    <div className="Error"><br/>{link_Error}</div>
+  }
+  <>
     {token &&
       <div>
-        <div>
-          <NewPlaid />
-        </div>
-        <div>
-          <table className="Table" cellSpacing={1} cellPadding={1}>
-            <tbody>
-            {uploading && 
-              <tr><td colSpan={2}>
-              <Box sx={{ width: '100%' }}>
-                <LinearProgressWithLabel value={progress} />
-              </Box>
-              </td></tr>
-            }
-            { PLAIDAccounts.map((acc, index, myArray) => (
-              <React.Fragment key={index}>
-                { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
-                  <React.Fragment>
-                  <tr className="Table TGHR">
-                    <td className="Table THRC">{acc.institution}</td>
-                    <td className="Table THRC">
-                      <button 
-                        className='textButton'
-                        onClick={() => {
-                          get_transactions(acc)
-                        }} 
-                        disabled={!token}>
-                        Update
-                      </button>
-                      <button 
-                        className='textButton'
-                        onClick={() => {
-                          // Get the latest transaction date for this account
-                          const filtered = PLAIDAccounts.filter((a) => a.access_token === acc.access_token);
-                          const only_dates = filtered.map((a) => new Date(a.lastTx + 'T00:00:00').getTime());
-                          const max_date = Math.max(...only_dates);
-                          const max_date_str = dayjs(max_date).format('YYYY-MM-DD');
-                          if (max_date_str) {
-                            setGetStart(max_date_str);
-                          } else {
-                            setGetStart(dayjs().startOf('month').format("YYYY-MM-DD"));
-                          }
-                          setGetEnd(dayjs().format("YYYY-MM-DD"));
-                          setGetAcc(acc);
-                          
-                          handleOpen();
-                        }} 
-                        disabled={!token}>
-                        Force Get
-                      </button>
-                    </td>
-                  </tr>
-                  </React.Fragment>
-                )}
-                <tr key={index}>
-                  <td align='left'>
-                    {acc.account_name + '-' + acc.mask}
-                  </td>
-                  <td align='right'>
-                    {acc.lastTx && dayjs(acc.lastTx).format('M/D/YYYY')}
+        <table className="Table" cellSpacing={1} cellPadding={1}>
+          <tbody>
+            <tr>
+              <td colSpan={2} align="left">
+                <NewPlaid />
+              </td>
+            </tr>
+          {uploading && 
+            <tr><td colSpan={2}>
+            <Box sx={{ width: '100%' }}>
+              <LinearProgressWithLabel value={progress} />
+            </Box>
+            </td></tr>
+          }
+          { PLAIDAccounts.map((acc, index, myArray) => (
+            <React.Fragment key={index}>
+              { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
+                <React.Fragment>
+                <tr className="Table TGHR">
+                  <td className="Table THRC">{acc.institution}</td>
+                  <td className="Table THRC">
+                    <button 
+                      className='textButton'
+                      onClick={() => {
+                        get_transactions(acc)
+                      }} 
+                      disabled={!token}>
+                      Update
+                    </button>
+                    <button 
+                      className='textButton'
+                      onClick={() => {
+                        // Get the latest transaction date for this account
+                        const filtered = PLAIDAccounts.filter((a) => a.access_token === acc.access_token);
+                        const only_dates = filtered.map((a) => new Date(a.lastTx + 'T00:00:00').getTime());
+                        const max_date = Math.max(...only_dates);
+                        const max_date_str = dayjs(max_date).format('YYYY-MM-DD');
+                        if (max_date_str) {
+                          setGetStart(max_date_str);
+                        } else {
+                          setGetStart(dayjs().startOf('month').format("YYYY-MM-DD"));
+                        }
+                        setGetEnd(dayjs().format("YYYY-MM-DD"));
+                        setGetAcc(acc);
+                        
+                        handleOpen();
+                      }} 
+                      disabled={!token}>
+                      Force Get
+                    </button>
                   </td>
                 </tr>
-              </React.Fragment>
-            ))}
-          </tbody></table>
-          <Modal
-            open={open}
-            onClose={handleClose}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-          >
-            <Box sx={style}>
-              Get transactions<br/>
-              <table><tbody>
-              <tr>
-                <td>from:</td>
-                <td>
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    value={dayjs(getStart)}
-                    onChange={(newValue) => {
-                      const new_date = newValue ? newValue.format("YYYY-MM-DD") : '';
-                      setGetStart(new_date);
-                    }}
-                    sx={{ width:150, pr:0 }}
-                    />
-                  </LocalizationProvider>
+                </React.Fragment>
+              )}
+              <tr key={index}>
+                <td align='left'>
+                  {acc.account_name + '-' + acc.mask}
+                </td>
+                <td align='right'>
+                  {acc.lastTx && dayjs(acc.lastTx).format('M/D/YYYY')}
                 </td>
               </tr>
-              <tr>
-                <td>to:</td>
-                <td>
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    value={dayjs(getEnd)}
-                    onChange={(newValue) => {
-                      const new_date = newValue ? newValue.format("YYYY-MM-DD") : '';
-                      setGetEnd(new_date);
-                    }}
-                    sx={{ width:150, pr:0 }}
-                    />
-                  </LocalizationProvider>
-                </td>
-              </tr>
-              </tbody></table>
-              <br/>
-              <button 
-                className='textButton'
-                onClick={() => {
-                  force_get_transactions(getAcc, getStart, getEnd);
-                }} 
-                disabled={!token}>
-                Get Those Transactions!
-              </button>
-            </Box>
-          </Modal>
-        </div>
+            </React.Fragment>
+          ))}
+        </tbody></table>
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box sx={style}>
+            Get transactions<br/>
+            <table><tbody>
+            <tr>
+              <td>from:</td>
+              <td>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  value={dayjs(getStart)}
+                  onChange={(newValue) => {
+                    const new_date = newValue ? newValue.format("YYYY-MM-DD") : '';
+                    setGetStart(new_date);
+                  }}
+                  sx={{ width:150, pr:0 }}
+                  />
+                </LocalizationProvider>
+              </td>
+            </tr>
+            <tr>
+              <td>to:</td>
+              <td>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  value={dayjs(getEnd)}
+                  onChange={(newValue) => {
+                    const new_date = newValue ? newValue.format("YYYY-MM-DD") : '';
+                    setGetEnd(new_date);
+                  }}
+                  sx={{ width:150, pr:0 }}
+                  />
+                </LocalizationProvider>
+              </td>
+            </tr>
+            </tbody></table>
+            <br/>
+            <button 
+              className='textButton'
+              onClick={() => {
+                force_get_transactions(getAcc, getStart, getEnd);
+              }} 
+              disabled={!token}>
+              Get Those Transactions!
+            </button>
+          </Box>
+        </Modal>
       </div>
     }
   </>

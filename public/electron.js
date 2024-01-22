@@ -19,7 +19,7 @@ const destroyer = require('server-destroy');
 const fs = require('fs');
 const readline = require('readline');
 
-const latest_DB_version = 5;
+const latest_DB_version = 6;
 
 let usingGoogleDrive = false;
 let googleCredentials = null;
@@ -241,6 +241,7 @@ const create_local_db = async (filePath) => {
       table.text('secret');
       table.text('environment');
       table.text('token');
+      table.integer('token_expiration');
     });
 
     // Create PLAID account Table
@@ -303,6 +304,17 @@ const update_local_db = async () => {
       // update version to 5
       await db('version').update({ version: 5 }).then();
       cur_ver = '5';
+    }
+
+    if (cur_ver && cur_ver.toString() === '5') {
+      // Need to add the token column to the plaid table
+      await db.schema.table('plaid', (table) => {
+        table.integer('token_expiration');
+      });
+
+      // update version to 6
+      await db('version').update({ version: 6 }).then();
+      cur_ver = '6';
     }
   }
 };
@@ -1373,9 +1385,11 @@ ipcMain.on(channels.PLAID_GET_TOKEN, async (event) => {
       if (db) {
         db('plaid')
           .update('token', createTokenResponse.data.link_token)
+          .update('token_expiration', createTokenResponse.data.expiration)
           .then()
           .catch((err) => console.log(err));
       }
+      console.log(createTokenResponse.data);
 
       event.sender.send(channels.PLAID_LIST_TOKEN, createTokenResponse.data);
     } catch (error) {

@@ -302,6 +302,10 @@ button.TabButton:hover {
   color: red;
 }
 
+div.Error {
+  width:600px;
+}
+
 div.import-container {
   border-radius: 0px;
   border: 1px solid black;
