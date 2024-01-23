@@ -296,12 +296,14 @@ export const ConfigPlaid = () => {
     const updateConfig: PlaidLinkOptions = {
       token: updateToken,
       onSuccess: (public_token, metadata) => {
+        setUpdateConfig(null);
         // You do not need to repeat the /item/public_token/exchange
         // process when a user uses Link in update mode.
         // The Item's access_token has not changed.
         console.log("Success updating login", public_token, metadata);
       },
       onExit: (err, metadata) => {
+        setUpdateConfig(null);
         //console.log("onExit: ", metadata);
         // The user exited the Link flow.
         if (err != null) {
