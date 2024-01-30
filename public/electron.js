@@ -1316,7 +1316,7 @@ ipcMain.on(channels.DEL_TX_LIST, async (event, { del_tx_list }) => {
 });
 
 ipcMain.on(channels.SPLIT_TX, async (event, { txID, split_tx_list }) => {
-  console.log(channels.SPLIT_TX);
+  console.log(channels.SPLIT_TX, ' num split: ', split_tx_list?.length);
   if (db) {
     // Lets use a transaction for this
     await db

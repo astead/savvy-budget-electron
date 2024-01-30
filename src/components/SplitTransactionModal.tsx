@@ -68,7 +68,7 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
 
   const handleTxDateChange = (index, newValue) => {
     let tmpArr = splitData;
-    tmpArr[index].txDate = newValue;
+    tmpArr[index].txDate = newValue.format('YYYY-MM-DD');
     setSplitData([...tmpArr]);
   }
 
@@ -93,24 +93,36 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
 
     if (numSplit) {
       oldDefValue = (txAmt / numSplit);
+      oldDefValue = Math.round(oldDefValue * 100) / 100;
     }
 
     if (newNumSplit) {
       defValue = (txAmt / newNumSplit);
+      defValue = Math.round(defValue * 100) / 100;
     }
 
     let tmpArr = [...splitData];
-    if (numSplit > 0 && tmpArr[numSplit-1].txAmt === oldDefValue) {
+      
+    if (numSplit > 0 && tmpArr[0].txAmt === oldDefValue) {
       tmpArr.map((item) => {
         item.txAmt = defValue;
         return item;
       })
     }  
 
+    let cur_sum = tmpArr.reduce((a, item) => a + item.txAmt, 0);
+
     for (let i = 0; i < count; i++) {
+      let amtValue = defValue;
+      if (i === count-1) {
+        amtValue = txAmt - cur_sum;
+      } else {
+        cur_sum += defValue;
+      }
+
       const newNode = {
         txDate: txDate,
-        txAmt: defValue as number,
+        txAmt: amtValue as number,
         txDesc: txDesc,
         txEnvID: envID
       }
