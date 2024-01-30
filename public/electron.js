@@ -1126,14 +1126,6 @@ ipcMain.on(channels.DRIVE_AUTH, async (event, { credentials }) => {
   });
 });
 
-ipcMain.on(
-  channels.DRIVE_LIST_FILES,
-  async (event, { credentials, tokens }) => {
-    console.log(channels.DRIVE_LIST_FILES, credentials, tokens);
-    event.sender.send(channels.DRIVE_DONE_LIST_FILES, await drive_find_DB());
-  }
-);
-
 ipcMain.on(channels.DRIVE_GET_FILE, async (event, { credentials, tokens }) => {
   console.log(channels.DRIVE_GET_FILE);
   if (!googleGettingFile) {
