@@ -736,16 +736,22 @@ const drive_find_DB = async () => {
       });
       file_list = res.data.files;
       console.log('Got ' + file_list?.length + ' files.');
-      return { file_list: file_list };
+      return { file_list: file_list, error: null };
     } catch (err) {
-      console.log(err);
-      return {};
+      var err_msg = err;
+      if (err?.response?.data?.error_description) {
+        err_msg = err?.response?.data?.error_description;
+        console.log('Error Message:', err_msg);
+      } else {
+        console.log('Error:', err);
+      }
+      return { file_list: null, error: err_msg };
     }
   } else {
-    console.log(
-      'Was trying to look up DB on Google Drive but googleClient is null.'
-    );
-    return {};
+    const err_str =
+      'Was trying to look up DB on Google Drive but googleClient is null.';
+    console.log(err_str);
+    return { file_list: null, error: err_str };
   }
 };
 
@@ -875,10 +881,13 @@ const push_GDrive_file = async () => {
     : path.join(process.resourcesPath, './SavvyBudget.db');
 
   if (!googleFileID) {
-    const { file_list } = await drive_find_DB();
+    const { file_list, error } = await drive_find_DB();
     console.log('drive_find_DB returned: ', file_list);
     if (file_list?.length) {
       googleFileID = file_list[0].id;
+    }
+    if (error?.length) {
+      console.log('drive_find_DB error returned: ', error);
     }
   }
 
@@ -955,34 +964,50 @@ const get_GDrive_file = async () => {
       : path.join(process.resourcesPath, './SavvyBudget.db');
 
     console.log('Find the DB file on GDrive');
-    const { file_list } = await drive_find_DB();
+    const { file_list, error } = await drive_find_DB();
     console.log('drive_find_DB returned: ', file_list);
     let fileId = null;
     if (file_list?.length) {
       fileId = file_list[0].id;
+    }
+    if (error?.length) {
+      console.log('drive_find_DB error returned: ', error);
+
+      return {
+        error: error,
+        fileName: '',
+      };
     }
 
     let already_downloaded_file = false;
 
     if (!fileId) {
       // We did not find the DB file
+      console.log('We did not find the file on Google Drive');
 
       let localDBFile = '';
 
       // Were we already using a DB file?
       if (dbPath) {
+        console.log("We are already using a DB, let's just use that.");
         localDBFile = dbPath;
       } else {
         // If not, let's create a new local DB
         // Check if a local file with the same name exists
         if (!fs.existsSync(fileName)) {
+          console.log('We were not using a DB, so creating a new one.');
           await create_local_db(fileName);
+        } else {
+          console.log(
+            'A DB named ' + fileName + ' already exists, so just using that.'
+          );
         }
         localDBFile = fileName;
       }
 
       // Now that we have a local DB, let's upload
       // this DB to Drive and get the fileId
+      console.log('Uploading our DB to Google Drive.');
       const fileSize = fs.statSync(localDBFile).size;
       const requestBody = {
         name: 'SavvyBudget.db',
@@ -992,26 +1017,35 @@ const get_GDrive_file = async () => {
         body: fs.createReadStream(fileName),
       };
 
-      const res = await googleClient.files.create(
-        {
-          uploadType: 'media',
-          requestBody,
-          media: media,
-        },
-        {
-          // Use the `onUploadProgress` event from Axios to track the
-          // number of bytes uploaded to this point.
-          onUploadProgress: (evt) => {
-            const progress = (evt.bytesRead / fileSize) * 100;
-            readline.clearLine(process.stdout, 0);
-            readline.cursorTo(process.stdout, 0);
-            process.stdout.write(`${Math.round(progress)}% complete`);
+      try {
+        const res = await googleClient.files.create(
+          {
+            uploadType: 'media',
+            requestBody,
+            media: media,
           },
+          {
+            // Use the `onUploadProgress` event from Axios to track the
+            // number of bytes uploaded to this point.
+            onUploadProgress: (evt) => {
+              const progress = (evt.bytesRead / fileSize) * 100;
+              readline.clearLine(process.stdout, 0);
+              readline.cursorTo(process.stdout, 0);
+              process.stdout.write(`${Math.round(progress)}% complete`);
+            },
+          }
+        );
+        console.log(res.data);
+        if (res?.data?.id) {
+          fileId = res.data.id;
         }
-      );
-      console.log(res.data);
-      if (res?.data?.id) {
-        fileId = res.data.id;
+      } catch (err) {
+        if (err?.response?.data?.error_description) {
+          const err_msg = err?.response?.data?.error_description;
+          console.log('Error Message:', err_msg);
+        } else {
+          console.log('Error:', err);
+        }
       }
 
       // if we still don't have a fileId return an error

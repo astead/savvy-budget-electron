@@ -49,13 +49,16 @@ export const App: React.FC = () => {
             localStorage.setItem('databaseFile', JSON.stringify(fileName));
     
             check_database_file(fileName);
+            localStorage.removeItem('DatabaseError');
           }
           if (error) {
             console.log("Error getting the file: " + error);
             if (error.startsWith('Lock file already exists')) {
               localStorage.setItem('LockFileExists', JSON.stringify(true));
+            } else {
+              localStorage.setItem('LockFileExists', JSON.stringify(false));
             }
-
+            localStorage.setItem('DatabaseError', JSON.stringify(error));
           }
 
           ipcRenderer.removeAllListeners(channels.DRIVE_DONE_GET_FILE);

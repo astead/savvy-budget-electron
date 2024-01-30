@@ -26,6 +26,7 @@ export const ConfigDB = () => {
   const [databaseFile, setDatabaseFile] = useState('');
   const [databaseExists, setDatabaseExists] = useState(false);
   const [databaseVersion, setDatabaseVersion] = useState(null);
+  const [databaseError, setDatabaseError] = useState('');
   const [latestDatabaseVersion, setLatestDatabaseVersion] = useState(null);
 
   // Google Drive
@@ -166,6 +167,7 @@ export const ConfigDB = () => {
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.DRIVE_DELETE_LOCK, { credentials: credentials, tokens: client });
       setLockFileExists(false);
+      setDatabaseError('');
       localStorage.setItem('LockFileExists', JSON.stringify(false));
       
       // Receive the data
@@ -188,6 +190,7 @@ export const ConfigDB = () => {
   const handleGetFile = async () => {
     if (client) {
       setLockFileExists(false);
+      setDatabaseError('');
       localStorage.setItem('LockFileExists', JSON.stringify(false));
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.DRIVE_GET_FILE, { credentials: credentials, tokens: client });
@@ -208,7 +211,13 @@ export const ConfigDB = () => {
           //console.log("Error getting the file: " + error);
           if (error.startsWith('Lock file already exists')) {
             setLockFileExists(true);
+            setDatabaseError(
+              'Looks like someone is using the database on Google Drive,\n' +
+              'delete the lock files and try downloading the database again.'
+            );
             localStorage.setItem('LockFileExists', JSON.stringify(false));
+          } else {
+            setDatabaseError(error);
           }
           //if (error.startsWith('Another thread is trying to get the DB file')) {
           //  removeListeners = false;
@@ -347,6 +356,18 @@ export const ConfigDB = () => {
       const lock_exists = JSON.parse(lock_str);
       if (lock_exists) {
         setLockFileExists(true);
+        setDatabaseError(
+          'Looks like someone is using the database on Google Drive,\n' +
+          'delete the lock files and try downloading the database again.'
+        );
+      }
+    }
+
+    const DB_err_str = localStorage.getItem('DatabaseError');
+    if (DB_err_str?.length) {
+      const DB_err = JSON.parse(DB_err_str);
+      if (DB_err) {
+        setDatabaseError(DB_err);
       }
     }
 
@@ -368,19 +389,10 @@ export const ConfigDB = () => {
               <td className="Table TC Left">The database file does not exist.</td>
             </tr>
           }
-          {databaseFile && databaseExists && !databaseVersion && !lockFileExists &&
+          {databaseFile && databaseExists && !databaseVersion &&
             <tr className="TR">
               <td className="Table TC Right">Status:</td>
-              <td className="Table TC Left">Could not read from the database, try getting it again or selecting a new one.</td>
-            </tr>
-          }
-          {databaseFile && databaseExists && !databaseVersion && lockFileExists &&
-            <tr className="TR">
-              <td className="Table TC Right">Status:</td>
-              <td className="Table TC Left">
-                Looks like someone is using the database on Google Drive,<br/>
-                delete the lock files and try downloading the database again.
-              </td>
+              <td className="Table TC Left">{databaseError}</td>
             </tr>
           }
           {databaseFile && databaseExists && databaseVersion &&
