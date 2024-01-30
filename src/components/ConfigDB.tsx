@@ -518,7 +518,7 @@ export const ConfigDB = () => {
                     </td>
                   </tr>
                 </tbody></table>
-                {!client && 
+                {(!client || databaseError.startsWith('Token has been expired')) && 
                   <>
                     <br />
                     <button onClick={handleAuthClick} className="textButton GDrive">Authorize Google Drive</button>
