@@ -134,15 +134,13 @@ export const TransactionTable = ({data, envList, callback}) => {
   } 
   
   const handleChangeAll = ({id, new_value}) => {
+    setChangeAllEnvID(new_value);
     let filtered_nodes = isChecked.filter((item) => item.isChecked);
     
     filtered_nodes.forEach((item) => {
       txData[item.index].envID = new_value;
     });
     setIsAllChecked(false);
-
-    // Reset the drop down to the default
-    setChangeAllEnvID(-1);
 
     // Reset all checkboxes
     setIsAllChecked(false);
@@ -157,14 +155,19 @@ export const TransactionTable = ({data, envList, callback}) => {
     ipcRenderer.send(channels.UPDATE_TX_ENV_LIST, {new_value, filtered_nodes});
     
     // Wait till we are done
-    ipcRenderer.on(channels.DONE_DEL_TX_LIST, () => {
+    ipcRenderer.on(channels.DONE_UPDATE_TX_ENV_LIST, () => {
+      // Reset the drop down to the default
+      setChangeAllEnvID(-1);
+
+      // Probably don't need to call the callback since we 
+      // already made the changes in the local data array above.
       callback();
-      ipcRenderer.removeAllListeners(channels.DONE_DEL_TX_LIST);
+      ipcRenderer.removeAllListeners(channels.DONE_UPDATE_TX_ENV_LIST);
     });
     
     // Clean the listener after the component is dismounted
     return () => {
-      ipcRenderer.removeAllListeners(channels.DONE_DEL_TX_LIST);
+      ipcRenderer.removeAllListeners(channels.DONE_UPDATE_TX_ENV_LIST);
     };
 
   }; 
@@ -395,7 +398,7 @@ export const TransactionTable = ({data, envList, callback}) => {
           }</td>
           <td className="Table THR TCInput">
             <DropDown
-                  id={-1}
+                  id={'change-all-selected-envelopes'}
                   selectedID={changeAllEnvID}
                   optionData={envList}
                   changeCallback={handleChangeAll}

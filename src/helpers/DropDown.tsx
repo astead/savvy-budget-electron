@@ -12,9 +12,9 @@ export const DropDown = ({id, selectedID, optionData, changeCallback, className}
   const [my_optionData, setMy_optionData] = useState(optionData);
 
   const handleChange = (e) => {
+    setMy_selectedID(e.target.value);
     var index = e.nativeEvent.target.selectedIndex;
     changeCallback({id: my_id, new_value: e.target.value, new_text: e.nativeEvent.target[index].text});
-    setMy_selectedID(e.target.value);
   };
 
   useEffect(() => {
