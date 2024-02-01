@@ -529,14 +529,25 @@ ipcMain.on(
 
       let envID = await lookup_keyword(accountID, a.name);
 
-      await basic_insert_transaction_node(
+      // Check if this is a duplicate
+      let isDuplicate = await lookup_if_duplicate(
         accountID,
-        -1 * a.amount,
-        a.date,
-        a.name,
         a.transaction_id,
-        envID
+        a.date,
+        -1 * a.amount,
+        a.name
       );
+
+      if (isDuplicate !== 1) {
+        await basic_insert_transaction_node(
+          accountID,
+          -1 * a.amount,
+          a.date,
+          a.name,
+          a.transaction_id,
+          envID
+        );
+      }
 
       cur_record++;
       event.sender.send(
@@ -674,14 +685,25 @@ ipcMain.on(
 
       let envID = await lookup_keyword(accountID, a.name);
 
-      await basic_insert_transaction_node(
+      // Check if this is a duplicate
+      let isDuplicate = await lookup_if_duplicate(
         accountID,
-        -1 * a.amount,
-        a.date,
-        a.name,
         a.transaction_id,
-        envID
+        a.date,
+        -1 * a.amount,
+        a.name
       );
+
+      if (isDuplicate !== 1) {
+        await basic_insert_transaction_node(
+          accountID,
+          -1 * a.amount,
+          a.date,
+          a.name,
+          a.transaction_id,
+          envID
+        );
+      }
 
       cur_record++;
       event.sender.send(
