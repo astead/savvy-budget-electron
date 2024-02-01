@@ -637,9 +637,6 @@ ipcMain.on(
       event.sender.send(channels.PLAID_LIST_TRANSACTIONS, e.response.data);
       return;
     }
-    console.log('Response: ' + response);
-    const data = response.data;
-    console.log(' Response: ', data);
     let transactions = response.data.transactions;
     const total_transactions = response.data.total_transactions;
 
