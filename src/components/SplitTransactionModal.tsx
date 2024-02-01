@@ -116,6 +116,7 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
       let amtValue = defValue;
       if (i === count-1) {
         amtValue = txAmt - cur_sum;
+        amtValue = Math.round(amtValue * 100) / 100;
       } else {
         cur_sum += defValue;
       }
