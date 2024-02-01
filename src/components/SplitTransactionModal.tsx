@@ -203,6 +203,7 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
                       in_value={item.txDesc}
                       callback={handleTxDescChange}
                       className="Medium"
+                      style={{}}
                     />
                   </td>
                   <td className="Table TC Left">
@@ -220,6 +221,7 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
                       in_value={item.txAmt.toFixed(2)}
                       callback={handleTxAmtChange}
                       className="Small Right"
+                      style={{}}
                     />
                   </td>
                   <td className="Table TC Smallest">
