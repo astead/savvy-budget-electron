@@ -274,7 +274,7 @@ export const Envelopes: React.FC = () => {
     
     // Wait till we are done
     ipcRenderer.on(channels.DONE_COPY_BUDGET, () => {
-      
+      load_CurrBudget();
       ipcRenderer.removeAllListeners(channels.DONE_COPY_BUDGET);
     });
     
