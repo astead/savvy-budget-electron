@@ -2389,6 +2389,18 @@ ipcMain.on(channels.UPDATE_TX_DESC, async (event, { txID, new_value }) => {
     });
 });
 
+ipcMain.on(channels.UPDATE_TX_DATE, async (event, { txID, new_value }) => {
+  console.log(channels.UPDATE_TX_DATE, txID, new_value);
+
+  db('transaction')
+    .where({ id: txID })
+    .update({ txDate: new_value })
+    .then()
+    .catch((err) => {
+      console.log('Error: ' + err);
+    });
+});
+
 ipcMain.on(channels.SAVE_KEYWORD, (event, { acc, envID, description }) => {
   console.log(channels.SAVE_KEYWORD, acc, envID, description);
 

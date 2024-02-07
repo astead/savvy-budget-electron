@@ -10,6 +10,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Pagination from '@mui/material/Pagination';
 import { EditText } from 'react-edit-text';
+import { EditDate } from '../helpers/EditDate.tsx';
 
 /*
  TODO:
@@ -307,7 +308,16 @@ export const TransactionTable = ({data, envList, callback}) => {
             index < (pagingCurPage * pagingPerPage) &&
             index >= ((pagingCurPage-1) * pagingPerPage) &&
             <tr key={"tx-" + item.txID} className={(item.isDuplicate === 1 ? "TR-duplicate":"TR")}>
-              <td className="Table TC">{dayjs(item.txDate).format('M/D/YYYY')}</td>
+              <td className="Table TC">
+                <EditDate 
+                  in_ID={item.txID.toString()}
+                  in_value={dayjs(item.txDate).format('M/D/YYYY')}
+                  callback={({id, value}) => {
+                    const ipcRenderer = (window as any).ipcRenderer;
+                    ipcRenderer.send(channels.UPDATE_TX_DATE, { txID: item.txID, new_value: value });
+                  }}
+                />
+              </td>
               <td className="Table TC Left">{item.account}</td>
               <td className="Table TC Left">
                 <EditText
