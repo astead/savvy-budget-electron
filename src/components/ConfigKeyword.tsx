@@ -9,6 +9,7 @@ import { EditText } from 'react-edit-text';
   TODO:
   - Show keyword duplicate matches?
   - don't allow renaming to cause duplicate matches.
+  - show when a keyword was last used
 */
 
 interface KeywordList {

@@ -24,6 +24,13 @@ const style = {
   p: 4,
 };
 
+/* 
+  TODO:
+  - Update last TX after getting new data
+  - Update list of accounts after adding new one
+  - when hitting Update, clear error message.
+*/
+
 export const ConfigPlaid = () => {
   
   const [open, setOpen] = useState(false);

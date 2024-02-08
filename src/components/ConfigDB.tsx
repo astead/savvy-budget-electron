@@ -4,20 +4,7 @@ import { channels } from '../shared/constants.js';
 /* 
   TODO:
   - Show more DB data? transaction dates, # transactions, # accounts?
-  - Allow DB on Azure?
-      knex({
-        client : 'mssql',
-        connection: {
-          server : 'myserver.database.windows.net',
-          user : 'myuser',
-          password : 'mypass',
-          database : 'mydatabase',
-          options: {
-              port: 1433,
-              encrypt: true
-          }
-        }
-      });
+  - another cloud DB option?
 */
 
 export const ConfigDB = () => {

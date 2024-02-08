@@ -14,7 +14,6 @@ import { EditDate } from '../helpers/EditDate.tsx';
 
 /*
  TODO:
-  - modify date?
   - popup window to add notes, tags, etc and edit item
 */
 
@@ -225,7 +224,6 @@ export const TransactionTable = ({data, envList, callback}) => {
   };
 
   useEffect(() => {
-    // TODO: Not super happy with this, but it will do for now.
     const oldNumPer = Math.ceil(pagingTotalRecords / pagingNumPages);
     const oldItemIndex = (pagingCurPage-1) * oldNumPer;
     const newItemIndex = Math.ceil(oldItemIndex / pagingPerPage)

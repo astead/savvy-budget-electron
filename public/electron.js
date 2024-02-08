@@ -35,6 +35,7 @@ let googleDrivefileName = null;
   TODO:
   - consolidate redundant work?
   - use transactions for anything requiring multiple DB calls.
+  - handle error when creating server at 3001 when it is already listening
 */
 
 let win;
@@ -587,7 +588,6 @@ ipcMain.on(
       let envID = await lookup_keyword(accountID, m.name);
 
       // Rather than modify it, just remove the old and the new
-      // TODO: Not sure how much faster it would be to just update
       await basic_remove_transaction_node(access_token, m.transaction_id);
 
       await basic_insert_transaction_node(

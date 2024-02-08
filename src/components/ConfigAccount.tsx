@@ -5,6 +5,12 @@ import * as dayjs from 'dayjs';
 import { EditText } from 'react-edit-text';
 import { channels } from '../shared/constants.js';
 
+/*
+  TODO:
+  - when getting last tx date, don't include splits
+  - sort by last tx date?
+*/
+
 export const ConfigAccount = () => {
 
   const [accountData, setAccountData] = useState<any[]>([]);
