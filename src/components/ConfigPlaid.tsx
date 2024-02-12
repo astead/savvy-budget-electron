@@ -169,6 +169,9 @@ export const ConfigPlaid = () => {
   }
 
   const get_transactions = (acc : PLAIDAccount) => {
+    // Clear error message
+    setLink_Error(null);
+
     setUploading(true);
     
     // Get transactions
@@ -185,6 +188,9 @@ export const ConfigPlaid = () => {
       if (data >= 100) {
         ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
         setUploading(false);
+        
+        // Get new latest transaction dates
+        getAccountList();
       }
     });
 
@@ -222,9 +228,13 @@ export const ConfigPlaid = () => {
       if (data >= 100) {
         ipcRenderer.removeAllListeners(channels.UPLOAD_PROGRESS);
         setUploading(false);
+        
+        // Get new latest transaction dates
+        getAccountList();
       }
     });
 
+    // TODO: This is never being sent, why do we have this?
     ipcRenderer.on(channels.PLAID_DONE_FORCE_TRANSACTIONS, (data) => {
       if (data.error_message?.length) {
         console.log(data);
