@@ -35,7 +35,6 @@ let googleDrivefileName = null;
   TODO:
   - consolidate redundant work?
   - use transactions for anything requiring multiple DB calls.
-  - handle error when creating server at 3001 when it is already listening
 */
 
 let win;
