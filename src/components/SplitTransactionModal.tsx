@@ -44,7 +44,7 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
 
   const handleSaveNewValue = () => {
     // Request we update the DB
-    if (splitData.reduce((a, item) => a + item.txAmt, 0) === txAmt) {
+    if (splitData.reduce((a, item) => a + item.txAmt, 0).toFixed(2) === txAmt.toFixed(2)) {
 
       const ipcRenderer = (window as any).ipcRenderer;
       ipcRenderer.send(channels.SPLIT_TX, {txID: txID, split_tx_list: splitData});
@@ -147,7 +147,7 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
+  
   return (
     <>
       <span onClick={handleOpen}
@@ -237,7 +237,7 @@ export const SplitTransactionModal = ({txID, txDate, txAmt, txDesc, cat, env, en
                 <td className="Table TC Left"></td>
                 <td className="Table TC Left"></td>
                 <td className="Table TC Right">
-                  <span className={(splitData.reduce((a, item) => a + item.txAmt, 0) !== txAmt)?" Red":""}>
+                  <span className={(splitData.reduce((a, item) => a + item.txAmt, 0).toFixed(2) !== txAmt.toFixed(2))?" Red":""}>
                     { formatCurrency(splitData.reduce((a, item) => a + item.txAmt, 0)) }
                   </span>
                 </td>
