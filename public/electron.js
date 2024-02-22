@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { shell, app, BrowserWindow, ipcMain, dialog } = require('electron');
 const isDev = require('electron-is-dev'); // To check if electron is in development mode
 const path = require('path');
 const { channels } = require('../src/shared/constants.js');
@@ -82,6 +82,11 @@ function createWindow() {
   if (isDev) {
     win.webContents.openDevTools();
   }
+
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
 }
 
 // ((OPTIONAL)) Setting the location for the userdata folder created by an Electron app. It default to the AppData folder if you don't set it.

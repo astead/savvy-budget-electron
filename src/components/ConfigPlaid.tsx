@@ -7,9 +7,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import LinearProgressWithLabel from '@mui/material/LinearProgress';
-import { PlaidLink, PlaidLinkOptions, usePlaidLink, 
+import { PlaidLinkOptions, usePlaidLink, 
   PlaidLinkOnSuccess,
-  PlaidLinkOnEvent,
   PlaidLinkOnExit } from 'react-plaid-link';
 
 const style = {
@@ -26,9 +25,7 @@ const style = {
 
 /* 
   TODO:
-  - Update last TX after getting new data
   - Update list of accounts after adding new one
-  - when hitting Update, clear error message.
 */
 
 export const ConfigPlaid = () => {
@@ -52,6 +49,7 @@ export const ConfigPlaid = () => {
   const [getEnd, setGetEnd] = React.useState('');
   const [getAcc, setGetAcc] = React.useState<any>(null);
   const [updateConfig, setUpdateConfig] = React.useState<any>(null);
+  //const isOAuthRedirect = window.location.href.includes('?oauth_state_id=');
   
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -89,6 +87,9 @@ export const ConfigPlaid = () => {
         if (data[0].token) {
           setToken(data[0].token);
           setTokenExpiration(data[0].token_expiration);
+          getAccountList();
+        } else {
+          createLinkToken();
         }
         
         setLoading(false);
@@ -114,6 +115,8 @@ export const ConfigPlaid = () => {
         setToken(data.link_token);
         setTokenExpiration(data.expiration);
         setLink_Error(null);
+        
+        getAccountList();
       }
       if (data.error_message?.length) {
         console.log(data);
@@ -264,12 +267,6 @@ export const ConfigPlaid = () => {
     ipcRenderer.send(channels.PLAID_SET_ACCESS_TOKEN, {public_token, metadata});
   };
 
-  const onEvent: PlaidLinkOnEvent = (eventName, metadata) => {
-    // log onEvent callbacks from Link
-    // https://plaid.com/docs/link/web/#onevent
-    //console.log("onEvent:", eventName, metadata);
-  };
-
   const onExit: PlaidLinkOnExit = (error, metadata) => {
     // log onExit callbacks from Link, handle errors
     // https://plaid.com/docs/link/web/#onexit
@@ -355,24 +352,15 @@ export const ConfigPlaid = () => {
     );
   };
 
-  const NewPlaid = () => {
-    return (
-      <PlaidLink  
-        className={"textButton" + (!token?" myButton-disabled":"")}
-        style={{ cursor: 'pointer' }}
-        token={token}
-        onSuccess={onSuccess}
-        onEvent={onEvent}
-        onExit={onExit}
-      >
-        Link New Account
-      </PlaidLink>
-    );
-  };
+  const { open: openLink, ready: readyLink } = usePlaidLink({
+    token: token,
+    onSuccess: onSuccess,
+    onExit: onExit,
+  });
 
+ 
   useEffect(() => {
     getPLAIDInfo();
-    getAccountList();
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -456,7 +444,9 @@ export const ConfigPlaid = () => {
             <tr>
               <td colSpan={2} align="left">
                 {updateConfig && <UpdatePlaid/>}
-                <NewPlaid />
+                <button className='textButton' onClick={() => openLink()} disabled={!readyLink}>
+                  Connect a new bank account
+                </button>
               </td>
             </tr>
           {uploading && 
