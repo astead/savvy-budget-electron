@@ -466,6 +466,177 @@ ipcMain.on(
   }
 );
 
+ipcMain.on(channels.PLAID_GET_KEYS, (event) => {
+  console.log(channels.PLAID_GET_KEYS);
+  if (db) {
+    db.select('client_id', 'secret', 'environment', 'token', 'token_expiration')
+      .from('plaid')
+      .then((data) => {
+        PLAID_CLIENT_ID = data[0].client_id.trim();
+        PLAID_SECRET = data[0].secret.trim();
+        PLAID_ENV = data[0].environment.trim();
+
+        client.configuration.baseOptions.headers['PLAID-CLIENT-ID'] =
+          PLAID_CLIENT_ID;
+        client.configuration.baseOptions.headers['PLAID-SECRET'] = PLAID_SECRET;
+        client.configuration.basePath = PlaidEnvironments[PLAID_ENV];
+
+        if (data[0].token) {
+          client.linkTokenCreate(configs);
+        }
+
+        event.sender.send(channels.PLAID_LIST_KEYS, data);
+      })
+      .catch((err) => console.log(err));
+  }
+});
+
+ipcMain.on(channels.PLAID_GET_TOKEN, async (event) => {
+  console.log('Try getting PLAID link token');
+  if (PLAID_CLIENT_ID?.length) {
+    try {
+      const createTokenResponse = await client.linkTokenCreate(configs);
+
+      if (db) {
+        db('plaid')
+          .update('token', createTokenResponse.data.link_token)
+          .update('token_expiration', createTokenResponse.data.expiration)
+          .then()
+          .catch((err) => console.log(err));
+      }
+
+      event.sender.send(channels.PLAID_LIST_TOKEN, createTokenResponse.data);
+    } catch (error) {
+      console.log(error);
+      // handle error
+      console.log('Error: ', error.response.data.error_message);
+      event.sender.send(channels.PLAID_LIST_TOKEN, error.response.data);
+    }
+  } else {
+    event.sender.send(channels.PLAID_LIST_TOKEN, null);
+  }
+});
+
+ipcMain.on(channels.PLAID_UPDATE_LOGIN, async (event, { access_token }) => {
+  console.log('Switching to update mode');
+  if (PLAID_CLIENT_ID?.length) {
+    try {
+      const linkTokenResponse = await client.linkTokenCreate({
+        ...configs,
+        access_token: access_token,
+      });
+
+      // Use the link_token to initialize Link
+      //console.log(linkTokenResponse);
+      event.sender.send(channels.PLAID_DONE_UPDATE_LOGIN, {
+        link_token: linkTokenResponse.data.link_token,
+        error: '',
+      });
+    } catch (error) {
+      console.log(error);
+      event.sender.send(channels.PLAID_DONE_UPDATE_LOGIN, {
+        link_token: '',
+        error: error,
+      });
+    }
+  } else {
+    event.sender.send(channels.PLAID_DONE_UPDATE_LOGIN, {
+      link_token: '',
+      error: 'PLAID_CLIENT_ID not set.',
+    });
+  }
+});
+
+ipcMain.on(
+  channels.PLAID_SET_KEYS,
+  (event, { client_id, secret, environment }) => {
+    console.log(channels.PLAID_SET_KEYS);
+
+    PLAID_CLIENT_ID = client_id.trim();
+    PLAID_SECRET = secret.trim();
+    PLAID_ENV = environment.trim();
+
+    client.configuration.baseOptions.headers['PLAID-CLIENT-ID'] =
+      PLAID_CLIENT_ID;
+    client.configuration.baseOptions.headers['PLAID-SECRET'] = PLAID_SECRET;
+    client.configuration.basePath = PlaidEnvironments[PLAID_ENV];
+
+    if (db) {
+      db.select('client_id')
+        .from('plaid')
+        .then((rows) => {
+          if (rows?.length) {
+            db('plaid')
+              .update('client_id', client_id)
+              .update('secret', secret)
+              .update('environment', environment)
+              .update('token', '')
+              .then()
+              .catch((err) => console.log(err));
+          } else {
+            db('plaid')
+              .insert({
+                client_id: client_id,
+                secret: secret,
+                environment: environment,
+              })
+              .then()
+              .catch((err) => console.log(err));
+          }
+        })
+        .catch((err) => console.log(err));
+    }
+  }
+);
+
+ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
+  console.log(channels.PLAID_GET_ACCOUNTS);
+  if (db) {
+    let query = db
+      .select(
+        'plaid_account.id',
+        'plaid_account.institution',
+        'plaid_account.account_id',
+        'plaid_account.mask',
+        'plaid_account.account_name',
+        'plaid_account.account_subtype',
+        'plaid_account.account_type',
+        'plaid_account.verification_status',
+        'plaid_account.item_id',
+        'plaid_account.access_token',
+        'plaid_account.cursor'
+      )
+      .max({ lastTx: 'txDate' })
+      .from('plaid_account')
+      .join('account', 'plaid_account.account_id', 'account.plaid_id')
+      .leftJoin('transaction', function () {
+        this.on('account.id', '=', 'transaction.accountID')
+          .on('transaction.isBudget', '=', 0)
+          .on('transaction.isVisible', '=', 1)
+          .on('transaction.isDuplicate', '=', 0);
+      })
+      .orderBy('institution', 'public_token')
+      .groupBy(
+        'plaid_account.id',
+        'plaid_account.institution',
+        'plaid_account.account_id',
+        'plaid_account.mask',
+        'plaid_account.account_name',
+        'plaid_account.account_subtype',
+        'plaid_account.account_type',
+        'plaid_account.verification_status',
+        'plaid_account.item_id',
+        'plaid_account.access_token',
+        'plaid_account.cursor'
+      );
+    query
+      .then((data) => {
+        event.sender.send(channels.PLAID_LIST_ACCOUNTS, data);
+      })
+      .catch((err) => console.log(err));
+  }
+});
+
 ipcMain.on(
   channels.PLAID_GET_TRANSACTIONS,
   async (event, { access_token, cursor }) => {
@@ -1414,177 +1585,6 @@ ipcMain.on(channels.SPLIT_TX, async (event, { txID, split_tx_list }) => {
       .catch(function (error) {
         console.error(error);
       });
-  }
-});
-
-ipcMain.on(channels.PLAID_GET_KEYS, (event) => {
-  console.log(channels.PLAID_GET_KEYS);
-  if (db) {
-    db.select('client_id', 'secret', 'environment', 'token', 'token_expiration')
-      .from('plaid')
-      .then((data) => {
-        PLAID_CLIENT_ID = data[0].client_id.trim();
-        PLAID_SECRET = data[0].secret.trim();
-        PLAID_ENV = data[0].environment.trim();
-
-        client.configuration.baseOptions.headers['PLAID-CLIENT-ID'] =
-          PLAID_CLIENT_ID;
-        client.configuration.baseOptions.headers['PLAID-SECRET'] = PLAID_SECRET;
-        client.configuration.basePath = PlaidEnvironments[PLAID_ENV];
-
-        if (data[0].token) {
-          client.linkTokenCreate(configs);
-        }
-
-        event.sender.send(channels.PLAID_LIST_KEYS, data);
-      })
-      .catch((err) => console.log(err));
-  }
-});
-
-ipcMain.on(channels.PLAID_GET_TOKEN, async (event) => {
-  console.log('Try getting PLAID link token');
-  if (PLAID_CLIENT_ID?.length) {
-    try {
-      const createTokenResponse = await client.linkTokenCreate(configs);
-
-      if (db) {
-        db('plaid')
-          .update('token', createTokenResponse.data.link_token)
-          .update('token_expiration', createTokenResponse.data.expiration)
-          .then()
-          .catch((err) => console.log(err));
-      }
-
-      event.sender.send(channels.PLAID_LIST_TOKEN, createTokenResponse.data);
-    } catch (error) {
-      console.log(error);
-      // handle error
-      console.log('Error: ', error.response.data.error_message);
-      event.sender.send(channels.PLAID_LIST_TOKEN, error.response.data);
-    }
-  } else {
-    event.sender.send(channels.PLAID_LIST_TOKEN, null);
-  }
-});
-
-ipcMain.on(channels.PLAID_UPDATE_LOGIN, async (event, { access_token }) => {
-  console.log('Switching to update mode');
-  if (PLAID_CLIENT_ID?.length) {
-    try {
-      const linkTokenResponse = await client.linkTokenCreate({
-        ...configs,
-        access_token: access_token,
-      });
-
-      // Use the link_token to initialize Link
-      //console.log(linkTokenResponse);
-      event.sender.send(channels.PLAID_DONE_UPDATE_LOGIN, {
-        link_token: linkTokenResponse.data.link_token,
-        error: '',
-      });
-    } catch (error) {
-      console.log(error);
-      event.sender.send(channels.PLAID_DONE_UPDATE_LOGIN, {
-        link_token: '',
-        error: error,
-      });
-    }
-  } else {
-    event.sender.send(channels.PLAID_DONE_UPDATE_LOGIN, {
-      link_token: '',
-      error: 'PLAID_CLIENT_ID not set.',
-    });
-  }
-});
-
-ipcMain.on(
-  channels.PLAID_SET_KEYS,
-  (event, { client_id, secret, environment }) => {
-    console.log(channels.PLAID_SET_KEYS);
-
-    PLAID_CLIENT_ID = client_id.trim();
-    PLAID_SECRET = secret.trim();
-    PLAID_ENV = environment.trim();
-
-    client.configuration.baseOptions.headers['PLAID-CLIENT-ID'] =
-      PLAID_CLIENT_ID;
-    client.configuration.baseOptions.headers['PLAID-SECRET'] = PLAID_SECRET;
-    client.configuration.basePath = PlaidEnvironments[PLAID_ENV];
-
-    if (db) {
-      db.select('client_id')
-        .from('plaid')
-        .then((rows) => {
-          if (rows?.length) {
-            db('plaid')
-              .update('client_id', client_id)
-              .update('secret', secret)
-              .update('environment', environment)
-              .update('token', '')
-              .then()
-              .catch((err) => console.log(err));
-          } else {
-            db('plaid')
-              .insert({
-                client_id: client_id,
-                secret: secret,
-                environment: environment,
-              })
-              .then()
-              .catch((err) => console.log(err));
-          }
-        })
-        .catch((err) => console.log(err));
-    }
-  }
-);
-
-ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
-  console.log(channels.PLAID_GET_ACCOUNTS);
-  if (db) {
-    let query = db
-      .select(
-        'plaid_account.id',
-        'plaid_account.institution',
-        'plaid_account.account_id',
-        'plaid_account.mask',
-        'plaid_account.account_name',
-        'plaid_account.account_subtype',
-        'plaid_account.account_type',
-        'plaid_account.verification_status',
-        'plaid_account.item_id',
-        'plaid_account.access_token',
-        'plaid_account.cursor'
-      )
-      .max({ lastTx: 'txDate' })
-      .from('plaid_account')
-      .join('account', 'plaid_account.account_id', 'account.plaid_id')
-      .leftJoin('transaction', function () {
-        this.on('account.id', '=', 'transaction.accountID')
-          .on('transaction.isBudget', '=', 0)
-          .on('transaction.isVisible', '=', 1)
-          .on('transaction.isDuplicate', '=', 0);
-      })
-      .orderBy('institution', 'public_token')
-      .groupBy(
-        'plaid_account.id',
-        'plaid_account.institution',
-        'plaid_account.account_id',
-        'plaid_account.mask',
-        'plaid_account.account_name',
-        'plaid_account.account_subtype',
-        'plaid_account.account_type',
-        'plaid_account.verification_status',
-        'plaid_account.item_id',
-        'plaid_account.access_token',
-        'plaid_account.cursor'
-      );
-    query
-      .then((data) => {
-        event.sender.send(channels.PLAID_LIST_ACCOUNTS, data);
-      })
-      .catch((err) => console.log(err));
   }
 });
 
