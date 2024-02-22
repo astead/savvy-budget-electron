@@ -35,6 +35,7 @@ let googleDrivefileName = null;
   TODO:
   - consolidate redundant work?
   - use transactions for anything requiring multiple DB calls.
+  - persist localStorage on app update, maybe with: https://github.com/sindresorhus/electron-store
 */
 
 let win;
