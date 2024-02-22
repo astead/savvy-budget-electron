@@ -354,20 +354,6 @@ const PLAID_COUNTRY_CODES = (process.env.PLAID_COUNTRY_CODES || 'US').split(
   ','
 );
 
-// Parameters used for the OAuth redirect Link flow.
-//
-// Set PLAID_REDIRECT_URI to 'http://localhost:3000'
-// The OAuth redirect flow requires an endpoint on the developer's website
-// that the bank website should redirect to. You will need to configure
-// this redirect URI for your client ID through the Plaid developer dashboard
-// at https://dashboard.plaid.com/team/api.
-const PLAID_REDIRECT_URI =
-  process.env.PLAID_REDIRECT_URI || 'https://localhost:3000';
-
-// Parameter used for OAuth in Android. This should be the package name of your app,
-// e.g. com.plaid.linksample
-const PLAID_ANDROID_PACKAGE_NAME = process.env.PLAID_ANDROID_PACKAGE_NAME || '';
-
 // Initialize the Plaid client
 // Find your API keys in the Dashboard (https://dashboard.plaid.com/account/keys)
 
@@ -395,15 +381,8 @@ const configs = {
   products: PLAID_PRODUCTS,
   country_codes: PLAID_COUNTRY_CODES,
   language: 'en',
+  redirect_uri: 'https://localhost:3000',
 };
-
-if (PLAID_REDIRECT_URI !== '') {
-  configs.redirect_uri = PLAID_REDIRECT_URI;
-}
-
-if (PLAID_ANDROID_PACKAGE_NAME !== '') {
-  configs.android_package_name = PLAID_ANDROID_PACKAGE_NAME;
-}
 
 ipcMain.on(
   channels.PLAID_SET_ACCESS_TOKEN,
