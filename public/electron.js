@@ -577,6 +577,7 @@ ipcMain.on(
 ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
   console.log(channels.PLAID_GET_ACCOUNTS);
   if (db) {
+    const find_date = dayjs(new Date()).format('YYYY-MM-DD');
     let query = db
       .select(
         'plaid_account.id',
@@ -595,11 +596,12 @@ ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
       .from('plaid_account')
       .join('account', 'plaid_account.account_id', 'account.plaid_id')
       .leftJoin('transaction', function () {
-        this.on('account.id', '=', 'transaction.accountID')
-          .on('transaction.isBudget', '=', 0)
-          .on('transaction.isVisible', '=', 1)
-          .on('transaction.isDuplicate', '=', 0);
+        this.on('account.id', '=', 'transaction.accountID');
       })
+      .whereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
+      .andWhere('transaction.isBudget', '=', 0)
+      .andWhere('transaction.isVisible', '=', 1)
+      .andWhere('transaction.isDuplicate', '=', 0)
       .orderBy('institution', 'public_token')
       .groupBy(
         'plaid_account.id',
@@ -3216,16 +3218,18 @@ ipcMain.on(channels.GET_ACCOUNT_NAMES, (event) => {
 ipcMain.on(channels.GET_ACCOUNTS, (event) => {
   console.log(channels.GET_ACCOUNTS);
   if (db) {
+    const find_date = dayjs(new Date()).format('YYYY-MM-DD');
     db.select('account.id', 'account.refNumber', 'account', 'isActive')
       .max({ lastTx: 'txDate' })
       .count({ numTx: 'txDate' })
       .from('account')
       .leftJoin('transaction', function () {
-        this.on('account.id', '=', 'transaction.accountID')
-          .on('transaction.isBudget', '=', 0)
-          .on('transaction.isVisible', '=', 1)
-          .on('transaction.isDuplicate', '=', 0);
+        this.on('account.id', '=', 'transaction.accountID');
       })
+      .whereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
+      .andWhere('transaction.isBudget', '=', 0)
+      .andWhere('transaction.isVisible', '=', 1)
+      .andWhere('transaction.isDuplicate', '=', 0)
       .orderBy('account.id')
       .groupBy('account.id', 'account.refNumber', 'account', 'isActive')
       .then((data) => {
