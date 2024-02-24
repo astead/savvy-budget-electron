@@ -14,7 +14,7 @@ import { EditDate } from '../helpers/EditDate.tsx';
 
 /*
  TODO:
-  - popup window to add notes, tags, etc and edit item
+  - popup window to add notes, tags, etc
 */
 
 interface TransactionNodeData {
