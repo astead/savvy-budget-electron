@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronUp, faChevronDown, faTrash, faReply, faReplyAll } from "@fortawesome/free-solid-svg-icons"
+import * as dayjs from 'dayjs';
 import { channels } from '../shared/constants.js';
 import { DropDown } from '../helpers/DropDown.tsx';
 import { EditText } from 'react-edit-text';
@@ -19,6 +20,7 @@ interface KeywordList {
   category: string;
   envelope: string;
   account: string;
+  last_used: string;
 }
 
 export const ConfigKeyword = () => {
@@ -211,6 +213,7 @@ export const ConfigKeyword = () => {
                 <FontAwesomeIcon icon={faChevronDown} className="sortIcon" />
             }
           </th>
+          <th className="Table THR THRC">{'Used?'}</th>
           <th className="Table THR THRC">{'Del'}</th>
           <th className="Table THR THRC">{'Set'}</th>
           <th className="Table THR THRC">{'Force'}</th>
@@ -219,7 +222,7 @@ export const ConfigKeyword = () => {
 
       <tbody>
         {
-          keywordData.map(({ id, envelopeID, description, account }, index) => (
+          keywordData.map(({ id, envelopeID, description, account, last_used }, index) => (
             <tr key={"row-"+id} className="Table TR">
               <td className="Table TC">
                 <DropDown 
@@ -252,6 +255,9 @@ export const ConfigKeyword = () => {
                   changeCallback={handleEnvelopeChange}
                   className={envelopeID === -1 ? "envelopeDropDown-undefined":""}
                 />
+              </td>
+              <td className="Table TC">
+                {last_used && dayjs(last_used).format('M/D/YYYY')}
               </td>
               <td className="Table TC">
               <button 

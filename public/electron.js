@@ -19,7 +19,7 @@ const destroyer = require('server-destroy');
 const fs = require('fs');
 const readline = require('readline');
 
-const latest_DB_version = 6;
+const latest_DB_version = 7;
 
 let usingGoogleDrive = false;
 let googleCredentials = null;
@@ -223,6 +223,7 @@ const create_local_db = async (filePath) => {
       table.integer('envelopeID');
       table.text('description');
       table.text('account');
+      table.integer('last_used');
     });
 
     // Create Transaction Table
@@ -271,7 +272,7 @@ const create_local_db = async (filePath) => {
     });
 
     // Set the version to 1
-    db('version').insert({ version: 5 }).then();
+    db('version').insert({ version: 7 }).then();
 
     // Add the Income Category
     db('category').insert({ category: 'Uncategorized' }).then();
@@ -321,6 +322,17 @@ const update_local_db = async () => {
       // update version to 6
       await db('version').update({ version: 6 }).then();
       cur_ver = '6';
+    }
+
+    if (cur_ver && cur_ver.toString() === '6') {
+      // Need to add the token column to the plaid table
+      await db.schema.table('keyword', (table) => {
+        table.integer('last_used');
+      });
+
+      // update version to 6
+      await db('version').update({ version: 7 }).then();
+      cur_ver = '7';
     }
   }
 };
@@ -2601,7 +2613,7 @@ async function lookup_keyword(accountID, description) {
 
   if (description?.length) {
     let query = db('keyword')
-      .select('envelopeID')
+      .select('id', 'envelopeID')
       .whereRaw(`? LIKE description`, description);
 
     query = query.andWhere(function () {
@@ -2613,6 +2625,13 @@ async function lookup_keyword(accountID, description) {
     await query.then((data) => {
       if (data?.length) {
         envID = data[0].envelopeID;
+
+        // Let's record that we used this keyword
+        let cur_date = dayjs(new Date()).format('YYYY-MM-DD');
+        db('keyword')
+          .update({ last_used: cur_date })
+          .where('id', data[0].id)
+          .catch((err) => console.log(err));
       }
     });
   }
@@ -3185,7 +3204,8 @@ ipcMain.on(channels.GET_KEYWORDS, (event) => {
       'description',
       'category',
       'envelope',
-      'account'
+      'account',
+      'last_used'
     )
       .from('keyword')
       .leftJoin('envelope', function () {
