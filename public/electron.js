@@ -697,7 +697,7 @@ ipcMain.on(
         accountArr.push({ name: account_str, id: accountID });
       }
 
-      let envID = await lookup_keyword(accountID, a.name);
+      let envID = await lookup_keyword(accountID, a.name, a.date);
 
       // Check if this is a duplicate
       let isDuplicate = await lookup_if_duplicate(
@@ -754,7 +754,7 @@ ipcMain.on(
         accountArr.push({ name: account_str, id: accountID });
       }
 
-      let envID = await lookup_keyword(accountID, m.name);
+      let envID = await lookup_keyword(accountID, m.name, m.date);
 
       // Rather than modify it, just remove the old and the new
       await basic_remove_transaction_node(access_token, m.transaction_id);
@@ -849,7 +849,7 @@ ipcMain.on(
         accountArr.push({ name: account_str, id: accountID });
       }
 
-      let envID = await lookup_keyword(accountID, a.name);
+      let envID = await lookup_keyword(accountID, a.name, a.date);
 
       // Check if this is a duplicate
       let isDuplicate = await lookup_if_duplicate(
@@ -2608,7 +2608,7 @@ async function lookup_uncategorized() {
   return categoryID;
 }
 
-async function lookup_keyword(accountID, description) {
+async function lookup_keyword(accountID, description, txDate) {
   let envID = -1;
 
   if (description?.length) {
@@ -2627,9 +2627,8 @@ async function lookup_keyword(accountID, description) {
         envID = data[0].envelopeID;
 
         // Let's record that we used this keyword
-        let cur_date = dayjs(new Date()).format('YYYY-MM-DD');
         db('keyword')
-          .update({ last_used: cur_date })
+          .update({ last_used: txDate })
           .where('id', data[0].id)
           .catch((err) => console.log(err));
       }
@@ -3160,7 +3159,7 @@ async function insert_transaction_node(
   }
 
   // Check if this matches a keyword
-  let envID = await lookup_keyword(accountID, description);
+  let envID = await lookup_keyword(accountID, description, my_txDate);
 
   // Check if this is a duplicate
   isDuplicate = await lookup_if_duplicate(
