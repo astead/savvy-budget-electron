@@ -3126,13 +3126,28 @@ async function basic_remove_transaction_node(access_token, refNumber) {
   )
     .from('plaid_account')
     .join('account', 'account.plaid_id', 'plaid_account.account_id')
-    .join('transaction', 'transaction.account_id', 'account.id')
+    .join('transaction', 'transaction.accountID', 'account.id')
     .where({ access_token: access_token })
     .andWhere('transaction.refNumber', '=', refNumber)
     .then(async (data) => {
       if (data?.length) {
+        console.log(
+          'Deleting transaction id: ',
+          data[0].id,
+          ' amt: ',
+          data[0].txAmt,
+          ' envID: ',
+          data[0].envelopeID
+        );
         await db('transaction').delete().where({ id: data[0].id });
         await update_env_balance(data[0].envelopeID, -1 * data[0].txAmt);
+      } else {
+        console.log(
+          'No TX to delete, looking for refNumber: ',
+          refNumber,
+          ' and access_token: ',
+          access_token
+        );
       }
     })
     .catch((err) => console.log(err));
