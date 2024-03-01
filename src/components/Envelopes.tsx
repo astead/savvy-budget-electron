@@ -683,7 +683,7 @@ export const Envelopes: React.FC = () => {
                 
                 <div className="envelopeDataDiffItem">
                   <div>Diff:</div>
-                  <div className="envelopeDataDiffItemCurr">
+                  <div className={((curTotalBudgetIncome + curTotalBudgetSpending)<=0)?"Green envelopeDataDiffItemCurr":"DarkRed envelopeDataDiffItemCurr"}>
                     {formatWholeCurrency(curTotalBudgetIncome + curTotalBudgetSpending)}
                   </div>
                 </div>

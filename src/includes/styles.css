@@ -302,6 +302,14 @@ button.TabButton:hover {
   color: red;
 }
 
+.DarkRed {
+  color: rgb(66, 7, 0);
+}
+
+.Green {
+  color: rgb(7, 66, 0);
+}
+
 div.Error {
   width:600px;
 }
