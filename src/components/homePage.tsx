@@ -21,8 +21,6 @@ export const HomePage: React.FC = () => {
           Now that Mint is going away, I decided to resurrect this.  I again re-created the whole thing, this time making it so it can run
           locally with a local database file without needing hosting.  
           <br/><br/>
-          I'm still trying to get PLAID working so I can get the auto transaction pulling like Mint had.
-          <br /><br />
           <b>What is it?</b><br />
           Savvy Budget is a combination of envelope budgeting and transaction accounting.  The idea of envelope budgeting is that you have envelopes for
           each bill or spending item such as the electric bill or groceries.  You then set money aside from your paycheck into the appropriate envelopes
@@ -40,6 +38,9 @@ export const HomePage: React.FC = () => {
           Happy Budgeting!
           <br/><br/>
           Please send any bugs, feature requests, comments, questions to: alan.stead@gmail.com
+          <br/><br/>
+          If you want to pull your bank transactions automatically, you can set this up with Plaid.
+          You'll have to create your own Plaid account and keys and authorization, but the infrastructure is all there.
         </div>
       </div>
     );
