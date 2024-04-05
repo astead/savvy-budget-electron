@@ -461,7 +461,10 @@ export const ConfigPlaid = () => {
               { (index === 0 || (index > 0 && acc.access_token !== myArray[index - 1].access_token)) && (
                 <React.Fragment>
                 <tr className="Table TGHR">
-                  <td className="Table THRC">{acc.institution}</td>
+                  <td className="Table THRC">
+                    {acc.institution}
+                    {acc.access_token.includes('production')?' (prod)':' (dev)'}
+                  </td>
                   <td className="Table THRC">
                     <button 
                       className='textButton'
