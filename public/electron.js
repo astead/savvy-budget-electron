@@ -608,12 +608,12 @@ ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
       .from('plaid_account')
       .join('account', 'plaid_account.account_id', 'account.plaid_id')
       .leftJoin('transaction', function () {
-        this.on('account.id', '=', 'transaction.accountID');
+        this.on('account.id', '=', 'transaction.accountID')
+          .on(db.raw(`julianday(?) - julianday(txDate) > 0`, [find_date]))
+          .on('transaction.isBudget', '=', 0)
+          .on('transaction.isVisible', '=', 1)
+          .on('transaction.isDuplicate', '=', 0);
       })
-      .whereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
-      .andWhere('transaction.isBudget', '=', 0)
-      .andWhere('transaction.isVisible', '=', 1)
-      .andWhere('transaction.isDuplicate', '=', 0)
       .orderBy('institution', 'public_token')
       .groupBy(
         'plaid_account.id',
@@ -3258,12 +3258,12 @@ ipcMain.on(channels.GET_ACCOUNTS, (event) => {
       .count({ numTx: 'txDate' })
       .from('account')
       .leftJoin('transaction', function () {
-        this.on('account.id', '=', 'transaction.accountID');
+        this.on('account.id', '=', 'transaction.accountID')
+          .on(db.raw(`julianday(?) - julianday(txDate) > 0`, [find_date]))
+          .on('transaction.isBudget', '=', 0)
+          .on('transaction.isVisible', '=', 1)
+          .on('transaction.isDuplicate', '=', 0);
       })
-      .whereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
-      .andWhere('transaction.isBudget', '=', 0)
-      .andWhere('transaction.isVisible', '=', 1)
-      .andWhere('transaction.isDuplicate', '=', 0)
       .orderBy('account.id')
       .groupBy('account.id', 'account.refNumber', 'account', 'isActive')
       .then((data) => {
