@@ -171,6 +171,35 @@ export const ConfigPlaid = () => {
     };
   }
 
+  const remove_login = (acc : PLAIDAccount) => {
+    const ipcRenderer = (window as any).ipcRenderer;
+    
+    if (token) {
+      if (acc.access_token.includes('production') && !token.includes('production')) {
+        setLink_Error('You are trying to remove a production login but you have development link token.');
+        return;
+      }
+      if (acc.access_token.includes('development') && !token.includes('development')) {
+        setLink_Error('You are trying to remove a development login but you have production link token.');
+        return;
+      }
+      ipcRenderer.send(channels.PLAID_REMOVE_LOGIN, 
+        { access_token: acc.access_token }
+      );
+
+      ipcRenderer.on(channels.PLAID_DONE_REMOVE_LOGIN, () => {
+        getAccountList();
+      });
+        
+      // Clean the listener after the component is dismounted
+      return () => {
+        ipcRenderer.removeAllListeners(channels.PLAID_DONE_UPDATE_LOGIN);
+      };
+    } else {
+      setLink_Error('You need a link token to remove a plaid account login.');
+    }
+  }
+
   const get_transactions = (acc : PLAIDAccount) => {
     // Clear error message
     setLink_Error(null);
@@ -466,6 +495,14 @@ export const ConfigPlaid = () => {
                     {acc.access_token.includes('production')?' (prod)':' (dev)'}
                   </td>
                   <td className="Table THRC">
+                    <button 
+                      className='textButton'
+                      onClick={() => {
+                        remove_login(acc)
+                      }} 
+                      disabled={!token}>
+                      Remove
+                    </button>
                     <button 
                       className='textButton'
                       onClick={() => {

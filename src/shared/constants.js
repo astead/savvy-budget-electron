@@ -115,6 +115,8 @@ module.exports = {
     PLAID_LIST_ACCOUNTS: 'plaid_list_accounts',
     PLAID_UPDATE_LOGIN: 'plaid_update_login',
     PLAID_DONE_UPDATE_LOGIN: 'plaid_done_update_login',
+    PLAID_REMOVE_LOGIN: 'plaid_update_login',
+    PLAID_DONE_REMOVE_LOGIN: 'plaid_done_update_login',
 
     DRIVE_AUTH: 'drive_auth',
     DRIVE_DONE_AUTH: 'drive_done_auth',

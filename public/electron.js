@@ -636,6 +636,54 @@ ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
   }
 });
 
+ipcMain.on(channels.PLAID_REMOVE_LOGIN, async (event, { access_token }) => {
+  console.log('Removing plaid account login ');
+
+  await remove_plaid_login(access_token);
+
+  await db.transaction(async (trx) => {
+    // Get the account info
+    await trx
+      .select('account_id')
+      .from('plaid_account')
+      .where({ access_token: access_token })
+      .then(async (data) => {
+        for (const item of data) {
+          // Remove the plaid account from the database
+          remove_plaid_account(item.account_id);
+
+          // If there was a regular account, disconnect it from a plaid account
+          remove_plaid_account_link(item.account_id);
+        }
+      });
+  });
+
+  event.sender.send(channels.PLAID_DONE_REMOVE_LOGIN);
+});
+
+async function remove_plaid_login(access_token) {
+  let response = null;
+  try {
+    response = await client.itemRemove({
+      access_token: access_token,
+    });
+  } catch (e) {
+    console.log('Error: ', e.response.data.error_message);
+    return;
+  }
+  console.log('Response: ' + response);
+}
+
+async function remove_plaid_account(account_id) {
+  await db('plaid_account').delete().where({ account_id: account_id });
+}
+
+async function remove_plaid_account_link(account_id) {
+  await db('account')
+    .update({ plaid_id: null })
+    .where({ plaid_id: account_id });
+}
+
 ipcMain.on(
   channels.PLAID_GET_TRANSACTIONS,
   async (event, { access_token, cursor }) => {
@@ -3374,12 +3422,19 @@ ipcMain.on(channels.DEL_ACCOUNT, async (event, { id }) => {
             .delete()
             .where({ id: id })
             .then(async () => {
-              if (data[0].plaid_id?.length) {
-                // delete the plaid account if it exists
-                await trx('plaid_account')
-                  .delete()
-                  .where({ account_id: data[0].plaid_id });
-              }
+              // Not sure if we want to delete the plaid account
+              // We would be leaving the account login
+              // If we delete the account login as well, it would remove the login
+              // for all accounts of this institution.
+              // Seems like it would be best to disconnect
+              // the plaid account from this account, and
+              // let the user remove the plaid portion from the configPlaid page.
+              //if (data[0].plaid_id?.length) {
+              // delete the plaid account if it exists
+              //await trx('plaid_account')
+              //  .delete()
+              //  .where({ account_id: data[0].plaid_id });
+              //}
             });
         }
       });
