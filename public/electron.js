@@ -826,7 +826,12 @@ ipcMain.on(
       added = added.concat(paginatedResponse.data.transactions);
     }
 
-    console.log('Done getting the data, now processing');
+    console.log(added);
+    console.log(
+      'Done getting the data, now processing: ',
+      added.length,
+      ' transaction(s)'
+    );
 
     let total_records = added.length;
     let cur_record = 0;
