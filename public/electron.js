@@ -609,7 +609,7 @@ ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
       .join('account', 'plaid_account.account_id', 'account.plaid_id')
       .leftJoin('transaction', function () {
         this.on('account.id', '=', 'transaction.accountID')
-          .on(db.raw(`julianday(?) - julianday(txDate) > 0`, [find_date]))
+          .on(db.raw(`julianday(?) - julianday(txDate) >= 0`, [find_date]))
           .on('transaction.isBudget', '=', 0)
           .on('transaction.isVisible', '=', 1)
           .on('transaction.isDuplicate', '=', 0);
@@ -3312,7 +3312,7 @@ ipcMain.on(channels.GET_ACCOUNTS, (event) => {
       .from('account')
       .leftJoin('transaction', function () {
         this.on('account.id', '=', 'transaction.accountID')
-          .on(db.raw(`julianday(?) - julianday(txDate) > 0`, [find_date]))
+          .on(db.raw(`julianday(?) - julianday(txDate) >= 0`, [find_date]))
           .on('transaction.isBudget', '=', 0)
           .on('transaction.isVisible', '=', 1)
           .on('transaction.isDuplicate', '=', 0);
