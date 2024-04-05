@@ -3360,10 +3360,30 @@ ipcMain.on(channels.VIS_ACCOUNT, async (event, { id, value }) => {
 
 ipcMain.on(channels.DEL_ACCOUNT, async (event, { id }) => {
   console.log(channels.DEL_ACCOUNT, { id });
-  await db('account')
-    .delete()
-    .where({ id: id })
-    .catch((err) => console.log(err));
+
+  await db.transaction(async (trx) => {
+    // Get the account info
+    await trx
+      .select('id', 'account', 'refNumber', 'plaid_id')
+      .from('account')
+      .where({ id: id })
+      .then(async (data) => {
+        if (data?.length) {
+          // Delete the original
+          await trx('account')
+            .delete()
+            .where({ id: id })
+            .then(async () => {
+              if (data[0].plaid_id?.length) {
+                // delete the plaid account if it exists
+                await trx('plaid_account')
+                  .delete()
+                  .where({ account_id: data[0].plaid_id });
+              }
+            });
+        }
+      });
+  });
 
   event.sender.send(channels.DONE_DEL_ACCOUNT);
 });
