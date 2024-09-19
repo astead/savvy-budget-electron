@@ -756,7 +756,22 @@ ipcMain.on(
         a.name
       );
 
-      if (isDuplicate !== 1) {
+      // Check for matching removed transaction
+      let matchingRemoved = removed.find(r => 
+        r.transaction_id === a.pending_transaction_id
+      );
+
+      if (matchingRemoved) {
+        // Update the existing transaction's transaction_id
+        await update_transaction_id(
+          access_token,
+          matchingRemoved.transaction_id, 
+          a.transaction_id,
+          -1 * a.amount,
+          a.date,
+          a.name
+        );
+      } else if (isDuplicate !== 1) {
         await basic_insert_transaction_node(
           accountID,
           -1 * a.amount,
@@ -3118,6 +3133,64 @@ ipcMain.on(
     event.sender.send(channels.UPLOAD_PROGRESS, 100);
   }
 );
+
+async function update_transaction_id(
+  access_token,
+  old_transaction_id, 
+  new_transaction_id,
+  txAmt,
+  txDate,
+  description
+) {
+  let my_txDate = dayjs(new Date(txDate + 'T00:00:00')).format('YYYY-MM-DD');
+
+  await db.select(
+    'transaction.id as id'
+  )
+    .from('plaid_account')
+    .join('account', 'account.plaid_id', 'plaid_account.account_id')
+    .join('transaction', 'transaction.accountID', 'account.id')
+    .where({ access_token: access_token })
+    .andWhere('transaction.refNumber', '=', old_transaction_id)
+    .then(async (data) => {
+      if (data?.length) {
+        console.log(
+          'Updating transaction id: ',
+          data[0].id,
+          ' -> ',
+          new_transaction_id
+        );
+        await db('transaction')
+        .where({ id: data[0].id })
+        .update({ 
+          refNumber: new_transaction_id,
+          txAmt: txAmt,
+          txDate: my_txDate,
+          description: description
+        })
+        .then(() =>
+          {
+            console.log('Successully updated former pending transaction refNumber. ');
+          }
+        )
+        .catch((err) => {
+          console.log('Error: ' + err);
+        });
+                
+      } else {
+        console.log(
+          'We were supposed to be updating a transactions ref Number, but we couldnt find refNumber: ',
+          refNumber,
+          ' and access_token: ',
+          access_token
+        );
+      }
+    })
+    .catch((err) => console.log(err));
+
+  process.stdout.write('.');
+  
+};
 
 async function basic_insert_transaction_node(
   accountID,
