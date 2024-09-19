@@ -32,6 +32,7 @@
     "@types/react-edit-text": "^5.0.4",
     "@types/yup": "^0.32.0",
     "apexcharts": "^3.45.1",
+    "caniuse-lite": "^1.0.30001662",
     "chart.js": "^4.4.1",
     "concurrently": "^8.2.2",
     "crypto": "npm:crypto-browserify",
@@ -40,6 +41,7 @@
     "daisyui": "^4.4.0",
     "dayjs": "^1.11.10",
     "electron-is-dev": "^2.0.0",
+    "electron-store": "^8.1.0",
     "eslint-plugin-babel": "^5.3.1",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -116,8 +118,10 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "electron": "^27.1.0",
     "electron-builder": "^24.6.4",
+    "electron-rebuild": "^3.2.9",
     "wait-on": "^7.2.0"
   },
   "browser": {
