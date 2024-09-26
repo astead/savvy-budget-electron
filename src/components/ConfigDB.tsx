@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { channels } from '../shared/constants.js';
+import { styled } from '@mui/material/styles';
+import MuiAccordion, { AccordionProps } from '@mui/material/Accordion';
+import MuiAccordionSummary, { AccordionSummaryProps } from '@mui/material/AccordionSummary';
+import MuiAccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
 
 /* 
   TODO:
@@ -8,6 +17,10 @@ import { channels } from '../shared/constants.js';
 */
 
 export const ConfigDB = () => {
+  // Accordian
+  const [expanded, setExpanded] = React.useState<string | false>('cloud');
+  //Radio
+  const [selectedValue, setSelectedValue] = React.useState('cloud');
 
   // Database filename
   const [databaseFile, setDatabaseFile] = useState('');
@@ -27,6 +40,41 @@ export const ConfigDB = () => {
   const [secretTemp, setSecretTemp] = useState('');
   const [lockFileExists, setLockFileExists] = useState(false);
 
+  const Accordion = styled((props: AccordionProps) => (
+    <MuiAccordion disableGutters elevation={0} square {...props} />
+  ))(({ theme }) => ({
+    border: `1px solid ${theme.palette.divider}`,
+    '&:not(:last-child)': {
+      borderBottom: 0,
+    },
+    '&::before': {
+      display: 'none',
+    },
+  }));
+
+  const AccordionSummary = styled((props: AccordionSummaryProps) => (
+    <MuiAccordionSummary
+      {...props}
+    />
+  ))(({ theme }) => ({
+    backgroundColor: 'rgba(0, 0, 0, .03)',
+    ...theme.applyStyles('dark', {
+      backgroundColor: 'rgba(255, 255, 255, .05)',
+    }),
+  }));
+  
+  const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
+    padding: theme.spacing(2),
+    borderTop: '1px solid rgba(0, 0, 0, .125)',
+  }));
+
+  const handleChange =
+    (panel: string) => (event: React.SyntheticEvent, newExpanded: boolean) => {
+      setExpanded(newExpanded ? panel : false);
+  };
+  const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedValue(event.target.value);
+  };
 
   const check_database_file = (my_databaseFile) => {
     //console.log("Checking DB file: ", my_databaseFile);
@@ -289,6 +337,19 @@ export const ConfigDB = () => {
   }
 
   useEffect(() => {
+    if (selectedValue == 'local' && usingGoogleDrive) {
+      handleUseDrive(false);
+    }
+    if (selectedValue == 'drive' && !usingGoogleDrive) {
+      handleUseDrive(true);
+    }
+    if (selectedValue == 'cloud' && usingGoogleDrive) {
+      handleUseDrive(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedValue]);
+
+  useEffect(() => {
     if (credentialsFile) {
       readCredentialsFile();
     }
@@ -335,6 +396,8 @@ export const ConfigDB = () => {
       const using_Drive = JSON.parse(using_Drive_str);
       if (using_Drive) {
         setUsingGoogleDrive(using_Drive.useGDrive);
+        setExpanded('drive');
+        setSelectedValue('drive');
       }
     }
 
@@ -397,149 +460,211 @@ export const ConfigDB = () => {
         </>
       }
       {databaseFile && <><br /><br /></>}
-      <table className="Table" cellSpacing={0} cellPadding={0}><tbody>
-        <tr className="TR">
-          <td className="Table TC Right">
-            {!databaseFile &&
-              <span>Select local database file:</span>
-            }
-            {databaseFile &&
-              <span>Select a different local database file:</span>
-            }
-          </td>
-          <td className="Table TC Left">
-            <input
-              type="file"
-              name="file"
-              className="import-file"
-              onChange={(e) => {
-                if (e.target.files) {
-                  handleUseDrive(false);
-                  check_database_file(e.target.files[0].path);
+      <>
+        <FormControl>
+        <RadioGroup
+          aria-labelledby="demo-radio-buttons-group-label"
+          defaultValue="cloud"
+          name="radio-buttons-group"
+        >
+          <Accordion expanded={expanded === 'local'} onChange={handleChange('local')}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="local-content"
+              id="local-header"
+            >
+              <FormControlLabel value="local" control={
+                <Radio 
+                  checked={selectedValue === 'local'}
+                  onChange={handleRadioChange}
+                  value="local"
+                />
+                } label="Local SQLite DB" />
+            </AccordionSummary>
+            <AccordionDetails>
+              <div style={{ textAlign: 'left' }}>
+              You can store the SQLite database locally.<br/>
+              It will be tricky to share your budget with 
+              anyone else, but you will control all your data.<br/>
+              You can select an existing database or create a new one.
+              </div><br/>
+            <table className="Table" cellSpacing={0} cellPadding={0} style={{ border: '0', borderCollapse: 'collapse' }}><tbody>
+            <tr className="TR">
+              <td className="Table TC Right" style={{ border: '0' }}>
+                {!databaseFile &&
+                  <span>Select local database file:</span>
                 }
-              }}
-            />
-          </td>
-        </tr>
-        <tr className="TR">
-          <td className="Table TC Right">
-            <span>Create a new local database file:</span>
-          </td>
-          <td className="Table TC Left">
-            <button
-              className="textButton GDrive"
-              style={{ height: 'minHeight', paddingTop: '0px', paddingBottom: '0px', minHeight: '' }}
-              onClick={() => {
-                const ipcRenderer = (window as any).ipcRenderer;
-                ipcRenderer.send(channels.CREATE_DB);
+                {databaseFile &&
+                  <span>Select a different local database file:</span>
+                }
+              </td>
+              <td className="Table TC Left" style={{ border: '0' }}>
+                <input
+                  type="file"
+                  name="file"
+                  className="import-file"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      handleUseDrive(false);
+                      check_database_file(e.target.files[0].path);
+                    }
+                  }}
+                />
+              </td>
+            </tr>
+            <tr className="TR">
+              <td className="Table TC Right" style={{ border: '0' }}>
+                <span>Create a new local database file:</span>
+              </td>
+              <td className="Table TC Left" style={{ border: '0' }}>
+                <button
+                  className="textButton GDrive"
+                  style={{ height: 'minHeight', paddingTop: '0px', paddingBottom: '0px', minHeight: '' }}
+                  onClick={() => {
+                    const ipcRenderer = (window as any).ipcRenderer;
+                    ipcRenderer.send(channels.CREATE_DB);
 
-                // Receive the new filename
-                ipcRenderer.on(channels.LIST_NEW_DB_FILENAME, (arg) => {
-                  if (arg?.length > 0) {
-                    handleUseDrive(false);
-                    check_database_file(arg);
-                  }
+                    // Receive the new filename
+                    ipcRenderer.on(channels.LIST_NEW_DB_FILENAME, (arg) => {
+                      if (arg?.length > 0) {
+                        handleUseDrive(false);
+                        check_database_file(arg);
+                      }
 
-                  ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
-                });
+                      ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
+                    });
 
-                // Clean the listener after the component is dismounted
-                return () => {
-                  ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
-                };
-              }}>
-              Create New
-            </button>
-          </td>
-        </tr>
-        <tr className="TR">
-          <td className="Table TC Right">
-            <span>Google Drive:</span><br /><br />
-            To use Google Drive, you should have<br />
-            a Google API project setup.<br />
-            Go to '<a href='https://console.cloud.google.com'>Google Cloud Console</a>' in order to do this.<br />
-            Your return URL in the JSON<br />
-            should be set to: http://127.0.0.1:3001
-          </td>
-          <td className="Table TC Left">
-            <button onClick={() => {
-              handleUseDrive(usingGoogleDrive ? false : true);
-            }} className="textButton GDrive">
-              {usingGoogleDrive ? "Stop Using Google Drive" : "Use Google Drive"}
-            </button>
-            {usingGoogleDrive &&
-              <>
-                <br />
-                <input type="file" accept=".json" onChange={handleFileChange} />
-              </>
-            }
-            {usingGoogleDrive && credentials &&
-              <>
-                <table><tbody>
-                  <tr>
-                    <td className="txFilterLabelCell">
-                      Client Email:
-                    </td>
-                    <td className="txFilterCell">
-                      <input
-                        name="DRIVEClient"
-                        defaultValue={clientID}
-                        onChange={(e) => setClientTemp(e.target.value)}
-                        onBlur={handleClientChange}
-                        className="filterSize"
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="txFilterLabelCell">
-                      Secret:
-                    </td>
-                    <td className="txFilterCell">
-                      <input
-                        name="DRIVESecret"
-                        defaultValue={secret}
-                        onChange={(e) => setSecretTemp(e.target.value)}
-                        onBlur={handleSecretChange}
-                        className="filterSize"
-                      />
-                    </td>
-                  </tr>
-                </tbody></table>
-                {(!client || databaseError.startsWith('Token has been expired')) && 
+                    // Clean the listener after the component is dismounted
+                    return () => {
+                      ipcRenderer.removeAllListeners(channels.LIST_NEW_DB_FILENAME);
+                    };
+                  }}>
+                  Create New
+                </button>
+              </td>
+            </tr>
+            </tbody></table>
+            </AccordionDetails>
+          </Accordion>
+          <Accordion expanded={expanded === 'drive'} onChange={handleChange('drive')}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="drive-content"
+              id="drive-header"
+            >
+              <FormControlLabel value="drive" control={
+                <Radio 
+                  checked={selectedValue === 'drive'}
+                  onChange={handleRadioChange}
+                  value="drive"
+                />
+                } label="SQLite DB on Google Drive" />
+            </AccordionSummary>
+            <AccordionDetails>
+              <div style={{ textAlign: 'left' }}>
+                To use Google Drive, you should have 
+                a Google API project setup.<br />
+                You can go to '<a href='https://console.cloud.google.com'>Google Cloud Console</a>' in order to set this up.<br />
+                The return URL in the JSON 
+                should be set to: http://127.0.0.1:3001<br/>
+                The database will be a SQLite database called SavvyBudget.db.<br/>
+                It will get copied from your Google Drive root folder when starting,<br/>
+                and copied back to your Google Drive root folder when you close the app.
+              </div><br/>
+            
+                {!credentials &&
+                  <div style={{ textAlign: 'left' }}>
+                    Start by loading your Google Drive client secret json file:<br />
+                    <input type="file" accept=".json" onChange={handleFileChange} />
+                  </div>
+                }
+                {credentials &&
                   <>
-                    <br />
-                    <button onClick={handleAuthClick} className="textButton GDrive">Authorize Google Drive</button>
+                    <table><tbody>
+                      <tr>
+                        <td className="txFilterLabelCell">
+                          Client Email:
+                        </td>
+                        <td className="txFilterCell">
+                          <input
+                            name="DRIVEClient"
+                            defaultValue={clientID}
+                            onChange={(e) => setClientTemp(e.target.value)}
+                            onBlur={handleClientChange}
+                            className="filterSize"
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="txFilterLabelCell">
+                          Secret:
+                        </td>
+                        <td className="txFilterCell">
+                          <input
+                            name="DRIVESecret"
+                            defaultValue={secret}
+                            onChange={(e) => setSecretTemp(e.target.value)}
+                            onBlur={handleSecretChange}
+                            className="filterSize"
+                          />
+                        </td>
+                      </tr>
+                    </tbody></table>
+                    {(!client || databaseError.startsWith('Token has been expired')) && 
+                      <>
+                        <br />
+                        <button onClick={handleAuthClick} className="textButton GDrive">Authorize Google Drive</button>
+                      </>
+                    }
+                    {client &&
+                      <>
+                        <br />
+                        <button onClick={handleGetFile} className="textButton GDrive">Get DB from Google Drive</button>
+                      </>
+                    }
+                    {client && lockFileExists &&
+                      <>
+                        <br />
+                        Lock files found, someone may be using the database. <br />
+                        If you are confident no one is using the database, <br />
+                        delete the lock files with the button below and <br />
+                        try getting the database again.<br />
+                        <button onClick={handleDeleteLock} className="textButton GDrive">Delete Lock File</button>
+                      </>
+                    }
+                    {client && databaseFile && databaseVersion &&
+                      <>
+                        <br />
+                        <button onClick={handlePushFile} className="textButton GDrive">Upload DB back to Google Drive</button>
+                      </>
+                    }
                   </>
                 }
-                {client &&
-                  <>
-                    <br />
-                    <button onClick={handleGetFile} className="textButton GDrive">Get DB from Google Drive</button>
-                  </>
-                }
-                {client && lockFileExists &&
-                  <>
-                    <br />
-                    Lock files found, someone may be using the database. <br />
-                    If you are confident no one is using the database, <br />
-                    delete the lock files with the button below and <br />
-                    try getting the database again.<br />
-                    <button onClick={handleDeleteLock} className="textButton GDrive">Delete Lock File</button>
-                  </>
-                }
-                {client && databaseFile && databaseVersion &&
-                  <>
-                    <br />
-                    <button onClick={handlePushFile} className="textButton GDrive">Upload DB back to Google Drive</button>
-                  </>
-                }
-              </>
-            }
-          </td>
-        </tr>
-
-      </tbody>
-      </table>
+            </AccordionDetails>
+          </Accordion>
+          <Accordion expanded={expanded === 'cloud'} onChange={handleChange('cloud')}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="cloud-content"
+              id="cloud-header"
+            >
+              <FormControlLabel value="cloud" control={
+                <Radio 
+                  checked={selectedValue === 'cloud'}
+                  onChange={handleRadioChange}
+                  value="cloud"
+                />
+                } label="Cloud hosted DB" />
+            </AccordionSummary>
+            <AccordionDetails>
+              <div style={{ textAlign: 'left' }}>
+                We can host the data for you in a cloud-based DB.
+              </div>
+            </AccordionDetails>
+          </Accordion>
+          </RadioGroup>
+        </FormControl>
+      </>
     </>
   );
 };
