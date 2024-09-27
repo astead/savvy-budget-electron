@@ -17,7 +17,7 @@ export const App: React.FC = () => {
   const [client, setClient] = useState<any>(null);
   const [clientID, setClientID] = useState('');
   const [secret, setSecret] = useState('');
-  const [usingGoogleDrive, setUsingGoogleDrive] = useState(false);
+  const [dBType, setdBType] = useState('');
   const [doneLoading, setDoneLoading] = useState(false);
   const [doneLoadingDB, setDoneLoadingDB] = useState(false);
 
@@ -30,6 +30,7 @@ export const App: React.FC = () => {
       const fs = ipcRenderer.require('fs')
       
       if (fs.existsSync(my_databaseFile)) {
+        console.log("calling SET_DB_PATH from check_database_file");
         const ipcRenderer = (window as any).ipcRenderer;
         ipcRenderer.send(channels.SET_DB_PATH, { DBPath: my_databaseFile });
         setDoneLoadingDB(true);
@@ -72,26 +73,45 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log("useEffect [databaseFile, clientID, secret, credentials, client, dBType, doneLoading, doneLoadingDB] ENTER");
+    console.log("databaseFile :" + databaseFile);
+    console.log("clientID :" + clientID);
+    console.log("secret :" + secret);
+    console.log("credentials :" + credentials);
+    console.log("client :" + client);
+    console.log("dBType :" + dBType);
+    console.log("doneLoading :" + doneLoading);
+    console.log("doneLoadingDB :" + doneLoadingDB);
+
     if (doneLoading && !doneLoadingDB) {
-      if (usingGoogleDrive) {
-        if (clientID && secret && credentials && client && usingGoogleDrive) {
+      if (dBType === 'drive') {
+        if (clientID && secret && credentials && client) {
           handleGetFile();
         }
       } else {
-        if (databaseFile) {
-          const ipcRenderer = (window as any).ipcRenderer;
-          const fs = ipcRenderer.require('fs')
-          
-          if (fs.existsSync(databaseFile)) {
-            const ipcRenderer = (window as any).ipcRenderer;
-            ipcRenderer.send(channels.SET_DB_PATH, { DBPath: databaseFile });
+        const ipcRenderer = (window as any).ipcRenderer;
+            
+        if (dBType === 'local') {
+          if (databaseFile) {
+            const fs = ipcRenderer.require('fs')
+            
+            if (fs.existsSync(databaseFile)) {
+              console.log("calling SET_DB_PATH from App useEffect [databaseFile, clientID, secret, credentials, client, dBType, doneLoading, doneLoadingDB]");
+              ipcRenderer.send(channels.SET_DB_PATH, { DBPath: databaseFile });
+              setDoneLoadingDB(true);
+            }
+          }
+        } else {
+          if (dBType === 'cloud') {
+            console.log("calling SET_DB_PATH from App useEffect [databaseFile, clientID, secret, credentials, client, dBType, doneLoading, doneLoadingDB]");
+            ipcRenderer.send(channels.SET_DB_PATH, { DBPath: 'cloud' });
             setDoneLoadingDB(true);
           }
         }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [databaseFile, clientID, secret, credentials, client, usingGoogleDrive, doneLoading, doneLoadingDB]);
+  }, [databaseFile, clientID, secret, credentials, client, dBType, doneLoading, doneLoadingDB]);
 
   useEffect(() => {
     
@@ -120,12 +140,12 @@ export const App: React.FC = () => {
         setClient(drive_client.client);
       }
     }
-
-    const using_Drive_str = localStorage.getItem('use-Google-Drive');
-    if (using_Drive_str?.length) {
-      const using_Drive = JSON.parse(using_Drive_str);
-      if (using_Drive) {
-        setUsingGoogleDrive(using_Drive.useGDrive);
+    
+    const using_DB_str = localStorage.getItem('DB-Type');
+    if (using_DB_str?.length) {
+      const using_DB = JSON.parse(using_DB_str);
+      if (using_DB) {
+        setdBType(using_DB.DBType);
       }
     }
 

@@ -21,8 +21,10 @@ export const ConfigDB = () => {
   const [expanded, setExpanded] = React.useState<string | false>('cloud');
   //Radio
   const [selectedValue, setSelectedValue] = React.useState('cloud');
+  const [doneLoading, setDoneLoading] = useState(false);
 
   // Database filename
+  const [dBType, setdBType] = useState('');
   const [databaseFile, setDatabaseFile] = useState('');
   const [databaseExists, setDatabaseExists] = useState(false);
   const [databaseVersion, setDatabaseVersion] = useState(null);
@@ -30,7 +32,6 @@ export const ConfigDB = () => {
   const [latestDatabaseVersion, setLatestDatabaseVersion] = useState(null);
 
   // Google Drive
-  const [usingGoogleDrive, setUsingGoogleDrive] = useState(false);
   const [credentialsFile, setCredentialsFile] = useState<string>("");
   const [credentials, setCredentials] = useState<any>(null);
   const [client, setClient] = useState<any>(null);
@@ -148,14 +149,16 @@ export const ConfigDB = () => {
     };
   };
 
-  const handleUseDrive = async (useDrive) => {
-
+  const handleUseDrive = async (DBType) => {
+    console.log('handleUseDrive ENTER');
     localStorage.setItem(
-      'use-Google-Drive',
-      JSON.stringify({ useGDrive: useDrive })
+      'DB-Type',
+      JSON.stringify({ DBType: DBType })
     );
-    setUsingGoogleDrive(useDrive);
-    if (useDrive) {
+    
+    if (DBType === 'drive') {
+      setdBType(DBType);
+      
       // Setup everything.
       if (credentials) {
         if (!client) {
@@ -165,14 +168,32 @@ export const ConfigDB = () => {
         }
       }
     } else {
-      // Communicate this down to the main thread
-      // so it doesn't try and upload upon close.
       const ipcRenderer = (window as any).ipcRenderer;
-      ipcRenderer.send(channels.DRIVE_STOP_USING);
-
+        
+      if (dBType === "drive") {
+        // Communicate this down to the main thread
+        // so it doesn't try and upload upon close.
+        ipcRenderer.send(channels.DRIVE_STOP_USING);
+      }
+      
       localStorage.setItem('databaseFile', JSON.stringify(''));
       localStorage.setItem('drive-file', JSON.stringify(''));
       setDatabaseFile('');
+      setdBType(DBType);
+      
+      if (DBType === 'cloud') {
+        console.log('Calling USE_CLOUD_DB');
+        ipcRenderer.send(channels.USE_CLOUD_DB);
+        // Wait for completion
+        ipcRenderer.on(channels.DONE_USE_CLOUD_DB, () => {
+          ipcRenderer.removeAllListeners(channels.DONE_USE_CLOUD_DB);
+        });
+
+        // Clean the listener after the component is dismounted
+        return () => {
+          ipcRenderer.removeAllListeners(channels.DONE_USE_CLOUD_DB);
+        };
+      }
     }
   }
 
@@ -337,19 +358,17 @@ export const ConfigDB = () => {
   }
 
   useEffect(() => {
-    if (selectedValue == 'local' && usingGoogleDrive) {
-      handleUseDrive(false);
-    }
-    if (selectedValue == 'drive' && !usingGoogleDrive) {
-      handleUseDrive(true);
-    }
-    if (selectedValue == 'cloud' && usingGoogleDrive) {
-      handleUseDrive(false);
+    if (doneLoading) {
+      console.log("useEffect: [selectedValue]");
+      handleUseDrive(selectedValue);
+    } else {
+      console.log("SKIP: useEffect: [selectedValue]");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedValue]);
 
   useEffect(() => {
+    console.log("useEffect: [credentialsFile]");
     if (credentialsFile) {
       readCredentialsFile();
     }
@@ -357,6 +376,8 @@ export const ConfigDB = () => {
   }, [credentialsFile]);
 
   useEffect(() => {
+    console.log("useEffect: []");
+
     const databaseFile_str = localStorage.getItem('databaseFile');
     if (databaseFile_str?.length) {
       const my_databaseFile = JSON.parse(databaseFile_str);
@@ -390,14 +411,14 @@ export const ConfigDB = () => {
         setClient(drive_client.client);
       }
     }
-
-    const using_Drive_str = localStorage.getItem('use-Google-Drive');
-    if (using_Drive_str?.length) {
-      const using_Drive = JSON.parse(using_Drive_str);
-      if (using_Drive) {
-        setUsingGoogleDrive(using_Drive.useGDrive);
-        setExpanded('drive');
-        setSelectedValue('drive');
+    
+    const using_DB_str = localStorage.getItem('DB-Type');
+    if (using_DB_str?.length) {
+      const using_DB = JSON.parse(using_DB_str);
+      if (using_DB) {
+        setdBType(using_DB.DBType);
+        setExpanded(using_DB.DBType);
+        setSelectedValue(using_DB.DBType);
       }
     }
 
@@ -420,6 +441,8 @@ export const ConfigDB = () => {
         setDatabaseError(DB_err);
       }
     }
+
+    setDoneLoading(true);
 
   }, []);
 
@@ -505,7 +528,6 @@ export const ConfigDB = () => {
                   className="import-file"
                   onChange={(e) => {
                     if (e.target.files) {
-                      handleUseDrive(false);
                       check_database_file(e.target.files[0].path);
                     }
                   }}
@@ -527,7 +549,6 @@ export const ConfigDB = () => {
                     // Receive the new filename
                     ipcRenderer.on(channels.LIST_NEW_DB_FILENAME, (arg) => {
                       if (arg?.length > 0) {
-                        handleUseDrive(false);
                         check_database_file(arg);
                       }
 

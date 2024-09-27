@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { shell, app, BrowserWindow, ipcMain, dialog } = require('electron');
 const isDev = require('electron-is-dev'); // To check if electron is in development mode
 const path = require('path');
@@ -147,6 +148,8 @@ let dbPath = '';
 let db = null;
 
 const set_db = async (DBPath) => {
+  console.log("set_db ENTER");
+  console.log("DBPath: " + DBPath);
   if (DBPath === dbPath && db) {
     //console.log('db connection is already set to the same file. ignoring.');
     return;
@@ -159,19 +162,60 @@ const set_db = async (DBPath) => {
     dbPath = DBPath;
 
     // Re-initialize knexInstance with the new path
-    db = knex({
-      client: 'sqlite3',
-      connection: {
-        filename: dbPath,
-      },
-      useNullAsDefault: true,
-    });
+    if (dbPath === 'cloud') {
+      console.log('Setting knex DB connection to PG Supabase to: ', process.env.REACT_APP_SUPABASE_CONN_HOST);
+      db = knex({
+        client: 'pg',
+        debug: true,
+        log: {
+          warn(message) {},
+          error(message) {},
+          deprecate(message) {},
+          debug(message) {},
+        },
+        connection: {
+          host: process.env.REACT_APP_SUPABASE_CONN_HOST,
+          port: process.env.REACT_APP_SUPABASE_CONN_PORT,
+          user: process.env.REACT_APP_SUPABASE_CONN_USER,
+          password: process.env.REACT_APP_SUPABASE_CONN_PW,
+          database: process.env.REACT_APP_SUPABASE_CONN_DB,
+          //ssl: process.env.REACT_APP_SUPABASE_CONN_DB ? { rejectUnauthorized: false } : false,
+          ssl: false,
+        },
+        useNullAsDefault: true,
+      });
+  
+      db.raw("SELECT 1").then(() => {
+          console.log("PostgreSQL connected");
+      })
+      .catch((e) => {
+          console.log("PostgreSQL not connected");
+          console.error(e);
+      });
+    } else {
+      console.log('Setting knex DB connection to file: ', dbPath);
+      
+      db = knex({
+        client: 'sqlite3',
+        connection: {
+          filename: dbPath,
+        },
+        useNullAsDefault: true,
+      });
+    }
   }
 };
 
 ipcMain.on(channels.SET_DB_PATH, async (event, { DBPath }) => {
+  console.log("SET_DB_PATH ENTER: calling set_db");
   await set_db(DBPath);
   event.sender.send(channels.DONE_SET_DB_PATH);
+});
+
+ipcMain.on(channels.USE_CLOUD_DB, async (event) => {
+  console.log("USE_CLOUD_DB ENTER: calling set_db");
+  await set_db('cloud');
+  event.sender.send(channels.DONE_USE_CLOUD_DB);
 });
 
 const create_local_db = async (filePath) => {
@@ -1368,6 +1412,7 @@ const get_GDrive_file = async () => {
           }
 
           // Use the DB
+          console.log('calling set_db from get_GDrive_file: 1');
           set_db(fileName);
 
           googleDrivefileName = fileName;
@@ -1417,7 +1462,7 @@ ipcMain.on(channels.DRIVE_AUTH, async (event, { credentials }) => {
 });
 
 ipcMain.on(channels.DRIVE_GET_FILE, async (event, { credentials, tokens }) => {
-  console.log(channels.DRIVE_GET_FILE);
+  console.log("DRIVE_GET_FILE ENTER");
   if (!googleGettingFile) {
     googleGettingFile = true;
     googleCredentials = credentials.installed;
@@ -1429,6 +1474,7 @@ ipcMain.on(channels.DRIVE_GET_FILE, async (event, { credentials, tokens }) => {
     console.log('calling google.drive to set googleClient');
     googleClient = await google.drive({ version: 'v3', auth: googleAuth });
 
+    console.log("calling get_GDrive_file from DRIVE_GET_FILE");
     event.sender.send(
       channels.DRIVE_DONE_GET_FILE,
       await get_GDrive_file(credentials, tokens)

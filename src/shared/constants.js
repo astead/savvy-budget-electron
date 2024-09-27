@@ -100,6 +100,8 @@ module.exports = {
     LIST_NEW_DB_FILENAME: 'list_new_db_filename',
     UPDATE_DB: 'update_db',
     DONE_UPDATE_DB: 'done_update_db',
+    USE_CLOUD_DB: 'use_cloud_db',
+    DONE_USE_CLOUD_DB: 'done_use_cloud_db',
 
     PLAID_GET_KEYS: 'plaid_get_keys',
     PLAID_LIST_KEYS: 'plaid_list_keys',
