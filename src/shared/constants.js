@@ -20,7 +20,7 @@ module.exports = {
     GET_MONTHLY_AVG: 'get_monthly_avg',
     LIST_MONTHLY_AVG: 'list_monthly_avg',
 
-    GET_TX_DATA: 'get_tx_date',
+    GET_TX_DATA: 'get_tx_data',
     LIST_TX_DATA: 'list_tx_data',
     DEL_TX_LIST: 'del_tx_list',
     DONE_DEL_TX_LIST: 'done_del_tx_list',
