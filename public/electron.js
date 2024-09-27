@@ -3425,20 +3425,28 @@ ipcMain.on(channels.GET_ACCOUNTS, (event) => {
   console.log(channels.GET_ACCOUNTS);
   if (db) {
     const find_date = dayjs(new Date()).format('YYYY-MM-DD');
-    db.select('account.id', 'account.refNumber', 'account', 'isActive')
+    let query = db.select('account.id', 'account.refNumber', 'account', 'isActive')
       .max({ lastTx: 'txDate' })
       .count({ numTx: 'txDate' })
       .from('account')
       .leftJoin('transaction', function () {
         this.on('account.id', '=', 'transaction.accountID')
-          .on(db.raw(`julianday(?) - julianday(txDate) >= 0`, [find_date]))
           .on('transaction.isBudget', '=', 0)
-          .on('transaction.isVisible', '=', 1)
           .on('transaction.isDuplicate', '=', 0);
+          
+          if (dbPath === 'cloud') {
+            // PostgreSQL
+            this.on(db.raw(`?::date - "txDate" >= 0`, [find_date]));
+            this.on(db.raw(`"transaction"."isVisible" = true`));
+          } else {
+            // SQLite
+            this.on(db.raw(`julianday(?) - julianday(txDate) >= 0`, [find_date]));
+            this.on('transaction.isVisible', '=', 1);
+          }
       })
       .orderBy('account.id')
-      .groupBy('account.id', 'account.refNumber', 'account', 'isActive')
-      .then((data) => {
+      .groupBy('account.id', 'account.refNumber', 'account', 'isActive');
+    query.then((data) => {
         event.sender.send(channels.LIST_ACCOUNTS, data);
       })
       .catch((err) => console.log(err));
