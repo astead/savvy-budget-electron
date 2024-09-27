@@ -477,7 +477,7 @@ ipcMain.on(
               '-' +
               account.mask,
             plaid_id: account.id,
-            isActive: 1,
+            isActive: dbPath === 'cloud' ? true : 1,
           })
           .then(() => {
             db('plaid_account')
@@ -653,10 +653,17 @@ ipcMain.on(channels.PLAID_GET_ACCOUNTS, (event) => {
       .join('account', 'plaid_account.account_id', 'account.plaid_id')
       .leftJoin('transaction', function () {
         this.on('account.id', '=', 'transaction.accountID')
-          .on(db.raw(`julianday(?) - julianday(txDate) >= 0`, [find_date]))
           .on('transaction.isBudget', '=', 0)
-          .on('transaction.isVisible', '=', 1)
           .on('transaction.isDuplicate', '=', 0);
+        if (dbPath === 'cloud') {
+          // PostgreSQL
+          this.on(db.raw(`?::date - "txDate" >= 0`, [find_date]));
+          this.on(db.raw(`"transaction"."isVisible" = true`));
+        } else {
+          // SQLite
+          this.on(db.raw(`julianday(?) - julianday(txDate) >= 0`, [find_date]));
+          this.on('transaction.isVisible', '=', 1);
+        }
       })
       .orderBy('institution', 'public_token')
       .groupBy(
@@ -1654,7 +1661,7 @@ ipcMain.on(channels.SPLIT_TX, async (event, { txID, split_tx_list }) => {
                   // Update the original budget
                   await trx
                     .raw(
-                      `UPDATE 'envelope' SET balance = balance - ` +
+                      `UPDATE "envelope" SET balance = balance - ` +
                         data[0].txAmt +
                         ` WHERE id = ` +
                         data[0].envelopeID
@@ -1682,7 +1689,7 @@ ipcMain.on(channels.SPLIT_TX, async (event, { txID, split_tx_list }) => {
                           .then(async () => {
                             // Adjust that envelope balance
                             await trx.raw(
-                              `UPDATE 'envelope' SET balance = balance + ` +
+                              `UPDATE "envelope" SET balance = balance + ` +
                                 item.txAmt +
                                 ` WHERE id = ` +
                                 item.txEnvID
@@ -1709,7 +1716,7 @@ ipcMain.on(channels.ADD_ENVELOPE, async (event, { categoryID }) => {
       categoryID: categoryID,
       envelope: 'New Envelope',
       balance: 0,
-      isActive: 1,
+      isActive: dbPath === 'cloud' ? true : 1,
     })
     .then()
     .catch((err) => {
@@ -1788,7 +1795,7 @@ ipcMain.on(channels.HIDE_ENVELOPE, async (event, { id }) => {
 
   await db('envelope')
     .where({ id: id })
-    .update({ isActive: 0 })
+    .update({ isActive: dbPath === 'cloud' ? false : 0 })
     .then()
     .catch((err) => {
       console.log('Error: ' + err);
@@ -1877,11 +1884,11 @@ async function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
             isBudget: 1,
             txAmt: newtxAmt,
             isDuplicate: 0,
-            isVisible: 1,
+            isVisible: dbPath === 'cloud' ? true : 1,
           })
           .then(async () => {
             await db.raw(
-              `UPDATE 'envelope' SET balance = balance + ` +
+              `UPDATE "envelope" SET balance = balance + ` +
                 newtxAmt +
                 ` WHERE id = ` +
                 newEnvelopeID
@@ -1894,7 +1901,7 @@ async function set_or_update_budget_item(newEnvelopeID, newtxDate, newtxAmt) {
         // Already exist
         await db
           .raw(
-            `UPDATE 'envelope' SET balance = balance + ` +
+            `UPDATE "envelope" SET balance = balance + ` +
               (newtxAmt - rows[0].txAmt) +
               ` WHERE id = ` +
               newEnvelopeID
@@ -1969,7 +1976,7 @@ ipcMain.on(channels.GET_CAT_ENV, (event, { onlyActive }) => {
       .orderBy('category.id');
 
     if (onlyActive === 1) {
-      query.where('envelope.isActive', 1);
+      query.where('envelope.isActive', dbPath === 'cloud' ? true : 1);
     }
 
     query
@@ -1994,7 +2001,7 @@ ipcMain.on(channels.GET_BUDGET_ENV, (event) => {
       .leftJoin('category', function () {
         this.on('category.id', '=', 'envelope.categoryID');
       })
-      .where('envelope.isActive', 1)
+      .where('envelope.isActive', dbPath === 'cloud' ? true : 1)
       .orderBy('category.id')
       .then((data) => {
         event.sender.send(channels.LIST_BUDGET_ENV, data);
@@ -2035,20 +2042,30 @@ ipcMain.on(channels.GET_PREV_ACTUAL, (event, { find_date }) => {
   const month = dayjs(new Date(find_date)).format('MM');
   const year = dayjs(new Date(find_date)).format('YYYY');
 
-  db.select('envelopeID')
+  let query = db.select('envelopeID')
     .sum({ totalAmt: 'txAmt' })
     .from('transaction')
     .orderBy('envelopeID')
     .where({ isBudget: 0 })
-    .andWhereRaw(`strftime('%m', txDate) = ?`, month)
     .andWhere({ isDuplicate: 0 })
-    .andWhere({ isVisible: 1 })
-    .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
-    .groupBy('envelopeID')
-    .then((data) => {
-      event.sender.send(channels.LIST_PREV_ACTUAL, data);
-    })
-    .catch((err) => console.log(err));
+    .andWhere({ isVisible: dbPath === 'cloud' ? true : 1 })
+    .groupBy('envelopeID');
+    
+  if (dbPath === 'cloud') {
+    // PostgreSQL
+    query = query
+      .andWhereRaw(`EXTRACT(MONTH FROM "txDate") = ?`, [month])
+      .andWhereRaw(`EXTRACT(YEAR FROM "txDate") = ?`, [year]);
+  } else {
+    // SQLite
+    query = query
+      .andWhereRaw(`strftime('%m', txDate) = ?`, [month])
+      .andWhereRaw(`strftime('%Y', txDate) = ?`, [year]);
+  }
+
+  query.then((data) => {
+    event.sender.send(channels.LIST_PREV_ACTUAL, data);
+  }).catch((err) => console.log(err));
 });
 
 ipcMain.on(channels.GET_CUR_ACTUAL, (event, { find_date }) => {
@@ -2057,20 +2074,30 @@ ipcMain.on(channels.GET_CUR_ACTUAL, (event, { find_date }) => {
   const month = dayjs(new Date(find_date)).format('MM');
   const year = dayjs(new Date(find_date)).format('YYYY');
 
-  db.select('envelopeID')
+  let query = db.select('envelopeID')
     .sum({ totalAmt: 'txAmt' })
     .from('transaction')
     .where({ isBudget: 0 })
     .andWhere({ isDuplicate: 0 })
-    .andWhere({ isVisible: 1 })
-    .andWhereRaw(`strftime('%Y', txDate) = ?`, year)
-    .andWhereRaw(`strftime('%m', txDate) = ?`, month)
+    .andWhere({ isVisible: dbPath === 'cloud' ? true : 1 })
     .groupBy('envelopeID')
-    .orderBy('envelopeID')
-    .then((data) => {
-      event.sender.send(channels.LIST_CUR_ACTUAL, data);
-    })
-    .catch((err) => console.log(err));
+    .orderBy('envelopeID');
+
+  if (dbPath === 'cloud') {
+    // PostgreSQL
+    query = query
+      .andWhereRaw(`EXTRACT(MONTH FROM "txDate") = ?`, [month])
+      .andWhereRaw(`EXTRACT(YEAR FROM "txDate") = ?`, [year]);
+  } else {
+    // SQLite
+    query = query
+      .andWhereRaw(`strftime('%m', txDate) = ?`, [month])
+      .andWhereRaw(`strftime('%Y', txDate) = ?`, [year]);
+  }
+
+  query.then((data) => {
+    event.sender.send(channels.LIST_CUR_ACTUAL, data);
+  }).catch((err) => console.log(err));
 });
 
 ipcMain.on(channels.GET_CURR_BALANCE, (event) => {
@@ -2088,18 +2115,27 @@ ipcMain.on(channels.GET_CURR_BALANCE, (event) => {
 ipcMain.on(channels.GET_MONTHLY_AVG, (event, { find_date }) => {
   console.log(channels.GET_MONTHLY_AVG);
 
-  db.select('envelopeID')
+  let query = db.select('envelopeID')
     .sum({ totalAmt: 'txAmt' })
     .min({ firstDate: 'txDate' })
     .from('transaction')
     .orderBy('envelopeID')
     .where({ isBudget: 0 })
-    .andWhereRaw(`julianday(?) - julianday(txDate) < 365`, [find_date])
-    .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
     .andWhere({ isDuplicate: 0 })
-    .andWhere({ isVisible: 1 })
-    .groupBy('envelopeID')
-    .then((data) => {
+    .andWhere({ isVisible: dbPath === 'cloud' ? true : 1  })
+    .groupBy('envelopeID');
+
+  if (dbPath === 'cloud') {
+    // PostgreSQL
+    query = query.andWhereRaw(`?::date - "txDate" < 365`, [find_date])
+      .andWhereRaw(`?::date - "txDate" > 0`, [find_date]);
+  } else {
+    // SQLite
+    query = query.andWhereRaw(`julianday(?) - julianday(txDate) < 365`, [find_date])
+      .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date]);
+  }
+
+  query.then((data) => {
       event.sender.send(channels.LIST_MONTHLY_AVG, data);
     })
     .catch((err) => console.log(err));
@@ -2184,10 +2220,8 @@ ipcMain.on(
       } else {
         if (parseInt(filterEnvID) > -3) {
           query = query.andWhere(function () {
-            this.where('transaction.envelopeID', -1).orWhere(
-              'envelope.isActive',
-              0
-            );
+            this.where('transaction.envelopeID', -1)
+            .orWhere('envelope.isActive', dbPath === 'cloud' ? false : 0);
           });
         }
       }
@@ -2205,10 +2239,22 @@ ipcMain.on(
         );
       }
       if (filterStartDate) {
-        query = query.andWhereRaw(`'transaction'.txDate >= ?`, filterStartDate);
+        if (dbPath === 'cloud') {
+          // PostgreSQL
+          query = query.andWhereRaw(`"transaction"."txDate" >= ?::date`, [filterStartDate]);
+        } else {
+          // SQLite
+          query = query.andWhereRaw(`'transaction'.txDate >= ?`, filterStartDate);
+        }
       }
       if (filterEndDate) {
-        query = query.andWhereRaw(`'transaction'.txDate <= ?`, filterEndDate);
+        if (dbPath === 'cloud') {
+          // PostgreSQL
+          query = query.andWhereRaw(`"transaction"."txDate" <= ?::date`, [filterEndDate]);
+        } else {
+          // SQLite
+          query = query.andWhereRaw(`'transaction'.txDate <= ?`, filterEndDate);
+        }
       }
       if (filterAmount?.length) {
         query = query.andWhereRaw(
@@ -2305,10 +2351,8 @@ ipcMain.on(
       } else {
         if (parseInt(filterEnvID) > -3) {
           query = query.andWhere(function () {
-            this.where('transaction.envelopeID', -1).orWhere(
-              'envelope.isActive',
-              0
-            );
+            this.where('transaction.envelopeID', -1)
+              .orWhere('envelope.isActive', dbPath === 'cloud' ? false : 0);
           });
         }
       }
@@ -2401,7 +2445,7 @@ ipcMain.on(channels.ADD_TX, async (event, { data }) => {
     isDuplicate: 0,
     isSplit: 0,
     accountID: data.txAccID,
-    isVisible: 1,
+    isVisible: dbPath === 'cloud' ? true : 1,
   };
 
   // Insert the node
@@ -2430,7 +2474,7 @@ ipcMain.on(channels.GET_ENV_LIST, (event, { onlyActive }) => {
       .orderBy('category.category', 'envelope.envelope');
 
     if (onlyActive === 1) {
-      query.where('envelope.isActive', 1);
+      query.where('envelope.isActive', dbPath === 'cloud' ? true : 1);
     }
 
     query
@@ -2609,7 +2653,10 @@ async function lookup_account(account) {
         } else {
           // If we haven't, lets store this one
           await db('account')
-            .insert({ account: 'New Account', refNumber: account, isActive: 1 })
+            .insert({ 
+              account: 'New Account', 
+              refNumber: account, 
+              isActive: dbPath === 'cloud' ? true : 1 })
             .then((result) => {
               if (result?.length) {
                 accountID = result[0];
@@ -2647,7 +2694,7 @@ async function lookup_plaid_account(account) {
               account: 'New Account',
               refNumber: account,
               plaid_id: account,
-              isActive: 1,
+              isActive: dbPath === 'cloud' ? true : 1,
             })
             .then((result) => {
               if (result?.length) {
@@ -2686,7 +2733,7 @@ async function lookup_envelope(envelope, defaultCategoryID) {
               envelope: envelope,
               categoryID: defaultCategoryID,
               balance: 0,
-              isActive: 1,
+              isActive: dbPath === 'cloud' ? true : 1,
             })
             .then((result) => {
               if (result?.length) {
@@ -2764,25 +2811,41 @@ async function lookup_if_duplicate(
   if (refNumber?.length) {
     //console.log('Checking by refNumber');
 
-    await db('transaction')
+    let query = db('transaction')
       .select('id')
       .andWhereRaw(`accountID = ?`, accountID)
-      .andWhereRaw(`refNumber = ?`, refNumber)
-      .andWhereRaw(`julianday(?) - julianday(txDate) = 0`, txDate)
-      .then((data) => {
+      .andWhereRaw(`refNumber = ?`, refNumber);
+      
+      if (dbPath === 'cloud') {
+        // PostgreSQL
+        query = query.andWhereRaw(`?::date - "txDate" = 0`, [txDate]);
+      } else {
+        // SQLite
+        query = query.andWhereRaw(`julianday(?) - julianday(txDate) = 0`, [txDate]);
+      }
+
+    await query.then((data) => {
         if (data?.length) {
           isDuplicate = 1;
         }
       });
   } else {
     //console.log('Checking by other stuff');
-    await db('transaction')
+    let query = db('transaction')
       .select('id')
       .where({ txAmt: txAmt })
       .andWhereRaw(`accountID = ?`, accountID)
-      .andWhere({ description: description })
-      .andWhereRaw(`julianday(?) - julianday(txDate) = 0`, txDate)
-      .then((data) => {
+      .andWhere({ description: description });
+      
+      if (dbPath === 'cloud') {
+        // PostgreSQL
+        query = query.andWhereRaw(`?::date - "txDate" = 0`, [txDate]);
+      } else {
+        // SQLite
+        query = query.andWhereRaw(`julianday(?) - julianday(txDate) = 0`, [txDate]);
+      }
+
+    await query.then((data) => {
         if (data?.length) {
           isDuplicate = 1;
         }
@@ -2795,7 +2858,7 @@ async function lookup_if_duplicate(
 async function update_env_balance(envID, amt) {
   await db
     .raw(
-      `UPDATE 'envelope' SET balance = balance + ` +
+      `UPDATE "envelope" SET balance = balance + ` +
         amt +
         ` WHERE id = ` +
         envID
@@ -3260,7 +3323,7 @@ async function basic_insert_transaction_node(
     isDuplicate: 0,
     isSplit: 0,
     accountID: accountID,
-    isVisible: 1,
+    isVisible: dbPath === 'cloud' ? true : 1,
   };
 
   // Insert the node
@@ -3369,7 +3432,7 @@ async function insert_transaction_node(
     isDuplicate: isDuplicate,
     isSplit: 0,
     accountID: accountID,
-    isVisible: 1,
+    isVisible: dbPath === 'cloud' ? true : 1,
   };
 
   // Insert the node
@@ -3434,15 +3497,15 @@ ipcMain.on(channels.GET_ACCOUNTS, (event) => {
           .on('transaction.isBudget', '=', 0)
           .on('transaction.isDuplicate', '=', 0);
           
-          if (dbPath === 'cloud') {
-            // PostgreSQL
-            this.on(db.raw(`?::date - "txDate" >= 0`, [find_date]));
-            this.on(db.raw(`"transaction"."isVisible" = true`));
-          } else {
-            // SQLite
-            this.on(db.raw(`julianday(?) - julianday(txDate) >= 0`, [find_date]));
-            this.on('transaction.isVisible', '=', 1);
-          }
+        if (dbPath === 'cloud') {
+          // PostgreSQL
+          this.on(db.raw(`?::date - "txDate" >= 0`, [find_date]));
+          this.on(db.raw(`"transaction"."isVisible" = true`));
+        } else {
+          // SQLite
+          this.on(db.raw(`julianday(?) - julianday(txDate) >= 0`, [find_date]));
+          this.on('transaction.isVisible', '=', 1);
+        }
       })
       .orderBy('account.id')
       .groupBy('account.id', 'account.refNumber', 'account', 'isActive');
@@ -3525,8 +3588,14 @@ ipcMain.on(channels.UPDATE_ACCOUNT, (event, { id, new_value }) => {
 
 ipcMain.on(channels.VIS_ACCOUNT, async (event, { id, value }) => {
   console.log(channels.VIS_ACCOUNT, { id, value });
+  
+  let new_value = value;
+  if (dbPath === 'cloud') {
+    new_value = (new_value === 1) ? true : false;
+  }
+
   await db('account')
-    .update({ isActive: value })
+    .update({ isActive: new_value })
     .where({ id: id })
     .catch((err) => console.log(err));
 
@@ -3582,19 +3651,30 @@ ipcMain.on(
 
     let query = db('transaction')
       .select({
-        month: db.raw(`strftime("%Y/%m", txDate)`),
+        month: dbPath === 'cloud' ? db.raw(`TO_CHAR("txDate", 'YYYY/MM')`) : db.raw(`strftime("%Y/%m", txDate)`),
         isBudget: 'isBudget',
       })
       .sum({ totalAmt: 'txAmt' })
       .where({ isDuplicate: 0 })
-      .andWhere({ isVisible: 1 })
-      .andWhereRaw(`julianday(?) - julianday(txDate) < ?`, [
-        find_date,
-        365 * filterTimeFrameID,
-      ])
-      .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date])
+      .andWhere({ isVisible: dbPath === 'cloud' ? true : 1 })
       .groupBy('month', 'isBudget')
       .orderBy('month');
+
+    if (dbPath === 'cloud') {
+      // PostgreSQL
+      query = query.andWhereRaw(`?::date - "txDate" < ?`, [
+          find_date,
+          365 * filterTimeFrameID,
+        ])
+        .andWhereRaw(`?::date - "txDate" > 0`, [find_date]);
+    } else {
+      // SQLite
+      query = query.andWhereRaw(`julianday(?) - julianday(txDate) < ?`, [
+          find_date,
+          365 * filterTimeFrameID,
+        ])
+        .andWhereRaw(`julianday(?) - julianday(txDate) > 0`, [find_date]);
+    }
 
     if (filterType === 'env' && parseInt(envID) > -2) {
       query = query.where('envelopeID', envID);
