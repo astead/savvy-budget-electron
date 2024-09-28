@@ -31,13 +31,6 @@ const style = {
 export const ConfigPlaid = () => {
   
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [client, setClient] = useState('');
-  const [clientTemp, setClientTemp] = useState('');
-  const [secret, setSecret] = useState('');
-  const [secretTemp, setSecretTemp] = useState('');
-  const [environment, setEnvironment] = useState('');
-  const [environmentTemp, setEnvironmentTemp] = useState('');
   const [token, setToken] = useState<string | null>(null);
   const [tokenExpiration, setTokenExpiration] = useState<string | null>(null);
   const [link_Error, setLink_Error] = useState<string | null>(null);
@@ -70,41 +63,7 @@ export const ConfigPlaid = () => {
     lastTx: number;
   }
 
-  const getPLAIDInfo = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.PLAID_GET_KEYS);
-
-    // Receive the data
-    ipcRenderer.on(channels.PLAID_LIST_KEYS, (data) => {
-      if (data?.length) {
-        setClient(data[0].client_id);
-        setClientTemp(data[0].client_id);
-        setSecret(data[0].secret);
-        setSecretTemp(data[0].secret);
-        setEnvironment(data[0].environment);
-        setEnvironmentTemp(data[0].environment);
-
-        if (data[0].token) {
-          setToken(data[0].token);
-          setTokenExpiration(data[0].token_expiration);
-          getAccountList();
-        } else {
-          createLinkToken();
-        }
-        
-        setLoading(false);
-      }
-      ipcRenderer.removeAllListeners(channels.PLAID_LIST_KEYS);
-    });
-
-    // Clean the listener after the component is dismounted
-    return () => {
-      ipcRenderer.removeAllListeners(channels.PLAID_LIST_KEYS);
-    };
-  };
-
-
-
+  
   const createLinkToken = () => {
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.PLAID_GET_TOKEN);
@@ -115,7 +74,6 @@ export const ConfigPlaid = () => {
         setToken(data.link_token);
         setTokenExpiration(data.expiration);
         setLink_Error(null);
-        
         getAccountList();
       }
       if (data.error_message?.length) {
@@ -133,7 +91,7 @@ export const ConfigPlaid = () => {
   };
 
 
-  const getAccountList = () => {
+  const getAccountList = async () => {
     const ipcRenderer = (window as any).ipcRenderer;
     ipcRenderer.send(channels.PLAID_GET_ACCOUNTS);
 
@@ -305,36 +263,6 @@ export const ConfigPlaid = () => {
     }
   };
 
-  const handleClientChange = () => {
-    if (!loading) {
-      //console.log("setting client to: ", clientTemp);
-      setClient(clientTemp);
-      update_PLAID_keys();
-    }
-  };
-  const handleSecretChange = () => {
-    if (!loading) {
-      //console.log("setting secret to: ", secretTemp);
-      setSecret(secretTemp);
-      update_PLAID_keys();
-    }
-  };
-  const handleEnvironmentChange = () => {
-    if (!loading) {
-      //console.log("setting env to: ", environmentTemp);
-      setEnvironment(environmentTemp);
-      update_PLAID_keys();
-    }
-  };
-
-  const update_PLAID_keys = () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    ipcRenderer.send(channels.PLAID_SET_KEYS, 
-      { client_id: clientTemp, secret: secretTemp, environment: environmentTemp }
-    );
-    setToken(null);
-  };
-
   const get_updated_login = async (updateToken) => {
     const updateConfig: PlaidLinkOptions = {
       token: updateToken,
@@ -389,7 +317,7 @@ export const ConfigPlaid = () => {
 
  
   useEffect(() => {
-    getPLAIDInfo();
+    createLinkToken();
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -398,48 +326,6 @@ export const ConfigPlaid = () => {
   return (
     <>
     <table><tbody>
-    <tr>
-      <td className="txFilterLabelCell">
-        Client ID:
-      </td>
-      <td className="txFilterCell" align="left">
-        <input
-          name="PLAIDClient"
-          defaultValue={client}
-          onChange={(e) => setClientTemp(e.target.value)}
-          onBlur={handleClientChange}
-          className="filterSize"
-        />
-      </td>
-    </tr>
-    <tr>
-      <td className="txFilterLabelCell">
-        Secret:
-      </td>
-      <td className="txFilterCell" align="left">
-        <input
-          name="PLAIDSecret"
-          defaultValue={secret}
-          onChange={(e) => setSecretTemp(e.target.value)}
-          onBlur={handleSecretChange}
-          className="filterSize"
-        />
-      </td>
-    </tr>
-    <tr>
-      <td className="txFilterLabelCell">
-        Environment:
-      </td>
-      <td className="txFilterCell" align="left">
-        <input
-          name="PLAIDEnvironment"
-          defaultValue={environment}
-          onChange={(e) => setEnvironmentTemp(e.target.value)}
-          onBlur={handleEnvironmentChange}
-          className="filterSize"
-        />
-      </td>
-    </tr>
     <tr>
       <td className="txFilterLabelCell">
         Link Token:
