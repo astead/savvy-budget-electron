@@ -163,7 +163,7 @@ const set_db = async (DBPath) => {
 
     // Re-initialize knexInstance with the new path
     if (dbPath === 'cloud') {
-      console.log('Setting knex DB connection to PG Supabase to: ', process.env.REACT_APP_SUPABASE_CONN_HOST);
+      console.log('Setting knex DB connection to: ', process.env.REACT_APP_DB_CONN_HOST);
       db = knex({
         client: 'pg',
         debug: true,
@@ -174,13 +174,15 @@ const set_db = async (DBPath) => {
           debug(message) {},
         },
         connection: {
-          host: process.env.REACT_APP_SUPABASE_CONN_HOST,
-          port: process.env.REACT_APP_SUPABASE_CONN_PORT,
-          user: process.env.REACT_APP_SUPABASE_CONN_USER,
-          password: process.env.REACT_APP_SUPABASE_CONN_PW,
-          database: process.env.REACT_APP_SUPABASE_CONN_DB,
-          //ssl: process.env.REACT_APP_SUPABASE_CONN_DB ? { rejectUnauthorized: false } : false,
-          ssl: false,
+          host: process.env.REACT_APP_DB_CONN_HOST,
+          port: process.env.REACT_APP_DB_CONN_PORT,
+          user: process.env.REACT_APP_DB_CONN_USER,
+          password: process.env.REACT_APP_DB_CONN_PW,
+          database: process.env.REACT_APP_DB_CONN_DB,
+          ssl: process.env.REACT_APP_DB_CONN_CERT ? 
+            { rejectUnauthorized: false, 
+              cert: fs.readFileSync(process.env.REACT_APP_DB_CONN_CERT).toString() } : 
+            false,
         },
         useNullAsDefault: true,
       });

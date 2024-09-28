@@ -678,7 +678,13 @@ export const ConfigDB = () => {
             </AccordionSummary>
             <AccordionDetails>
               <div style={{ textAlign: 'left' }}>
-                We can host the data for you in a cloud-based DB.
+                To use a cloud based PostgreSQL database, you need to set the following environment variables:<br/>
+                REACT_APP_DB_CONN_HOST: DB server host name<br/>
+                REACT_APP_DB_CONN_DB: DB name<br/>
+                REACT_APP_DB_CONN_PORT: port for connection<br/>
+                REACT_APP_DB_CONN_USER: username<br/>
+                REACT_APP_DB_CONN_PW: password<br/>
+                REACT_APP_DB_CONN_CERT: file location to ssl cert if using ssl
               </div>
             </AccordionDetails>
           </Accordion>
