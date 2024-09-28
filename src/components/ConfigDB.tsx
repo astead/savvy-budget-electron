@@ -13,7 +13,6 @@ import FormControl from '@mui/material/FormControl';
 /* 
   TODO:
   - Show more DB data? transaction dates, # transactions, # accounts?
-  - another cloud DB option?
 */
 
 export const ConfigDB = () => {
