@@ -2234,7 +2234,7 @@ ipcMain.on(
       if (filterDesc?.length) {
         filterDesc = '%' + filterDesc + '%';
         query = query.andWhereRaw(
-          `'transaction'.description LIKE ?`,
+          `"transaction"."description" LIKE ?`,
           filterDesc
         );
       }
@@ -2244,7 +2244,7 @@ ipcMain.on(
           query = query.andWhereRaw(`"transaction"."txDate" >= ?::date`, [filterStartDate]);
         } else {
           // SQLite
-          query = query.andWhereRaw(`'transaction'.txDate >= ?`, filterStartDate);
+          query = query.andWhereRaw(`"transaction"."txDate" >= ?`, filterStartDate);
         }
       }
       if (filterEndDate) {
@@ -2253,12 +2253,12 @@ ipcMain.on(
           query = query.andWhereRaw(`"transaction"."txDate" <= ?::date`, [filterEndDate]);
         } else {
           // SQLite
-          query = query.andWhereRaw(`'transaction'.txDate <= ?`, filterEndDate);
+          query = query.andWhereRaw(`"transaction"."txDate" <= ?`, filterEndDate);
         }
       }
       if (filterAmount?.length) {
         query = query.andWhereRaw(
-          `'transaction'.txAmt = ?`,
+          `"transaction"."txAmt" = ?`,
           parseFloat(filterAmount)
         );
       }
@@ -2365,19 +2365,19 @@ ipcMain.on(
       if (filterDesc?.length) {
         filterDesc = '%' + filterDesc + '%';
         query = query.andWhereRaw(
-          `'transaction'.description LIKE ?`,
+          `"transaction"."description" LIKE ?`,
           filterDesc
         );
       }
       if (filterStartDate) {
-        query = query.andWhereRaw(`'transaction'.txDate >= ?`, filterStartDate);
+        query = query.andWhereRaw(`"transaction"."txDate" >= ?`, filterStartDate);
       }
       if (filterEndDate) {
-        query = query.andWhereRaw(`'transaction'.txDate <= ?`, filterEndDate);
+        query = query.andWhereRaw(`"transaction"."txDate" <= ?`, filterEndDate);
       }
       if (filterAmount?.length) {
         query = query.andWhereRaw(
-          `'transaction'.txAmt = ?`,
+          `"transaction"."txAmt" = ?`,
           parseFloat(filterAmount)
         );
       }
@@ -2775,7 +2775,7 @@ async function lookup_keyword(accountID, description, txDate) {
   if (description?.length) {
     let query = db('keyword')
       .select('id', 'envelopeID')
-      .whereRaw(`? LIKE description`, description);
+      .whereRaw(`? LIKE "description"`, description);
 
     query = query.andWhere(function () {
       this.where('account', 'All').orWhere({
@@ -2813,8 +2813,8 @@ async function lookup_if_duplicate(
 
     let query = db('transaction')
       .select('id')
-      .andWhereRaw(`accountID = ?`, accountID)
-      .andWhereRaw(`refNumber = ?`, refNumber);
+      .andWhereRaw(`"accountID" = ?`, accountID)
+      .andWhereRaw(`"refNumber" = ?`, refNumber);
       
       if (dbPath === 'cloud') {
         // PostgreSQL
@@ -2834,7 +2834,7 @@ async function lookup_if_duplicate(
     let query = db('transaction')
       .select('id')
       .where({ txAmt: txAmt })
-      .andWhereRaw(`accountID = ?`, accountID)
+      .andWhereRaw(`"accountID" = ?`, accountID)
       .andWhere({ description: description });
       
       if (dbPath === 'cloud') {
@@ -2941,8 +2941,7 @@ ipcMain.on(channels.IMPORT_OFX, async (event, { ofxString }) => {
   event.sender.send(channels.UPLOAD_PROGRESS, 100);
 });
 
-ipcMain.on(
-  channels.IMPORT_CSV,
+ipcMain.on(channels.IMPORT_CSV,
   async (event, { account_string, ofxString }) => {
     let accountID = '';
     let totalNodes = 0;
@@ -3541,7 +3540,7 @@ ipcMain.on(channels.SET_ALL_KEYWORD, (event, { id, force }) => {
     .then((data) => {
       let query = db('transaction')
         .update({ envelopeID: data[0].envelopeID })
-        .whereRaw(`description LIKE ?`, data[0].description);
+        .whereRaw(`"description" LIKE ?`, data[0].description);
 
       if (data[0].account !== 'All') {
         query = query.andWhere({
